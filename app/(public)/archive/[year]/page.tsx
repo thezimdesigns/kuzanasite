@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { computeStatus, formatDate } from "@/lib/time";
@@ -41,11 +40,7 @@ export default async function EditionArchivePage({ params }: PageProps<"/archive
   return (
     <>
       <PageHeader
-        eyebrow={
-          <Link href="/archive" className="underline">
-            Archive
-          </Link>
-        }
+        back={{ href: "/archive", label: "Archive" }}
         title={edition.name}
         intro={`${formatDate(edition.startDate)} – ${formatDate(edition.endDate)}${edition.theme ? ` · ${edition.theme}` : ""}`}
       />

@@ -6,10 +6,12 @@ import { z } from "zod";
 import { adminFormAction, runAdmin } from "@/lib/admin-action";
 import { db } from "@/lib/db";
 import { requireCurrentEdition } from "@/lib/edition";
-import { optionalText, optionalUrl, requiredText } from "@/lib/forms";
+import { checkbox, optionalText, optionalUrl, requiredText } from "@/lib/forms";
 import { PartnerTier, Role } from "@/lib/generated/prisma/enums";
 import { deleteObject } from "@/lib/storage";
 import { parseLocalInput } from "@/lib/time";
+import { DEFAULT_FOOTER_LINKS } from "@/lib/footer-defaults";
+import { FOOTER_SETTING_DEFAULTS } from "@/lib/site-settings";
 
 // ---------------------------------------------------------------------------
 // Partners
@@ -21,6 +23,7 @@ const partnerSchema = z.object({
   tier: z.enum(PartnerTier),
   caption: optionalText(100),
   logoKey: optionalText(300),
+  prominent: checkbox,
   sortOrder: z.coerce.number().int().default(0),
 });
 
@@ -158,4 +161,96 @@ export async function setCurrentEdition(id: string) {
       db.edition.update({ where: { id }, data: { isCurrent: true } }),
     ]),
   );
+}
+
+// ---------------------------------------------------------------------------
+// Footer (settings + link columns)
+// ---------------------------------------------------------------------------
+
+const footerSettingsSchema = z.object(
+  Object.fromEntries(Object.keys(FOOTER_SETTING_DEFAULTS).map((k) => [k.replace("footer.", ""), optionalText(300)])) as Record<
+    string,
+    ReturnType<typeof optionalText>
+  >,
+);
+
+export const saveFooterSettings = adminFormAction("site", footerSettingsSchema, async (d) => {
+  await db.$transaction(
+    Object.keys(FOOTER_SETTING_DEFAULTS).map((key) => {
+      const value = d[key.replace("footer.", "")] ?? "";
+      return db.siteSetting.upsert({ where: { key }, update: { value }, create: { key, value } });
+    }),
+  );
+  return { ok: true, message: "Footer details saved." };
+});
+
+/** Internal paths ("/programme"), web addresses, email or phone links. */
+const linkHref = z
+  .string()
+  .trim()
+  .min(1, "Choose a page or enter a web address.")
+  .max(500)
+  .transform((v) => (/^(\/|https?:\/\/|mailto:|tel:)/i.test(v) ? v : `https://${v}`))
+  .refine((v) => v.startsWith("/") || /^(https?:\/\/[^\s]+\.[^\s]+|mailto:\S+@\S+|tel:[+\d\s()-]+)$/i.test(v), "Enter a valid link.");
+
+const footerLinkSchema = z.object({
+  label: requiredText("Label", 80),
+  page: z.string().optional(),
+  custom: z.string().optional(),
+  column: z.coerce.number().int().min(1).max(2),
+  newTab: checkbox,
+  sortOrder: z.coerce.number().int().default(0),
+});
+
+function resolveHref(d: { page?: string; custom?: string }) {
+  return linkHref.safeParse(d.page === "__custom" || !d.page ? (d.custom ?? "") : d.page);
+}
+
+/** The footer starts from built-in defaults; copy them in before the first edit. */
+async function ensureFooterLinks() {
+  if ((await db.footerLink.count()) === 0) {
+    await db.footerLink.createMany({ data: DEFAULT_FOOTER_LINKS.map((l, i) => ({ ...l, sortOrder: i })) });
+  }
+}
+
+export const createFooterLink = adminFormAction("site", footerLinkSchema, async (d) => {
+  const href = resolveHref(d);
+  if (!href.success) return { ok: false, errors: { custom: href.error.issues[0].message } };
+  await ensureFooterLinks();
+  const max = await db.footerLink.aggregate({ where: { column: d.column }, _max: { sortOrder: true } });
+  await db.footerLink.create({
+    data: { label: d.label, href: href.data, column: d.column, newTab: d.newTab, sortOrder: (max._max.sortOrder ?? -1) + 1 },
+  });
+  return { ok: true, message: "Link added to the footer." };
+});
+
+export const updateFooterLink = adminFormAction("site", footerLinkSchema.and(z.object({ id: z.string() })), async (d) => {
+  const href = resolveHref(d);
+  if (!href.success) return { ok: false, errors: { custom: href.error.issues[0].message } };
+  await db.footerLink.update({
+    where: { id: d.id },
+    data: { label: d.label, href: href.data, column: d.column, newTab: d.newTab, sortOrder: d.sortOrder },
+  });
+  return { ok: true, message: "Link saved." };
+});
+
+export async function deleteFooterLink(id: string) {
+  return runAdmin("site", () => db.footerLink.delete({ where: { id } }));
+}
+
+/** Swaps a link with its neighbour in the same column. */
+export async function moveFooterLink(id: string, direction: -1 | 1) {
+  return runAdmin("site", async () => {
+    const link = await db.footerLink.findUniqueOrThrow({ where: { id } });
+    const siblings = await db.footerLink.findMany({ where: { column: link.column }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] });
+    const i = siblings.findIndex((s) => s.id === id);
+    const other = siblings[i + direction];
+    if (!other) return;
+    // Normalise order first so equal sortOrder values still swap cleanly.
+    await db.$transaction(siblings.map((s, n) => db.footerLink.update({ where: { id: s.id }, data: { sortOrder: n } })));
+    await db.$transaction([
+      db.footerLink.update({ where: { id }, data: { sortOrder: i + direction } }),
+      db.footerLink.update({ where: { id: other.id }, data: { sortOrder: i } }),
+    ]);
+  });
 }

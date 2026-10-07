@@ -29,6 +29,8 @@ export type EventValues = {
   contact: string;
   posterKey: string;
   imageKey: string;
+  programmePdfKey: string;
+  programmePdfName: string;
   statusOverride: string;
   statusNote: string;
   publishStatus: string;
@@ -148,12 +150,32 @@ export function EventForm({
             </div>
           </Panel>
 
-          <Panel title="Description & images">
+          <Panel title="Detailed programme (PDF)">
+            <p className="mb-3 text-sm text-muted">
+              Visitors get a “Download detailed programme” button on this event and in the programme listings.
+            </p>
+            <UploadField
+              name="programmePdf"
+              mode="json"
+              accept="document"
+              label={v.programmePdfKey ? "Replace PDF" : "Upload PDF"}
+              current={v.programmePdfKey}
+              currentName={v.programmePdfName}
+              folder="programmes"
+            />
+            {v.programmePdfKey && (
+              <div className="mt-3">
+                <Checkbox name="removeProgrammePdf" label="Remove the current PDF" />
+              </div>
+            )}
+          </Panel>
+
+          <Panel title="Poster, description & images">
             <Field label="Full description" hint="Markdown supported: **bold**, lists, [links](https://…)">
               <Textarea name="description" rows={8} defaultValue={v.description} />
             </Field>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <UploadField name="posterKey" label="Poster" current={v.posterKey} folder="events" maxDim={2000} />
+              <UploadField name="posterKey" label="Poster (portrait works best)" current={v.posterKey} folder="events" maxDim={2000} />
               <UploadField name="imageKey" label="Featured image" current={v.imageKey} folder="events" maxDim={2000} />
             </div>
           </Panel>

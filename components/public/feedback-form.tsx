@@ -70,7 +70,7 @@ export function FeedbackForm({
           </Field>
           <Checkbox name="anonymous" label="Send anonymously" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
           {!anonymous && (
-            <div className="space-y-4 rounded-lg bg-cream p-4">
+            <div className="space-y-4 rounded-[var(--radius-control)] bg-cream p-4">
               <Field label="Name">
                 <Input name="name" autoComplete="name" />
               </Field>

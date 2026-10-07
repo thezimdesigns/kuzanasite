@@ -38,7 +38,6 @@ export default async function ExhibitorRegisterPage({ searchParams }: PageProps<
   return (
     <>
       <PageHeader
-        eyebrow="Exhibitors"
         title="Register your KUZANA stand"
         intro="Takes about 3 minutes. No account needed. Start with the basics and a photo of your stand; you can add more later."
       />

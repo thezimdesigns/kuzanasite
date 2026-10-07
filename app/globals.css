@@ -7,7 +7,9 @@
   --color-green-800: #006637;
   --color-green-100: #e3efe7;
   --color-orange: #f36c21;
-  --color-orange-dark: #d35a14;
+  /* Deeper brand orange for button fills and small text (5:1 on white). */
+  --color-orange-dark: #bd4c0e;
+  --color-orange-deeper: #a3410b;
   --color-orange-50: #fdeee5;
   --color-gold: #c89b2b;
   --color-gold-light: #d4a93a;
@@ -22,7 +24,13 @@
   --font-heading: var(--font-bricolage), system-ui, sans-serif;
   --font-sans: var(--font-open-sans), system-ui, sans-serif;
 
-  --radius-card: 12px;
+  /* Shape system: controls 6px, cards & media 10px, badges 4px. */
+  --radius-card: 10px;
+  --radius-control: 6px;
+  --radius-badge: 4px;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-lift: 0 1px 2px rgb(0 81 45 / 0.06), 0 12px 28px -12px rgb(0 81 45 / 0.28);
 }
 
 html {
@@ -85,20 +93,124 @@ h4 {
   font-weight: 700;
 }
 
-@keyframes live-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
-  }
+/* ---------------------------------------------------------------------------
+   Motion. Content is visible by default; every effect is opt-in under
+   prefers-reduced-motion: no-preference.
+   --------------------------------------------------------------------------- */
+
+.hero-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
 }
+
+/* Live indicator: a ring that radiates from the dot. */
 .live-dot {
-  animation: live-pulse 1.4s ease-in-out infinite;
+  position: relative;
 }
-@media (prefers-reduced-motion: reduce) {
-  .live-dot {
-    animation: none;
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .live-dot::after {
+    animation: live-ring 1.8s var(--ease-out-expo) infinite;
   }
+
+  /* Hero: headline lines rise out of a mask, then the supporting content settles in. */
+  .hero-line > span {
+    display: inline-block;
+    animation: line-rise 0.8s var(--ease-out-expo) both;
+    animation-delay: calc(var(--i, 0) * 90ms);
+  }
+  .hero-fade {
+    animation: fade-up 0.7s var(--ease-out-expo) both;
+    animation-delay: calc(240ms + var(--i, 0) * 70ms);
+  }
+  .hero-art {
+    animation: art-in 1s var(--ease-out-expo) 120ms both;
+  }
+
+  /* Lists reveal as they scroll into view (supported browsers only). */
+  @supports (animation-timeline: view()) {
+    .reveal-list > * {
+      animation: fade-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 45%;
+    }
+  }
+
+  /* The sticky header gains its edge once the page scrolls. */
+  @supports (animation-timeline: scroll()) {
+    .header-scroll {
+      animation: header-edge linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 80px;
+    }
+  }
+}
+
+@keyframes live-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+@keyframes line-rise {
+  from {
+    transform: translateY(105%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes art-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+@keyframes header-edge {
+  from {
+    box-shadow: 0 0 0 transparent;
+    border-bottom-color: transparent;
+  }
+  to {
+    box-shadow: 0 8px 24px -16px rgb(0 81 45 / 0.35);
+    border-bottom-color: var(--color-line);
+  }
+}
+
+/* Horizontal rails: native scroll-snap, no visible scrollbar on touch. */
+.rail {
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+.rail > * {
+  scroll-snap-align: start;
 }

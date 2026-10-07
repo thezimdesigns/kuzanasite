@@ -77,7 +77,7 @@ function Chip({ href, active, children }: { href: string; active: boolean; child
       href={href}
       scroll={false}
       className={cn(
-        "shrink-0 rounded-full border px-3 py-1.5 text-sm font-semibold whitespace-nowrap",
+        "shrink-0 rounded-[var(--radius-control)] border px-3 py-1.5 text-sm font-semibold whitespace-nowrap",
         active ? "border-green-900 bg-green-900 text-white" : "border-line bg-white hover:border-green-800",
       )}
     >

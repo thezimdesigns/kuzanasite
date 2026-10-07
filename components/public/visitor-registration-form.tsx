@@ -47,7 +47,7 @@ export function VisitorRegistrationForm() {
               <Input name="email" type="email" autoComplete="email" />
             </Field>
           </div>
-          <details className="rounded-lg bg-cream p-3">
+          <details className="rounded-[var(--radius-control)] bg-cream p-3">
             <summary className="cursor-pointer text-sm font-semibold">More about you (optional)</summary>
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <Field label="I am a">

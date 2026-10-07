@@ -23,7 +23,7 @@ export function DocumentList({ docs }: { docs: Doc[] }) {
       {docs.map((d) => (
         <li key={d.id}>
           <Link href={`/media/documents/${d.slug}`} className="flex gap-3 p-4 hover:bg-cream">
-            <FileText className="mt-0.5 size-5 shrink-0 text-orange" />
+            <FileText className="mt-0.5 size-5 shrink-0 text-orange-dark" />
             <div className="min-w-0">
               <p className="font-heading font-bold">{d.title}</p>
               <p className="mt-0.5 text-xs text-muted">

@@ -18,6 +18,8 @@ export type ProgrammeItem = {
   room: string | null;
   parentTitle?: string;
   category?: string | null;
+  posterKey?: string | null;
+  pdf?: { key: string; name: string | null } | null;
 };
 
 /** Published events of the current edition, ordered by start. */
@@ -75,6 +77,8 @@ export async function getDayProgramme(key = dateKey(new Date()), now = new Date(
       venue: e.venue?.name ?? null,
       room: e.room,
       category: e.category?.name,
+      posterKey: e.posterKey ?? e.imageKey,
+      pdf: e.programmePdfKey ? { key: e.programmePdfKey, name: e.programmePdfName } : null,
     });
     for (const s of e.sessions) {
       items.push({
@@ -89,6 +93,7 @@ export async function getDayProgramme(key = dateKey(new Date()), now = new Date(
         venue: e.venue?.name ?? null,
         room: s.room ?? e.room,
         parentTitle: e.title,
+        posterKey: s.posterKey,
       });
     }
   }

@@ -75,6 +75,8 @@ export default async function AdminEvent({ params }: PageProps<"/admin/events/[i
             contact: e.contact ?? "",
             posterKey: e.posterKey ?? "",
             imageKey: e.imageKey ?? "",
+            programmePdfKey: e.programmePdfKey ?? "",
+            programmePdfName: e.programmePdfName ?? "",
             statusOverride: e.statusOverride ?? "",
             statusNote: e.statusNote ?? "",
             publishStatus: e.publishStatus,
@@ -121,7 +123,7 @@ export default async function AdminEvent({ params }: PageProps<"/admin/events/[i
               <details open={e.sessions.length === 0}>
                 <summary className="cursor-pointer text-sm font-semibold text-green-800">+ Add session</summary>
                 <div className="mt-3">
-                  <SessionForm eventId={e.id} values={{ title: "", description: "", startsAt: nextStart, endsAt: "", room: "", type: "OTHER", statusOverride: "", publishStatus: "PUBLISHED", sortOrder: e.sessions.length }} />
+                  <SessionForm eventId={e.id} values={{ title: "", description: "", startsAt: nextStart, endsAt: "", room: "", posterKey: "", type: "OTHER", statusOverride: "", publishStatus: "PUBLISHED", sortOrder: e.sessions.length }} />
                 </div>
               </details>
             )}

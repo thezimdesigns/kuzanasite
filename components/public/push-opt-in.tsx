@@ -82,8 +82,8 @@ export function PushOptIn({ eventId, compact = false }: { eventId?: string; comp
   if (state === "unsupported") return null;
   if (state === "ios-install") {
     return (
-      <p className="max-w-xl rounded-lg bg-white/80 px-3 py-2 text-sm text-muted">
-        <BellRing className="mr-1.5 inline size-4 text-orange" />
+      <p className="max-w-xl rounded-[var(--radius-control)] bg-white/80 px-3 py-2 text-sm text-muted">
+        <BellRing className="mr-1.5 inline size-4 text-orange-dark" />
         On iPhone, tap <strong>Share → Add to Home Screen</strong>, then open KUZANA from your home screen to turn on alerts.
       </p>
     );
@@ -111,7 +111,7 @@ export function PushOptIn({ eventId, compact = false }: { eventId?: string; comp
       onClick={enable}
       disabled={state === "working"}
       className={cn(
-        "inline-flex w-fit items-center gap-2 rounded-full border-2 border-green-900 bg-white font-heading font-bold text-green-900 hover:bg-green-900 hover:text-white disabled:opacity-60",
+        "inline-flex w-fit items-center gap-2 rounded-[var(--radius-control)] border border-green-900/40 bg-white font-heading font-bold text-green-900 hover:bg-green-900 hover:text-white disabled:opacity-60",
         compact ? "px-3.5 py-1.5 text-sm" : "px-5 py-2.5",
       )}
     >

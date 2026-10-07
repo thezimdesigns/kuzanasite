@@ -20,8 +20,8 @@ export default async function PlanYourVisitPage() {
           <ul className="grid gap-3 sm:grid-cols-2">
             {venues.map((v) => (
               <li key={v.id}>
-                <Link href={`/venues/${v.slug}`} className="flex items-start gap-2 rounded-lg border border-line bg-white p-4 hover:border-green-800">
-                  <MapPin className="mt-0.5 size-5 shrink-0 text-orange" />
+                <Link href={`/venues/${v.slug}`} className="flex items-start gap-2 rounded-[var(--radius-control)] border border-line bg-white p-4 hover:border-green-800">
+                  <MapPin className="mt-0.5 size-5 shrink-0 text-orange-dark" />
                   <span>
                     <span className="block font-heading font-bold">{v.name}</span>
                     {v.address && <span className="block text-sm text-muted">{v.address}</span>}

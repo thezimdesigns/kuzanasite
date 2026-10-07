@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Download, Globe, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { Download, Globe, Mail, MapPin, MessageCircle, Phone, Star } from "lucide-react";
 import { db } from "@/lib/db";
 import { fileUrl, formatBytes } from "@/lib/files";
+import { RatingForm } from "@/components/public/rating-form";
 import { ShareButtons } from "@/components/public/share-buttons";
 import { Badge, Card, Section, SectionTitle } from "@/components/ui";
 
@@ -32,6 +33,7 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
   const x = await getExhibitor((await params).slug);
   if (!x) notFound();
 
+  const rating = await db.rating.aggregate({ where: { exhibitorId: x.id }, _avg: { stars: true }, _count: { stars: true } });
   const images = x.media.filter((m) => m.mimeType.startsWith("image/") && m.kind !== "LOGO");
   const files = x.media.filter((m) => !m.mimeType.startsWith("image/"));
   const logo = fileUrl(x.logoKey);
@@ -91,7 +93,7 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
               <SectionTitle>Photos</SectionTitle>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {images.map((m) => (
-                  <a key={m.id} href={fileUrl(m.key)!} target="_blank" rel="noopener" className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-cream-dark">
+                  <a key={m.id} href={fileUrl(m.key)!} target="_blank" rel="noopener" className="relative block aspect-[4/3] overflow-hidden rounded-[var(--radius-control)] bg-cream-dark">
                     <Image src={fileUrl(m.key)!} alt={m.caption ?? `${x.name} ${m.kind.toLowerCase().replace("_", " ")}`} fill sizes="(min-width: 640px) 25vw, 50vw" className="object-cover" />
                   </a>
                 ))}
@@ -123,13 +125,23 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
         </div>
 
         <aside className="space-y-6">
+          <Card className="p-5">
+            {rating._count.stars >= 3 && (
+              <p className="mb-3 flex items-center gap-1.5 text-sm">
+                <Star className="size-4 fill-gold text-gold" aria-hidden />
+                <strong>{rating._avg.stars?.toFixed(1)}</strong>
+                <span className="text-muted">from {rating._count.stars} visitor ratings</span>
+              </p>
+            )}
+            <RatingForm exhibitorId={x.id} label="Visited this stand? Rate it" />
+          </Card>
           <Card className="space-y-3 p-5">
             <h2 className="font-heading text-lg font-bold text-green-900">Contact</h2>
             <p className="text-sm">
               <strong>{x.contactName}</strong>
             </p>
             <a href={`tel:${x.phone.replace(/\s/g, "")}`} className="flex items-center gap-2 text-sm hover:text-green-800">
-              <Phone className="size-4 text-orange" /> {x.phone}
+              <Phone className="size-4 text-orange-dark" /> {x.phone}
             </a>
             {(x.whatsapp || x.phone) && (
               <a href={waLink(x.whatsapp ?? x.phone)} target="_blank" rel="noopener" className="flex items-center gap-2 text-sm hover:text-green-800">
@@ -138,19 +150,19 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
             )}
             {x.email && (
               <a href={`mailto:${x.email}`} className="flex items-center gap-2 text-sm break-all hover:text-green-800">
-                <Mail className="size-4 text-orange" /> {x.email}
+                <Mail className="size-4 text-orange-dark" /> {x.email}
               </a>
             )}
             {x.address && (
               <p className="flex items-start gap-2 text-sm">
-                <MapPin className="mt-0.5 size-4 shrink-0 text-orange" /> {x.address}
+                <MapPin className="mt-0.5 size-4 shrink-0 text-orange-dark" /> {x.address}
               </p>
             )}
             {socials.length > 0 && (
               <ul className="flex flex-wrap gap-2 pt-2">
                 {socials.map(([label, url]) => (
                   <li key={label}>
-                    <a href={url} target="_blank" rel="noopener nofollow" className="inline-flex items-center gap-1 rounded-full border border-line px-3 py-1 text-xs font-semibold hover:border-green-800">
+                    <a href={url} target="_blank" rel="noopener nofollow" className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-line px-3 py-1 text-xs font-semibold hover:border-green-800">
                       <Globe className="size-3" /> {label}
                     </a>
                   </li>
@@ -165,7 +177,7 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
                 {files.map((m) => (
                   <li key={m.id}>
                     <a href={fileUrl(m.key, m.fileName)!} className="flex items-start gap-2 text-sm hover:text-green-800">
-                      <Download className="mt-0.5 size-4 shrink-0 text-orange" />
+                      <Download className="mt-0.5 size-4 shrink-0 text-orange-dark" />
                       <span>
                         <span className="font-semibold">{m.fileName ?? m.kind.toLowerCase()}</span>
                         <span className="block text-xs text-muted">{formatBytes(m.size)}</span>

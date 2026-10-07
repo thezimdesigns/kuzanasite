@@ -7,16 +7,30 @@ permanent archive for KUZANA SCEEZ. Replaces the 2026 landing page at
 **Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · PostgreSQL 17 ·
 Prisma 7 · Better Auth · Garage (S3-compatible storage) · Docker · Coolify.
 
-## Local development (Docker)
+## Local development
+
+Postgres and Garage always run in Docker. For the app itself you have two options.
+
+**Recommended on Windows/macOS: app on the host.** Docker Desktop delays file-change
+events into containers, so hot reload is slow or missed. Run only the services in Docker:
+
+```bash
+npm run dev:services
+npm run dev
+```
+
+The local `.env` points at `localhost:5440` (Postgres) and `localhost:3900` (Garage).
+
+**Everything in Docker** (closest to production; restart the `app` container if a change is not picked up):
 
 ```bash
 docker compose -f docker-compose.dev.yml up --build
 ```
 
+Either way:
 - Site: http://localhost:3000, admin: http://localhost:3000/admin
 - Dev admin: `admin@kuzana.test` / `kuzana-dev-admin-2026` (local only, from the compose file)
 - Exhibitor form: http://localhost:3000/exhibitors/register?code=STAND2026
-- Code changes hot-reload. Postgres is on `localhost:5440`, Garage S3 on `localhost:3900`.
 
 After changing `prisma/schema.prisma`, create a migration from your machine
 (with the dev stack running):

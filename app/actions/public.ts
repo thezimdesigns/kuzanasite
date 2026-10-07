@@ -314,6 +314,7 @@ export async function removePushSubscription(endpoint: string) {
 const ratingSchema = z.object({
   eventId: optionalText(40),
   sessionId: optionalText(40),
+  exhibitorId: optionalText(40),
   stars: z.coerce.number().int().min(1, "Choose a rating.").max(5),
   comment: optionalText(1000),
 });
@@ -323,13 +324,18 @@ export async function submitRating(_: FormState, fd: FormData): Promise<FormStat
   if (!(await rateLimit("rating", 20, 600))) return TOO_MANY;
   const parsed = ratingSchema.safeParse(formToObject(fd));
   if (!parsed.success) return invalid(parsed.error, fd);
-  const { eventId, sessionId, ...rest } = parsed.data;
+  const { eventId, sessionId, exhibitorId, ...rest } = parsed.data;
+  // Exactly one target: a session, an exhibitor stand, or an event.
   const target = sessionId
     ? await db.session.findUnique({ where: { id: sessionId }, select: { id: true } })
-    : eventId
-      ? await db.event.findUnique({ where: { id: eventId }, select: { id: true } })
-      : null;
+    : exhibitorId
+      ? await db.exhibitor.findFirst({ where: { id: exhibitorId, status: "APPROVED" }, select: { id: true } })
+      : eventId
+        ? await db.event.findUnique({ where: { id: eventId }, select: { id: true } })
+        : null;
   if (!target) return { ok: false, message: "Nothing to rate." };
-  await db.rating.create({ data: { ...rest, eventId, sessionId } });
+  await db.rating.create({
+    data: sessionId ? { ...rest, sessionId } : exhibitorId ? { ...rest, exhibitorId } : { ...rest, eventId },
+  });
   return { ok: true, message: "Thanks for rating!" };
 }

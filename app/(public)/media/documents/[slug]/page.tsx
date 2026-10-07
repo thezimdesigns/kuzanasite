@@ -29,11 +29,7 @@ export default async function DocumentPage({ params }: PageProps<"/media/documen
   return (
     <>
       <PageHeader
-        eyebrow={
-          <Link href="/media" className="underline">
-            Media centre · {DOCUMENT_TYPE_LABELS[d.type]}
-          </Link>
-        }
+        back={{ href: "/media", label: `Media centre: ${DOCUMENT_TYPE_LABELS[d.type]}` }}
         title={d.title}
         intro={[d.date && formatDate(d.date), d.author].filter(Boolean).join(" · ")}
       >

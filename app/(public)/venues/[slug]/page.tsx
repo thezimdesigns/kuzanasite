@@ -57,7 +57,7 @@ export default async function VenuePage({ params }: PageProps<"/venues/[slug]">)
           <h1 className="mt-1 text-3xl font-extrabold text-green-900 sm:text-4xl">{venue.name}</h1>
           {venue.address && (
             <p className="mt-2 flex items-center gap-1.5 text-muted">
-              <MapPin className="size-4 text-orange" /> {venue.address}
+              <MapPin className="size-4 text-orange-dark" /> {venue.address}
             </p>
           )}
           <div className="mt-5 flex flex-col gap-4">

@@ -47,8 +47,11 @@ export const phone = z
   .max(30)
   .regex(/^[+\d][\d\s()-]+$/, "Enter a valid phone number.");
 
+/** An HTML checkbox: absent from FormData when unchecked, so the key must be optional. */
 export const checkbox = z
-  .union([z.literal("on"), z.literal("true"), z.literal("1"), z.literal(""), z.undefined(), z.null()])
+  .union([z.literal("on"), z.literal("true"), z.literal("1"), z.literal("")])
+  .optional()
+  .nullable()
   .transform((v) => v === "on" || v === "true" || v === "1");
 
 /** Converts FormData into a plain object; repeated keys become arrays. */

@@ -35,7 +35,7 @@ export default async function VenuesPage() {
                     <h2 className="font-heading text-lg font-bold">{v.name}</h2>
                     {v.address && (
                       <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
-                        <MapPin className="size-4 text-orange" /> {v.address}
+                        <MapPin className="size-4 text-orange-dark" /> {v.address}
                       </p>
                     )}
                     {v.description && <p className="mt-2 text-sm">{v.description}</p>}

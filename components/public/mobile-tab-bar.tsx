@@ -30,7 +30,7 @@ export function MobileTabBar() {
                 href={href}
                 className={cn(
                   "flex flex-col items-center gap-0.5 py-2 text-[0.7rem] font-semibold",
-                  active ? "text-orange" : "text-green-900",
+                  active ? "text-orange-dark" : "text-green-900",
                 )}
               >
                 <Icon className="size-5" aria-hidden />

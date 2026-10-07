@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { MEDIA_SECTIONS } from "@/lib/options";
@@ -23,11 +22,7 @@ export default async function MediaSectionPage({ params }: PageProps<"/media/[se
   return (
     <>
       <PageHeader
-        eyebrow={
-          <Link href="/media" className="underline">
-            Media centre
-          </Link>
-        }
+        back={{ href: "/media", label: "Media centre" }}
         title={s.title}
       />
       <Section>{docs.length ? <DocumentList docs={docs} /> : <EmptyState>Nothing published here yet.</EmptyState>}</Section>

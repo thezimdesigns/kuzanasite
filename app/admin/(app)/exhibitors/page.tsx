@@ -39,7 +39,7 @@ export default async function AdminExhibitors({ searchParams }: PageProps<"/admi
       title="Exhibitors"
       actions={
         <ButtonLink href="/admin/capture/exhibitor" size="sm">
-          <Camera className="size-4" /> Capture exhibitor
+          <Camera className="size-4" /> Add exhibitor
         </ButtonLink>
       }
     >

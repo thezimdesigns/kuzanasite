@@ -36,7 +36,7 @@ export function ShareButtons({ title, path }: { title: string; path: string }) {
         href={`https://wa.me/?text=${enc(text)}`}
         target="_blank"
         rel="noopener"
-        className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 font-heading text-sm font-bold text-white hover:opacity-90"
+        className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[#25D366] px-4 py-2 font-heading text-sm font-bold text-[#06371d] transition-[filter,transform] hover:brightness-95 active:scale-[0.98]"
       >
         <WhatsAppIcon /> Share on WhatsApp
       </a>
@@ -46,7 +46,7 @@ export function ShareButtons({ title, path }: { title: string; path: string }) {
           href={l.href}
           target="_blank"
           rel="noopener"
-          className="rounded-full border border-line bg-white px-3 py-2 text-sm font-semibold hover:border-green-800"
+          className="rounded-[var(--radius-control)] border border-line bg-white px-3 py-2 text-sm font-semibold hover:border-green-800"
         >
           {l.label}
         </a>
@@ -54,7 +54,7 @@ export function ShareButtons({ title, path }: { title: string; path: string }) {
       <button
         type="button"
         onClick={copy}
-        className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-2 text-sm font-semibold hover:border-green-800"
+        className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-white px-3 py-2 text-sm font-semibold hover:border-green-800"
       >
         {copied ? <Check className="size-4 text-green-800" /> : <Link2 className="size-4" />}
         {copied ? "Copied" : "Copy link"}

@@ -287,6 +287,10 @@ model Event {
   room                 String?
   posterKey            String?
   imageKey             String?
+  // Detailed programme / activity sheet (PDF) offered as a download.
+  programmePdfKey      String?
+  programmePdfName     String?
+  programmePdfSize     Int?
   ticketRequired       Boolean          @default(false)
   ticketPrice          String?
   ticketUrl            String?
@@ -329,6 +333,7 @@ model Session {
   startsAt       DateTime
   endsAt         DateTime?
   room           String?
+  posterKey      String?
   type           SessionType      @default(OTHER)
   statusOverride ProgrammeStatus?
   publishStatus  PublishStatus    @default(PUBLISHED)
@@ -461,6 +466,7 @@ model Exhibitor {
 
   media       ExhibitorMedia[]
   claimTokens ExhibitorClaimToken[]
+  ratings     Rating[]
 
   @@index([status, name])
   @@index([categoryId])
@@ -597,6 +603,8 @@ model Partner {
   url       String?
   tier      PartnerTier @default(PARTNER)
   caption   String?
+  // Shown larger than other partners (e.g. the hosting ministry).
+  prominent Boolean     @default(false)
   sortOrder Int         @default(0)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -641,17 +649,20 @@ model Feedback {
 }
 
 model Rating {
-  id        String   @id @default(cuid())
-  eventId   String?
-  event     Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  sessionId String?
-  session   Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  stars     Int
-  comment   String?
-  createdAt DateTime @default(now())
+  id          String     @id @default(cuid())
+  eventId     String?
+  event       Event?     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sessionId   String?
+  session     Session?   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exhibitorId String?
+  exhibitor   Exhibitor? @relation(fields: [exhibitorId], references: [id], onDelete: Cascade)
+  stars       Int
+  comment     String?
+  createdAt   DateTime   @default(now())
 
   @@index([eventId])
   @@index([sessionId])
+  @@index([exhibitorId])
 }
 
 model InterestRegistration {
@@ -765,4 +776,28 @@ model RateLimit {
   key         String   @id
   count       Int
   windowStart DateTime
+}
+
+// ---------------------------------------------------------------------------
+// Site settings & footer (managed in Admin → Footer)
+// ---------------------------------------------------------------------------
+
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model FooterLink {
+  id        String   @id @default(cuid())
+  /// 1 = first link column, 2 = second link column.
+  column    Int      @default(1)
+  label     String
+  href      String
+  newTab    Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([column, sortOrder])
 }

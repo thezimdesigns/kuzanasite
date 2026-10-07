@@ -41,6 +41,21 @@ const optionalStatus = z
   .optional()
   .transform((v) => (v && v in ProgrammeStatus ? (v as ProgrammeStatus) : null));
 
+/** JSON from an UploadField in "json" mode; empty when no new file was chosen. */
+const uploadedFile = z
+  .string()
+  .optional()
+  .transform((s) => {
+    if (!s) return null;
+    try {
+      return z
+        .object({ key: z.string().startsWith("staff/"), mimeType: z.string(), size: z.number(), fileName: z.string().optional() })
+        .parse(JSON.parse(s));
+    } catch {
+      return null;
+    }
+  });
+
 const slugField = z
   .string()
   .trim()
@@ -74,6 +89,8 @@ const eventSchema = z
     contact: optionalText(300),
     posterKey: optionalText(300),
     imageKey: optionalText(300),
+    programmePdf: uploadedFile,
+    removeProgrammePdf: checkbox,
     statusOverride: optionalStatus,
     statusNote: optionalText(300),
     publishStatus: z.enum(PublishStatus),
@@ -82,10 +99,14 @@ const eventSchema = z
   .refine((v) => !v.endsAt || v.endsAt >= v.startsAt, { message: "End must be after the start.", path: ["endsAt"] });
 
 function eventData(d: z.infer<typeof eventSchema>) {
-  const { slug: _slug, ...rest } = d;
-  void _slug;
+  const { slug: _slug, programmePdf, removeProgrammePdf, ...rest } = d;
   return {
     ...rest,
+    ...(programmePdf
+      ? { programmePdfKey: programmePdf.key, programmePdfName: programmePdf.fileName ?? "programme.pdf", programmePdfSize: programmePdf.size }
+      : removeProgrammePdf
+        ? { programmePdfKey: null, programmePdfName: null, programmePdfSize: null }
+        : {}),
     summary: d.summary ?? null,
     description: d.description ?? null,
     room: d.room ?? null,
@@ -140,6 +161,7 @@ const sessionSchema = z
     startsAt: localDate("Start"),
     endsAt: optionalLocalDate,
     room: optionalText(120),
+    posterKey: optionalText(300),
     type: z.enum(SessionType),
     statusOverride: optionalStatus,
     publishStatus: z.enum(PublishStatus),
@@ -148,14 +170,17 @@ const sessionSchema = z
   .refine((v) => !v.endsAt || v.endsAt >= v.startsAt, { message: "End must be after the start.", path: ["endsAt"] });
 
 export const createSession = adminFormAction("programme", sessionSchema, async (d) => {
-  await db.session.create({ data: { ...d, description: d.description ?? null, room: d.room ?? null } });
+  await db.session.create({ data: { ...d, description: d.description ?? null, room: d.room ?? null, posterKey: d.posterKey ?? null } });
   return { ok: true, message: `Session "${d.title}" added.` };
 });
 
 export const updateSession = adminFormAction("programme", sessionSchema.and(z.object({ id: z.string() })), async (d) => {
   const { id, eventId: _e, ...data } = d;
   void _e;
-  await db.session.update({ where: { id }, data: { ...data, description: data.description ?? null, room: data.room ?? null } });
+  await db.session.update({
+    where: { id },
+    data: { ...data, description: data.description ?? null, room: data.room ?? null, posterKey: data.posterKey ?? null },
+  });
   return { ok: true, message: "Session saved." };
 });
 

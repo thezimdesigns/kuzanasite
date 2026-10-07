@@ -35,13 +35,12 @@ export default async function ClaimPage({ params }: PageProps<"/exhibitors/claim
   return (
     <>
       <PageHeader
-        eyebrow="Exhibitors"
         title={`Complete your profile: ${x.name}`}
         intro="Check your details and add anything that's missing. No account is needed."
       />
       <Section className="max-w-2xl">
         {claim.exhibitor.reviewNotes && claim.exhibitor.status === "NEEDS_INFORMATION" && (
-          <p className="mb-4 rounded-lg bg-orange-50 p-3 text-sm text-orange-dark">The KUZANA team has asked for more information about your stand.</p>
+          <p className="mb-4 rounded-[var(--radius-control)] bg-orange-50 p-3 text-sm text-orange-dark">The KUZANA team has asked for more information about your stand.</p>
         )}
         <ExhibitorClaimForm
           token={token}

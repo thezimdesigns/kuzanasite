@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, Download, ExternalLink, MapPin, Phone, Ticket, UserCheck } from "lucide-react";
+import { CalendarDays, Download, ExternalLink, FileDown, MapPin, Phone, Ticket, UserCheck } from "lucide-react";
 import { db } from "@/lib/db";
 import { fileUrl, formatBytes } from "@/lib/files";
 import { DOCUMENT_TYPE_LABELS, PARTICIPANT_ROLE_LABELS, SESSION_TYPE_LABELS } from "@/lib/options";
@@ -15,7 +15,7 @@ import { ShareButtons } from "@/components/public/share-buttons";
 import { StatusBadge } from "@/components/public/status-badge";
 import { Markdown } from "@/components/markdown";
 import { Avatar } from "@/components/public/avatar";
-import { Badge, ButtonLink, Card, cn, Section, SectionTitle } from "@/components/ui";
+import { BackLink, Badge, ButtonLink, Card, cn, Section, SectionTitle } from "@/components/ui";
 
 async function getEvent(slug: string) {
   return db.event.findFirst({
@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: PageProps<"/events/[slug]">):
   const { slug } = await params;
   const event = await getEvent(slug);
   if (!event) return {};
-  const image = fileUrl(event.imageKey ?? event.posterKey);
+  const image = fileUrl(event.posterKey ?? event.imageKey);
   return {
     title: event.title,
     description: event.summary ?? `${event.title}: ${formatRange(event.startsAt, event.endsAt, event.timeTbc)}`,
@@ -68,7 +68,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 
   const now = new Date();
   const status = computeStatus(event, now);
-  const image = fileUrl(event.imageKey ?? event.posterKey);
+  const image = fileUrl(event.posterKey ?? event.imageKey);
   const when = formatRange(event.startsAt, event.endsAt, event.timeTbc);
   const shareTitle = `KUZANA ${event.title}: ${when}${event.venue ? ` at ${event.venue.name}` : ""}`;
 
@@ -84,14 +84,12 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
       <header className="border-b border-line bg-ivory-pattern">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 sm:py-12 md:grid-cols-[1.4fr_1fr]">
           <div>
+            <BackLink href="/programme" label="Programme" />
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              <Link href="/programme" className="text-sm font-semibold text-green-800 underline">
-                Programme
-              </Link>
               {event.category && <Badge tone="green">{event.category.name}</Badge>}
               <StatusBadge status={status} />
             </div>
-            <h1 className="text-3xl font-extrabold text-green-900 sm:text-4xl">{event.title}</h1>
+            <h1 className="text-[2rem] leading-[1.05] font-extrabold tracking-[-0.025em] text-balance text-green-900 sm:text-5xl">{event.title}</h1>
             {event.statusNote && <p className="mt-3 font-semibold text-danger">{event.statusNote}</p>}
             {event.summary && <p className="mt-3 text-lg text-muted">{event.summary}</p>}
             <dl className="mt-5 space-y-2 font-semibold">
@@ -103,7 +101,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
               {event.venue && (
                 <div className="flex items-center gap-2">
                   <dt className="sr-only">Where</dt>
-                  <MapPin className="size-5 text-orange" />
+                  <MapPin className="size-5 text-orange-dark" />
                   <dd>
                     <Link href={`/venues/${event.venue.slug}`} className="underline underline-offset-2">
                       {[event.room, event.venue.name].filter(Boolean).join(", ")}
@@ -128,15 +126,39 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
               )}
               {!event.ticketRequired && !event.registrationRequired && <Badge tone="green">No ticket or registration needed</Badge>}
             </div>
+            {event.programmePdfKey && (
+              <ButtonLink
+                href={fileUrl(event.programmePdfKey, event.programmePdfName ?? `${event.title} programme.pdf`)!}
+                prefetch={false}
+                size="lg"
+                className="mt-6 w-full sm:w-auto"
+              >
+                <FileDown className="size-5" /> Download detailed programme (PDF)
+                {event.programmePdfSize ? <span className="font-normal text-white/80">{formatBytes(event.programmePdfSize)}</span> : null}
+              </ButtonLink>
+            )}
             <div className="mt-6 flex flex-col gap-4">
               {status !== "COMPLETED" && <PushOptIn eventId={event.id} />}
               <ShareButtons title={shareTitle} path={`/events/${event.slug}`} />
             </div>
           </div>
           {image && (
-            <div className="relative aspect-[4/5] max-h-[28rem] overflow-hidden rounded-[var(--radius-card)] border border-line bg-white md:aspect-auto">
-              <Image src={image} alt={`${event.title} poster`} fill sizes="(min-width: 768px) 40vw, 100vw" className="object-contain" priority />
-            </div>
+            <a
+              href={image}
+              target="_blank"
+              rel="noopener"
+              className="hero-art group relative block aspect-[4/5] max-h-[32rem] overflow-hidden rounded-[var(--radius-card)] border border-line bg-white shadow-[var(--shadow-lift)]"
+              aria-label={`Open the ${event.title} poster full size`}
+            >
+              <Image
+                src={image}
+                alt={`${event.title} poster`}
+                fill
+                sizes="(min-width: 768px) 40vw, 100vw"
+                className="object-contain transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
+                priority
+              />
+            </a>
           )}
         </div>
       </header>
@@ -145,7 +167,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
         <Section className="pb-0">
           <div className="space-y-2">
             {event.announcements.map((a) => (
-              <div key={a.id} className={cn("rounded-lg border p-3.5", a.priority === "URGENT" ? "border-danger bg-danger-50" : "border-gold bg-[#fbf5e4]")}>
+              <div key={a.id} className={cn("rounded-[var(--radius-control)] border p-3.5", a.priority === "URGENT" ? "border-danger bg-danger-50" : "border-gold bg-[#fbf5e4]")}>
                 <p className="font-heading font-bold">{a.title}</p>
                 {a.body && <p className="text-sm whitespace-pre-line">{a.body}</p>}
               </div>
@@ -190,6 +212,25 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                               {SESSION_TYPE_LABELS[s.type]}
                               {s.room && ` · ${s.room}`}
                             </p>
+                            {s.posterKey && (
+                              <a
+                                href={fileUrl(s.posterKey)!}
+                                target="_blank"
+                                rel="noopener"
+                                className="group mt-2 block w-32 overflow-hidden rounded-[var(--radius-control)] border border-line"
+                                aria-label={`Open the ${s.title} poster`}
+                              >
+                                <span className="relative block aspect-[4/5]">
+                                  <Image
+                                    src={fileUrl(s.posterKey)!}
+                                    alt={`${s.title} poster`}
+                                    fill
+                                    sizes="128px"
+                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                  />
+                                </span>
+                              </a>
+                            )}
                             {s.description && <p className="mt-1 text-sm whitespace-pre-line">{s.description}</p>}
                             {s.participants.length > 0 && (
                               <ul className="mt-2 flex flex-wrap gap-2">
@@ -197,7 +238,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                                   <li key={p.id}>
                                     <Link
                                       href={`/speakers/${p.person.slug}`}
-                                      className="inline-flex items-center gap-2 rounded-full border border-line bg-white py-1 pr-3 pl-1 text-sm hover:border-green-800"
+                                      className="inline-flex items-center gap-2 rounded-[var(--radius-control)] border border-line bg-white py-1 pr-3 pl-1 text-sm transition-colors hover:border-green-800"
                                     >
                                       <Avatar name={p.person.name} photoKey={p.person.photoKey} size={28} />
                                       <span>
@@ -209,13 +250,21 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                                 ))}
                               </ul>
                             )}
+                            {now >= s.startsAt && (
+                              <details className="mt-2">
+                                <summary className="cursor-pointer text-xs font-semibold text-green-800">Rate this session</summary>
+                                <div className="mt-2">
+                                  <RatingForm sessionId={s.id} label="How was this session?" compact />
+                                </div>
+                              </details>
+                            )}
                             {(s.documents.length > 0 || s.videos.length > 0) && (
                               <div className="mt-2 flex flex-wrap gap-2">
                                 {s.documents.map((d) => (
                                   <a
                                     key={d.id}
                                     href={fileUrl(d.key, d.fileName) ?? `/media/documents/${d.slug}`}
-                                    className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-900"
+                                    className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-900"
                                   >
                                     <Download className="size-3.5" /> {d.title}
                                   </a>
@@ -226,7 +275,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                                     href={`https://www.youtube.com/watch?v=${v.youtubeId}`}
                                     target="_blank"
                                     rel="noopener"
-                                    className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-dark"
+                                    className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-deeper"
                                   >
                                     <ExternalLink className="size-3.5" /> Watch: {v.title}
                                   </a>
@@ -296,7 +345,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                 {event.documents.map((d) => (
                   <li key={d.id}>
                     <Link href={`/media/documents/${d.slug}`} className="flex items-start gap-2 text-sm hover:text-green-800">
-                      <Download className="mt-0.5 size-4 shrink-0 text-orange" />
+                      <Download className="mt-0.5 size-4 shrink-0 text-orange-dark" />
                       <span>
                         <span className="font-semibold">{d.title}</span>
                         <span className="block text-xs text-muted">
@@ -311,7 +360,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
             </Card>
           )}
 
-          {(status === "LIVE" || status === "COMPLETED") && (
+          {now >= event.startsAt && status !== "CANCELLED" && status !== "POSTPONED" && (
             <Card className="p-5">
               <RatingForm eventId={event.id} />
             </Card>
@@ -356,8 +405,8 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 
 function TicketBox({ icon, title, url, cta }: { icon: ReactNode; title: string; url: string | null; cta: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-line bg-white px-3.5 py-2.5">
-      <span className="text-orange">{icon}</span>
+    <div className="flex items-center gap-3 rounded-[var(--radius-control)] border border-line bg-white px-3.5 py-2.5">
+      <span className="text-orange-dark">{icon}</span>
       <span className="text-sm font-semibold">{title}</span>
       {url && (
         <a href={url} target="_blank" rel="noopener" className="text-sm font-bold text-green-800 underline">

@@ -35,6 +35,7 @@ export default async function AdminSession({ params }: PageProps<"/admin/session
               startsAt: toLocalInput(s.startsAt),
               endsAt: toLocalInput(s.endsAt),
               room: s.room ?? "",
+              posterKey: s.posterKey ?? "",
               type: s.type,
               statusOverride: s.statusOverride ?? "",
               publishStatus: s.publishStatus,

@@ -171,7 +171,7 @@ export function Uploader({
             <button
               type="button"
               onClick={() => cameraRef.current?.click()}
-              className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-green-800/40 bg-green-100/50 px-3 py-4 font-heading font-bold text-green-900 hover:bg-green-100"
+              className="flex items-center justify-center gap-2 rounded-[var(--radius-control)] border-2 border-dashed border-green-800/40 bg-green-100/50 px-3 py-4 font-heading font-bold text-green-900 hover:bg-green-100"
             >
               <Camera className="size-5" /> Take photo
             </button>
@@ -180,7 +180,7 @@ export function Uploader({
             type="button"
             onClick={() => pickRef.current?.click()}
             className={cn(
-              "flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-line bg-white px-3 font-heading font-bold text-ink hover:border-green-800",
+              "flex items-center justify-center gap-2 rounded-[var(--radius-control)] border-2 border-dashed border-line bg-white px-3 font-heading font-bold text-ink hover:border-green-800",
               compact ? "py-2.5" : "py-4",
             )}
           >
@@ -215,7 +215,7 @@ export function Uploader({
       {items.length > 0 && (
         <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
           {items.map((item) => (
-            <li key={item.id} className="relative overflow-hidden rounded-lg border border-line bg-white">
+            <li key={item.id} className="relative overflow-hidden rounded-[var(--radius-control)] border border-line bg-white">
               {item.preview ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={item.preview} alt="" className="aspect-[4/3] w-full object-cover" />

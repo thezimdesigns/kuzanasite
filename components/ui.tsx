@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
 export function cn(...classes: (string | false | null | undefined)[]) {
@@ -8,17 +9,18 @@ export function cn(...classes: (string | false | null | undefined)[]) {
 type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-orange text-white hover:bg-orange-dark",
+  primary: "bg-orange-dark text-white hover:bg-orange-deeper",
   secondary: "bg-green-900 text-white hover:bg-green-800",
-  outline: "border-2 border-green-900 text-green-900 hover:bg-green-900 hover:text-white",
+  outline: "border border-green-900/40 bg-white text-green-900 hover:border-green-900 hover:bg-green-100",
   ghost: "text-green-900 hover:bg-green-100",
   danger: "bg-danger text-white hover:opacity-90",
 };
 
 export function buttonClass(variant: Variant = "primary", size: "sm" | "md" | "lg" = "md") {
   return cn(
-    "inline-flex items-center justify-center gap-2 rounded-full font-heading font-bold transition-colors",
-    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange disabled:opacity-60",
+    "group/btn inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] font-heading font-semibold whitespace-nowrap",
+    "transition-[background-color,border-color,color,transform] duration-200 ease-[var(--ease-out-expo)] active:scale-[0.98]",
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-dark disabled:pointer-events-none disabled:opacity-60",
     size === "sm" && "px-3.5 py-1.5 text-sm",
     size === "md" && "px-5 py-2.5 text-[0.95rem]",
     size === "lg" && "px-6 py-3.5 text-base",
@@ -52,7 +54,7 @@ type Tone = "neutral" | "green" | "orange" | "red" | "gold";
 const tones: Record<Tone, string> = {
   neutral: "bg-cream-dark text-muted",
   green: "bg-green-100 text-green-900",
-  orange: "bg-orange-50 text-orange-dark",
+  orange: "bg-orange-50 text-orange-deeper",
   red: "bg-danger-50 text-danger",
   gold: "bg-[#f8efd6] text-[#8a6a14]",
 };
@@ -61,7 +63,7 @@ export function Badge({ tone = "neutral", className, children }: { tone?: Tone; 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap",
+        "inline-flex items-center gap-1.5 rounded-[var(--radius-badge)] px-2 py-0.5 text-xs font-semibold whitespace-nowrap",
         tones[tone],
         className,
       )}
@@ -71,24 +73,36 @@ export function Badge({ tone = "neutral", className, children }: { tone?: Tone; 
   );
 }
 
+export function BackLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="group/back mb-3 inline-flex items-center gap-1 text-sm font-semibold text-green-800 hover:text-green-900"
+    >
+      <ChevronLeft className="size-4 transition-transform duration-200 group-hover/back:-translate-x-0.5" aria-hidden />
+      {label}
+    </Link>
+  );
+}
+
 export function PageHeader({
   title,
   intro,
-  eyebrow,
+  back,
   children,
 }: {
   title: ReactNode;
   intro?: ReactNode;
-  eyebrow?: ReactNode;
+  back?: { href: string; label: string };
   children?: ReactNode;
 }) {
   return (
     <header className="border-b border-line bg-ivory-pattern">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-        {eyebrow && <div className="mb-2 text-sm font-semibold text-orange">{eyebrow}</div>}
-        <h1 className="text-3xl font-extrabold text-green-900 sm:text-4xl">{title}</h1>
-        {intro && <p className="mt-3 max-w-2xl text-muted">{intro}</p>}
-        {children && <div className="mt-5">{children}</div>}
+      <div className="mx-auto max-w-6xl px-4 pt-7 pb-8 sm:px-6 sm:pt-10 sm:pb-12">
+        {back && <BackLink {...back} />}
+        <h1 className="text-[2rem] leading-[1.05] font-extrabold tracking-[-0.025em] text-balance text-green-900 sm:text-5xl">{title}</h1>
+        {intro && <p className="mt-3 max-w-2xl text-pretty text-muted sm:text-lg">{intro}</p>}
+        {children && <div className="mt-6">{children}</div>}
       </div>
     </header>
   );
@@ -109,7 +123,7 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
 
 export function EmptyState({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-[var(--radius-card)] border border-dashed border-line bg-white/60 px-5 py-8 text-center text-muted">
+    <div className="rounded-[var(--radius-card)] border border-dashed border-line bg-white/60 px-5 py-10 text-center text-muted">
       {children}
     </div>
   );
@@ -120,8 +134,8 @@ export function EmptyState({ children }: { children: ReactNode }) {
 // ---------------------------------------------------------------------------
 
 const inputBase =
-  "w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-base text-ink placeholder:text-[#999] " +
-  "focus:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-100";
+  "w-full rounded-[var(--radius-control)] border border-line bg-white px-3.5 py-2.5 text-base text-ink placeholder:text-[#767676] " +
+  "transition-[border-color,box-shadow] duration-150 focus:border-green-800 focus:outline-none focus:ring-3 focus:ring-green-100";
 
 export function Field({
   label,
@@ -178,5 +192,5 @@ export function Alert({ tone = "green", children }: { tone?: "green" | "red" | "
     red: "border-danger/30 bg-danger-50 text-danger",
     orange: "border-orange/30 bg-orange-50 text-orange-dark",
   }[tone];
-  return <div className={cn("rounded-lg border px-4 py-3 text-sm", styles)}>{children}</div>;
+  return <div className={cn("rounded-[var(--radius-control)] border px-4 py-3 text-sm", styles)}>{children}</div>;
 }

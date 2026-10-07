@@ -35,7 +35,7 @@ export function PhotoGrid({ photos }: { photos: Photo[] }) {
       <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
         {photos.map((p, i) => (
           <li key={p.id}>
-            <button type="button" onClick={() => setOpen(i)} className="relative block aspect-square w-full overflow-hidden rounded-lg bg-cream-dark">
+            <button type="button" onClick={() => setOpen(i)} className="relative block aspect-square w-full overflow-hidden rounded-[var(--radius-control)] bg-cream-dark">
               <Image src={p.src} alt={p.caption ?? ""} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw" className="object-cover" />
             </button>
           </li>

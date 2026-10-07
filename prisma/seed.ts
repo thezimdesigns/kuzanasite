@@ -9,6 +9,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { hashPassword } from "better-auth/crypto";
 import { PrismaClient } from "../lib/generated/prisma/client";
 import type { SessionType } from "../lib/generated/prisma/enums";
+import { DEFAULT_FOOTER_LINKS } from "../lib/footer-defaults";
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 
@@ -240,11 +241,16 @@ async function main() {
   if ((await db.partner.count()) === 0) {
     await db.partner.createMany({
       data: [
-        { name: "MOSRAC Zimbabwe", logoUrl: "/brand/mosrac-zimbabwe.png", tier: "PARTNER", sortOrder: 1, editionId: edition.id },
+        { name: "MOSRAC Zimbabwe", logoUrl: "/brand/mosrac-zimbabwe.png", tier: "PARTNER", prominent: true, sortOrder: 1, editionId: edition.id },
         { name: "Nhimbe Trust", logoUrl: "/brand/nhimbe-trust.png", tier: "PARTNER", sortOrder: 2, editionId: edition.id },
         { name: "ZITF", logoUrl: "/brand/zitf.png", tier: "HOST", caption: "Host", sortOrder: 3, editionId: edition.id },
       ],
     });
+  }
+
+  // Footer links (then managed in Admin → Footer) --------------------------------
+  if ((await db.footerLink.count()) === 0) {
+    await db.footerLink.createMany({ data: DEFAULT_FOOTER_LINKS.map((l, i) => ({ ...l, sortOrder: i })) });
   }
 
   // Editable pages ------------------------------------------------------------

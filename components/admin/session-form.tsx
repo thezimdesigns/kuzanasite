@@ -2,6 +2,7 @@
 
 import { createSession, updateSession } from "@/app/admin/actions/programme";
 import { AdminForm } from "@/components/admin/admin-form";
+import { UploadField } from "@/components/admin/upload-field";
 import { Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { SESSION_TYPE_LABELS } from "@/lib/options";
 import { STATUS_LABELS } from "@/lib/time";
@@ -13,6 +14,7 @@ export type SessionValues = {
   startsAt: string;
   endsAt: string;
   room: string;
+  posterKey: string;
   type: string;
   statusOverride: string;
   publishStatus: string;
@@ -69,6 +71,7 @@ export function SessionForm({ eventId, values: v, readOnly = false }: { eventId:
           <Field label="Description">
             <Textarea name="description" rows={3} defaultValue={v.description} />
           </Field>
+          <UploadField name="posterKey" label="Poster (optional)" current={v.posterKey} folder="sessions" maxDim={2000} />
           <input type="hidden" name="sortOrder" value={v.sortOrder} />
           {!readOnly && (
             <Button type="submit" size="sm" variant="secondary" disabled={pending}>

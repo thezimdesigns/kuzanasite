@@ -5,7 +5,8 @@ import { after } from "next/server";
 import { z } from "zod";
 import { adminFormAction, runAdmin } from "@/lib/admin-action";
 import { db } from "@/lib/db";
-import { optionalText, requiredText } from "@/lib/forms";
+import { checkbox, optionalEmail, optionalText, requiredText } from "@/lib/forms";
+import { VISITOR_INTERESTS, VISITOR_TYPES } from "@/lib/options";
 import { Channel, FeedbackStatus } from "@/lib/generated/prisma/enums";
 import { deliverMessage, resolveAudience } from "@/lib/messaging";
 
@@ -68,3 +69,29 @@ export async function sendMessage(id: string) {
 export async function cancelMessage(id: string) {
   return runAdmin("messages", () => db.message.update({ where: { id, status: "DRAFT" }, data: { status: "CANCELLED" } }));
 }
+
+// ---------------------------------------------------------------------------
+// Visitors added by staff (e.g. at the registration desk)
+// ---------------------------------------------------------------------------
+
+export const createVisitor = adminFormAction(
+  "visitors",
+  z
+    .object({
+      name: requiredText("Full name"),
+      phone: optionalText(30),
+      email: optionalEmail,
+      organisation: optionalText(200),
+      city: optionalText(100),
+      country: optionalText(100),
+      visitorType: z.enum(VISITOR_TYPES).optional().catch(undefined),
+      interests: z.array(z.enum(VISITOR_INTERESTS)).default([]),
+      emailConsent: checkbox,
+    })
+    .refine((v) => v.email || v.phone, { message: "Give a mobile number or an email address.", path: ["phone"] }),
+  async (d) => {
+    await db.visitor.create({ data: { ...d, emailConsent: d.emailConsent && !!d.email } });
+    return { ok: true, message: `${d.name} added.` };
+  },
+  { arrays: ["interests"] },
+);

@@ -22,13 +22,13 @@ export default async function LivePage() {
     <>
       <AutoRefresh seconds={60} />
       <PageHeader
-        eyebrow={
-          <span className="inline-flex items-center gap-2">
-            <span className="live-dot size-2.5 rounded-full bg-orange" /> KUZANA Live · updated {formatTime(now)}
+        title="What's happening now"
+        intro={
+          <span className="inline-flex flex-wrap items-center gap-x-2">
+            <span className="live-dot inline-block size-2 rounded-full bg-orange" aria-hidden />
+            {formatLongDay(now)}. Updated {formatTime(now)} and refreshing automatically.
           </span>
         }
-        title="What's happening now"
-        intro={`${formatLongDay(now)}. This page refreshes automatically.`}
       >
         <div className="flex flex-col gap-4">
           <PushOptIn />
@@ -71,7 +71,7 @@ export default async function LivePage() {
               <ul className="space-y-2">
                 {board.next.map((e) => (
                   <li key={e.id}>
-                    <Link href={`/events/${e.slug}`} className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-line bg-white px-4 py-3 hover:border-green-800">
+                    <Link href={`/events/${e.slug}`} className="flex flex-wrap items-baseline justify-between gap-2 rounded-[var(--radius-control)] border border-line bg-white px-4 py-3 hover:border-green-800">
                       <span className="font-heading font-bold">{e.title}</span>
                       <span className="text-sm text-muted">
                         {formatRange(e.startsAt, e.endsAt, e.timeTbc)}

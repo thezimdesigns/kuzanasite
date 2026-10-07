@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { can, requireStaff } from "@/lib/permissions";
 import { formatDay, formatTime, dateKey, startOfDay } from "@/lib/time";
 import { AdminPage, Panel, Table, Tabs } from "@/components/admin/ui";
+import { VisitorCreateForm } from "@/components/admin/visitor-create-form";
 import { ButtonLink } from "@/components/ui";
 
 export const metadata = { title: "Visitors" };
@@ -89,6 +90,17 @@ export default async function AdminVisitors({ searchParams }: PageProps<"/admin/
           </ul>
         </Panel>
       </div>
+
+      {canSeeContacts && (
+        <Panel title="Add a visitor" className="mb-6">
+          <details>
+            <summary className="cursor-pointer text-sm font-semibold text-green-800">Register a walk-in visitor</summary>
+            <div className="mt-4 max-w-2xl">
+              <VisitorCreateForm />
+            </div>
+          </details>
+        </Panel>
+      )}
 
       {canSeeContacts ? (
         <>

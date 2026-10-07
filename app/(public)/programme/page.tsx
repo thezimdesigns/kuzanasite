@@ -53,6 +53,8 @@ export default async function ProgrammePage({ searchParams }: PageProps<"/progra
         statusNote: e.statusNote,
         venue: e.venue?.name ?? null,
         room: e.room,
+        posterKey: e.posterKey ?? e.imageKey,
+        pdf: e.programmePdfKey ? { key: e.programmePdfKey, name: e.programmePdfName } : null,
       });
     }
   }
@@ -107,7 +109,7 @@ export default async function ProgrammePage({ searchParams }: PageProps<"/progra
               <section key={key} aria-labelledby={`day-${key}`}>
                 <h2 id={`day-${key}`} className="mb-3 flex items-center gap-3 text-xl font-extrabold text-green-900">
                   {formatLongDay(startOfDay(key))}
-                  {key === today && <span className="rounded-full bg-orange px-2.5 py-0.5 text-xs text-white uppercase">Today</span>}
+                  {key === today && <span className="rounded-[var(--radius-badge)] bg-orange-dark px-2 py-0.5 text-xs text-white">Today</span>}
                 </h2>
                 <ProgrammeList items={items} />
                 <Link href={`/programme/${key}`} className="mt-2 inline-block text-sm font-semibold text-green-800 underline">
@@ -142,7 +144,7 @@ function FilterRow({
           href={href(value)}
           scroll={false}
           className={cn(
-            "shrink-0 rounded-full border px-3 py-1.5 text-sm font-semibold whitespace-nowrap",
+            "shrink-0 rounded-[var(--radius-control)] border px-3 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors",
             current === value ? "border-green-900 bg-green-900 text-white" : "border-line bg-white hover:border-green-800",
           )}
         >

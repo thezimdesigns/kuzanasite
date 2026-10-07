@@ -3,10 +3,19 @@
 import { createPartner, updatePartner } from "@/app/admin/actions/site";
 import { AdminForm } from "@/components/admin/admin-form";
 import { UploadField } from "@/components/admin/upload-field";
-import { Button, Field, Input, Select } from "@/components/ui";
+import { Button, Checkbox, Field, Input, Select } from "@/components/ui";
 import { PARTNER_TIER_LABELS } from "@/lib/options";
 
-export type PartnerValues = { id?: string; name: string; url: string; tier: string; caption: string; logoKey: string; sortOrder: number };
+export type PartnerValues = {
+  id?: string;
+  name: string;
+  url: string;
+  tier: string;
+  caption: string;
+  logoKey: string;
+  prominent: boolean;
+  sortOrder: number;
+};
 
 export function PartnerForm({ values: v }: { values: PartnerValues }) {
   return (
@@ -37,6 +46,7 @@ export function PartnerForm({ values: v }: { values: PartnerValues }) {
               <Input type="number" name="sortOrder" defaultValue={v.sortOrder} />
             </Field>
           </div>
+          <Checkbox name="prominent" defaultChecked={v.prominent} label="Prominent (shown larger, e.g. the hosting ministry)" />
           <UploadField name="logoKey" label="Logo" current={v.logoKey} folder="partners" maxDim={800} />
           <Button type="submit" size="sm" disabled={pending}>
             {v.id ? "Save" : "Add partner"}

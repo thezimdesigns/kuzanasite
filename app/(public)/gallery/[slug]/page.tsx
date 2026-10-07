@@ -39,11 +39,7 @@ export default async function AlbumPage({ params, searchParams }: PageProps<"/ga
   return (
     <>
       <PageHeader
-        eyebrow={
-          <Link href="/gallery" className="underline">
-            Gallery
-          </Link>
-        }
+        back={{ href: "/gallery", label: "Gallery" }}
         title={album.title}
         intro={[album.date && formatDate(album.date), `${album._count.photos} photos`, album.photographer && `Photos: ${album.photographer}`]
           .filter(Boolean)
@@ -66,7 +62,7 @@ export default async function AlbumPage({ params, searchParams }: PageProps<"/ga
             <PhotoGrid photos={photos.map((p) => ({ id: p.id, src: fileUrl(p.key)!, caption: p.caption, width: p.width, height: p.height }))} />
             {hasMore && (
               <div className="mt-8 text-center">
-                <Link href={`/gallery/${album.slug}?page=${page + 1}`} scroll={false} className="rounded-full border-2 border-green-900 px-5 py-2.5 font-heading font-bold text-green-900">
+                <Link href={`/gallery/${album.slug}?page=${page + 1}`} scroll={false} className="rounded-[var(--radius-control)] border border-green-900/40 px-5 py-2.5 font-heading font-bold text-green-900">
                   Load more photos
                 </Link>
               </div>
