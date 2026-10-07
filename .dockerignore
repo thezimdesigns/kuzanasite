@@ -1,0 +1,14 @@
+.git
+.github
+node_modules
+.next
+.uploads
+lib/generated
+.env
+.env.*
+!.env.example
+npm-debug.log*
+docker-compose*.yml
+README.md
+*.md
+!AGENTS.md

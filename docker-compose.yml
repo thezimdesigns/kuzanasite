@@ -1,0 +1,120 @@
+# Production stack for Coolify ("Docker Compose" build pack, from GitHub).
+# Set the variables marked :? in Coolify → Environment Variables (see .env.example).
+# In Coolify, attach the domain https://www.kuzana.org.zw to the "app" service, port 3000.
+
+services:
+  app:
+    build:
+      context: .
+      target: runner
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://www.kuzana.org.zw}
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
+        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY:-}
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      DATABASE_URL: postgresql://kuzana:${POSTGRES_PASSWORD:?}@db:5432/kuzana
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?}
+      BETTER_AUTH_URL: ${NEXT_PUBLIC_SITE_URL:-https://www.kuzana.org.zw}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://www.kuzana.org.zw}
+      STORAGE_DRIVER: s3
+      S3_ENDPOINT: http://garage:3900
+      S3_REGION: garage
+      S3_BUCKET: ${S3_BUCKET:-kuzana-media}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?}
+      EXHIBITOR_ACCESS_CODE: ${EXHIBITOR_ACCESS_CODE:?}
+      RECAPTCHA_SECRET_KEY: ${RECAPTCHA_SECRET_KEY:-}
+      RECAPTCHA_MIN_SCORE: ${RECAPTCHA_MIN_SCORE:-0.5}
+      NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:technical-partner@kuzana.org.zw}
+      AWS_REGION: ${AWS_REGION:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      SES_FROM_EMAIL: ${SES_FROM_EMAIL:-}
+      SES_FROM_NAME: ${SES_FROM_NAME:-KUZANA SCEEZ}
+      SES_REPLY_TO_EMAIL: ${SES_REPLY_TO_EMAIL:-}
+      SES_SEND_INTERVAL_MS: ${SES_SEND_INTERVAL_MS:-120}
+    depends_on:
+      db:
+        condition: service_healthy
+      garage:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  # Applies database migrations and seeds base data, then exits.
+  migrate:
+    build:
+      context: .
+      target: migrate
+    restart: "no"
+    environment:
+      DATABASE_URL: postgresql://kuzana:${POSTGRES_PASSWORD:?}@db:5432/kuzana
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-KUZANA Admin}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kuzana
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: kuzana
+    volumes:
+      - kuzana-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kuzana -d kuzana"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # S3-compatible object storage for photos, flyers and documents.
+  garage:
+    build: ./deploy/garage
+    restart: unless-stopped
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:?}
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:?}
+      GARAGE_CAPACITY: ${GARAGE_CAPACITY:-100G}
+      S3_BUCKET: ${S3_BUCKET:-kuzana-media}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?}
+    volumes:
+      - kuzana-garage-meta:/var/lib/garage/meta
+      - kuzana-garage-data:/var/lib/garage/data
+
+  # Database dumps every 6 hours, kept for 14 days, in the kuzana-backups volume.
+  # Copy this volume (and kuzana-garage-data) off the server regularly.
+  db-backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:?}
+    volumes:
+      - kuzana-backups:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          f=/backups/kuzana-$$(date +%Y%m%d-%H%M).sql.gz
+          pg_dump -h db -U kuzana kuzana | gzip > "$$f" && echo "backup: $$f"
+          find /backups -name 'kuzana-*.sql.gz' -mtime +14 -delete
+          sleep 21600
+        done
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  kuzana-postgres:
+  kuzana-garage-meta:
+  kuzana-garage-data:
+  kuzana-backups:

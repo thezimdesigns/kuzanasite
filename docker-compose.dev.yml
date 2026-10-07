@@ -1,0 +1,73 @@
+# Local development: the same services as production, with the app in dev mode.
+#   docker compose -f docker-compose.dev.yml up --build
+# App: http://localhost:3000 · Admin: http://localhost:3000/admin
+# Dev admin login comes from SEED_ADMIN_* below (local only).
+
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://kuzana:kuzana@db:5432/kuzana
+      BETTER_AUTH_SECRET: dev-only-secret-change-me-0123456789abcdef
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      STORAGE_DRIVER: s3
+      S3_ENDPOINT: http://garage:3900
+      S3_BUCKET: kuzana-media
+      S3_ACCESS_KEY_ID: "GK0123456789abcdef01234567"
+      S3_SECRET_ACCESS_KEY: "6b757a616e612d6465762d73332d7365637265742d6e6f742d666f722d70726f"
+      EXHIBITOR_ACCESS_CODE: STAND2026
+      SEED_ADMIN_EMAIL: admin@kuzana.test
+      SEED_ADMIN_PASSWORD: kuzana-dev-admin-2026
+      SEED_ADMIN_NAME: Dev Admin
+    volumes:
+      - .:/app
+      - kuzana-dev-node-modules:/app/node_modules
+      - kuzana-dev-next:/app/.next
+    depends_on:
+      db:
+        condition: service_healthy
+      garage:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: kuzana
+      POSTGRES_PASSWORD: kuzana
+      POSTGRES_DB: kuzana
+    ports:
+      - "5440:5432"
+    volumes:
+      - kuzana-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kuzana -d kuzana"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  garage:
+    build: ./deploy/garage
+    environment:
+      GARAGE_RPC_SECRET: "6b757a616e612d6465762d7270632d7365637265742d6e6f742d666f722d7072"
+      GARAGE_ADMIN_TOKEN: dev-admin-token
+      GARAGE_CAPACITY: 5G
+      S3_BUCKET: kuzana-media
+      S3_ACCESS_KEY_ID: "GK0123456789abcdef01234567"
+      S3_SECRET_ACCESS_KEY: "6b757a616e612d6465762d73332d7365637265742d6e6f742d666f722d70726f"
+    ports:
+      - "3900:3900"
+    volumes:
+      - kuzana-dev-garage-meta:/var/lib/garage/meta
+      - kuzana-dev-garage-data:/var/lib/garage/data
+
+volumes:
+  kuzana-db:
+  kuzana-dev-node-modules:
+  kuzana-dev-next:
+  kuzana-dev-garage-meta:
+  kuzana-dev-garage-data:

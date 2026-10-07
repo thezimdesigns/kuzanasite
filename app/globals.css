@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/* KUZANA SCEEZ brand tokens (from the 2026 landing page). */
+@theme {
+  --color-green-950: #023a1d;
+  --color-green-900: #00512d;
+  --color-green-800: #006637;
+  --color-green-100: #e3efe7;
+  --color-orange: #f36c21;
+  --color-orange-dark: #d35a14;
+  --color-orange-50: #fdeee5;
+  --color-gold: #c89b2b;
+  --color-gold-light: #d4a93a;
+  --color-cream: #fbfaf6;
+  --color-cream-dark: #f4f1e8;
+  --color-ink: #111111;
+  --color-muted: #555555;
+  --color-line: #e2dcc8;
+  --color-danger: #c62828;
+  --color-danger-50: #fdecec;
+
+  --font-heading: var(--font-bricolage), system-ui, sans-serif;
+  --font-sans: var(--font-open-sans), system-ui, sans-serif;
+
+  --radius-card: 12px;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.01em;
+}
+
+.bg-ivory-pattern {
+  background-color: var(--color-cream);
+  background-image: url("/brand/soft-ivory-pattern.png");
+  background-size: 320px 320px;
+}
+
+/* Markdown content rendered from the CMS. */
+.prose-kuzana h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-green-900);
+  margin: 1.75rem 0 0.6rem;
+}
+.prose-kuzana h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 1.25rem 0 0.5rem;
+}
+.prose-kuzana p {
+  margin: 0 0 0.9rem;
+  line-height: 1.65;
+}
+.prose-kuzana ul,
+.prose-kuzana ol {
+  margin: 0 0 1rem 1.25rem;
+  line-height: 1.65;
+}
+.prose-kuzana ul {
+  list-style: disc;
+}
+.prose-kuzana ol {
+  list-style: decimal;
+}
+.prose-kuzana a {
+  color: var(--color-green-800);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-kuzana strong {
+  font-weight: 700;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.live-dot {
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-dot {
+    animation: none;
+  }
+}
