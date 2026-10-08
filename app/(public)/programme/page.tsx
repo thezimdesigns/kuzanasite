@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { db } from "@/lib/db";
-import { eventBanner, getEditionEvents, venueMapUrl, type ProgrammeItem } from "@/lib/programme";
+import { eventBanner, eventOnDay, getEditionEvents, venueMapUrl, type ProgrammeItem } from "@/lib/programme";
 import { computeStatus, dateKey, effectiveEnd, startOfDay, TIME_ZONE } from "@/lib/time";
 import { AutoSubmitSelect } from "@/components/public/auto-submit-select";
 import { ProgrammeList } from "@/components/public/programme-list";
@@ -56,7 +56,7 @@ export default async function ProgrammePage({ searchParams }: PageProps<"/progra
 
   // Group by each day the event touches, so multi-day events appear every day.
   const days = new Map<string, ProgrammeItem[]>();
-  for (const { e, status } of filtered) {
+  for (const { e } of filtered) {
     const first = dateKey(e.startsAt);
     const last = dateKey(effectiveEnd(e));
     for (let d = startOfDay(first); dateKey(d) <= last; d = new Date(d.getTime() + 86_400_000)) {
@@ -67,10 +67,7 @@ export default async function ProgrammePage({ searchParams }: PageProps<"/progra
         id: e.id,
         title: e.title,
         href: `/events/${e.slug}`,
-        startsAt: e.startsAt,
-        endsAt: e.endsAt,
-        timeTbc: e.timeTbc || first !== last,
-        status,
+        ...eventOnDay(e, key, now),
         statusNote: e.statusNote,
         venue: e.venue?.name ?? null,
         room: e.room,

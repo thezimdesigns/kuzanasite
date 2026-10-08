@@ -288,6 +288,8 @@ model Event {
   startsAt             DateTime
   endsAt               DateTime?
   timeTbc              Boolean          @default(false)
+  /// Multi-day event open the same hours every day (start time = daily opening, end time = daily closing).
+  dailyHours           Boolean          @default(false)
   room                 String?
   posterKey            String?
   imageKey             String?

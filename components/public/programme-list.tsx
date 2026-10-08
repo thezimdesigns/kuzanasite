@@ -79,6 +79,7 @@ export function ProgrammeRow({ item }: { item: ProgrammeItem }) {
           </div>
           {item.statusNote && <p className="mt-1 text-sm font-semibold text-danger">{item.statusNote}</p>}
           {item.parentTitle && <p className="mt-0.5 text-sm text-muted">{item.parentTitle}</p>}
+          {item.dailyNote && <p className="mt-0.5 text-sm text-muted">{item.dailyNote}</p>}
           {(place || item.pdf || item.watchHref) && (
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {place &&

@@ -19,6 +19,7 @@ export type EventValues = {
   startsAt: string;
   endsAt: string;
   timeTbc: boolean;
+  dailyHours: boolean;
   isConference: boolean;
   featured: boolean;
   ticketRequired: boolean;
@@ -96,7 +97,14 @@ export function EventForm({
               <Field label="Ends" error={state.errors?.endsAt} hint="Leave empty if unknown (assumed 2 hours).">
                 <Input type="datetime-local" name="endsAt" defaultValue={v.endsAt} />
               </Field>
-              <div className="sm:col-span-2">
+              <div className="space-y-2 sm:col-span-2">
+                <div className="rounded-[var(--radius-control)] border border-line bg-cream px-3 py-2.5">
+                  <Checkbox name="dailyHours" defaultChecked={v.dailyHours} label="Same hours every day" />
+                  <p className="mt-1 pl-7 text-xs text-muted">
+                    For exhibitions that open every day. Start = first day + opening time, End = last day + closing time. Example: Wed 7 Oct 08:00 to Sat 10 Oct
+                    17:00 shows as open 08:00–17:00 on each day, and live only during those hours.
+                  </p>
+                </div>
                 <Checkbox name="timeTbc" defaultChecked={v.timeTbc} label="Time to be confirmed (show “Time TBC”, never shown as live automatically)" />
               </div>
               <Field label="Venue">

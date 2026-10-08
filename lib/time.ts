@@ -49,11 +49,12 @@ export function toLocalInput(d: Date | null | undefined) {
 /** Format a Date for a date input, in Harare time. */
 export const toDateInput = (d: Date | null | undefined) => (d ? dateKey(d) : "");
 
-export function formatRange(startsAt: Date, endsAt: Date | null, timeTbc = false) {
+export function formatRange(startsAt: Date, endsAt: Date | null, timeTbc = false, dailyHours = false) {
   const startDay = dateKey(startsAt);
   const endDay = endsAt ? dateKey(endsAt) : startDay;
   if (endsAt && startDay !== endDay) {
-    return `${formatDay(startsAt)} – ${formatDay(endsAt)}`;
+    const days = `${formatDay(startsAt)} – ${formatDay(endsAt)}`;
+    return dailyHours && !timeTbc ? `${days} · Daily ${formatTime(startsAt)}–${formatTime(endsAt)}` : days;
   }
   if (timeTbc) return `${formatDay(startsAt)} · Time TBC`;
   return `${formatDay(startsAt)} · ${formatTime(startsAt)}${endsAt ? `–${formatTime(endsAt)}` : ""}`;
@@ -69,8 +70,23 @@ export type Timed = {
   startsAt: Date;
   endsAt: Date | null;
   timeTbc?: boolean;
+  /** Multi-day item open the same hours every day: the start time is the daily opening, the end time the daily closing. */
+  dailyHours?: boolean;
   statusOverride: ProgrammeStatus | null;
 };
+
+const clock = (d: Date) => formatTime(d);
+
+/** Whether an item runs on set hours each day of a multi-day run. */
+export const isDaily = (item: Timed) => !!item.dailyHours && !item.timeTbc && !!item.endsAt && dateKey(item.startsAt) !== dateKey(item.endsAt);
+
+/** Opening and closing on one day (YYYY-MM-DD) of a daily-hours item. */
+export function dailyWindow(item: Timed, key: string) {
+  return {
+    startsAt: parseLocalInput(`${key}T${clock(item.startsAt)}`)!,
+    endsAt: parseLocalInput(`${key}T${clock(item.endsAt!)}`)!,
+  };
+}
 
 /** Effective end: explicit end, else end of day for TBC items, else start + 2h. */
 export function effectiveEnd(item: Timed) {
@@ -82,6 +98,18 @@ export function effectiveEnd(item: Timed) {
 /** Status inferred from the clock; an admin override always wins. */
 export function computeStatus(item: Timed, now = new Date()): ProgrammeStatus {
   if (item.statusOverride) return item.statusOverride;
+  // Daily hours: live only while open today; between days it is "upcoming" again.
+  if (isDaily(item)) {
+    const t = now.getTime();
+    if (t >= item.endsAt!.getTime()) return "COMPLETED";
+    const key = dateKey(now);
+    const first = dateKey(item.startsAt);
+    if (key < first) return computeStatus({ ...item, dailyHours: false, endsAt: dailyWindow(item, first).endsAt }, now);
+    const today = dailyWindow(item, key);
+    if (t >= today.startsAt.getTime() && t < today.endsAt.getTime()) return "LIVE";
+    if (t < today.startsAt.getTime() && today.startsAt.getTime() - t <= STARTING_SOON_MS) return "STARTING_SOON";
+    return "UPCOMING";
+  }
   const start = item.startsAt.getTime();
   const end = effectiveEnd(item).getTime();
   const t = now.getTime();

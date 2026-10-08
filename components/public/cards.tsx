@@ -15,6 +15,7 @@ type EventCardData = {
   startsAt: Date;
   endsAt: Date | null;
   timeTbc: boolean;
+  dailyHours?: boolean;
   imageKey: string | null;
   posterKey: string | null;
   programmePdfKey?: string | null;
@@ -90,7 +91,7 @@ export function EventCard({ event, status }: { event: EventCardData; status?: Pr
         <div className="mt-auto space-y-1 pt-3 text-sm">
           <p className="flex items-center gap-1.5 font-semibold text-green-900">
             <CalendarDays className="size-4 shrink-0" aria-hidden />
-            {formatRange(event.startsAt, event.endsAt, event.timeTbc)}
+            {formatRange(event.startsAt, event.endsAt, event.timeTbc, event.dailyHours)}
           </p>
           {event.venue && (
             <p className="flex items-center gap-1.5 text-muted">

@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { getCurrentEdition } from "@/lib/edition";
 import type { ProgrammeStatus } from "@/lib/generated/prisma/enums";
 import { googleMapsUrl } from "@/lib/geo";
-import { computeStatus, dateKey, endOfDay, occursOn, startOfDay } from "@/lib/time";
+import { computeStatus, dailyWindow, dateKey, endOfDay, formatDay, isDaily, occursOn, startOfDay } from "@/lib/time";
 
 export type ProgrammeItem = {
   kind: "event" | "session";
@@ -23,6 +23,8 @@ export type ProgrammeItem = {
   pdf?: { key: string; name: string | null } | null;
   banner?: { wide: string; mobile: string | null } | null;
   venueMapUrl?: string | null;
+  /** For events open the same hours every day, e.g. "Open daily · Wed 7 Oct – Sat 10 Oct". */
+  dailyNote?: string | null;
   /** Link to the stream players when live streams are set. */
   watchHref?: string | null;
 };
@@ -42,6 +44,28 @@ export function venueMapUrl(
   if (!v) return null;
   if (v.latitude != null && v.longitude != null) return googleMapsUrl(v.latitude, v.longitude);
   return v.mapUrl;
+}
+
+/**
+ * Times and status of an event on one day of the programme. Events with daily
+ * hours show that day's opening and closing; other multi-day events show TBC.
+ */
+export function eventOnDay(
+  e: { startsAt: Date; endsAt: Date | null; timeTbc: boolean; dailyHours: boolean; statusOverride: ProgrammeStatus | null },
+  key: string,
+  now: Date,
+) {
+  if (isDaily(e)) {
+    const day = dailyWindow(e, key);
+    return {
+      ...day,
+      timeTbc: false,
+      status: e.statusOverride ?? computeStatus({ ...day, statusOverride: null }, now),
+      dailyNote: `Open daily · ${formatDay(e.startsAt)} – ${formatDay(e.endsAt!)}`,
+    };
+  }
+  const multiDay = !!e.endsAt && dateKey(e.startsAt) !== dateKey(e.endsAt);
+  return { startsAt: e.startsAt, endsAt: e.endsAt, timeTbc: e.timeTbc || multiDay, status: computeStatus(e, now), dailyNote: null };
 }
 
 export function eventBanner(e: { bannerKey: string | null; bannerMobileKey: string | null }) {
@@ -100,10 +124,7 @@ export async function getDayProgramme(key = dateKey(new Date()), now = new Date(
       id: e.id,
       title: e.title,
       href: `/events/${e.slug}`,
-      startsAt: e.startsAt,
-      endsAt: e.endsAt,
-      timeTbc: e.timeTbc,
-      status: computeStatus(e, now),
+      ...eventOnDay(e, key, now),
       statusNote: e.statusNote,
       venue: e.venue?.name ?? null,
       room: e.room,

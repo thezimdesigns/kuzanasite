@@ -8,7 +8,7 @@ import { requireCurrentEdition } from "@/lib/edition";
 import { checkbox, optionalText, optionalUrl, requiredText } from "@/lib/forms";
 import { AnnouncementPriority, ParticipantRole, RoutePointKind, ProgrammeStatus, PublishStatus, SessionType } from "@/lib/generated/prisma/enums";
 import { slugify, uniqueSlug } from "@/lib/slug";
-import { parseLocalInput } from "@/lib/time";
+import { dateKey, formatTime, parseLocalInput } from "@/lib/time";
 import { resolveMapLink } from "@/lib/geo-server";
 
 const localDate = (label: string) =>
@@ -79,6 +79,7 @@ const eventSchema = z
     startsAt: localDate("Start"),
     endsAt: optionalLocalDate,
     timeTbc: checkbox,
+    dailyHours: checkbox,
     isConference: checkbox,
     featured: checkbox,
     ticketRequired: checkbox,
@@ -100,6 +101,14 @@ const eventSchema = z
   })
   .refine((v) => !v.endsAt || v.endsAt >= v.startsAt, {
     message: "End must be after the start.",
+    path: ["endsAt"],
+  })
+  .refine((v) => !v.dailyHours || (v.endsAt && dateKey(v.endsAt) !== dateKey(v.startsAt)), {
+    message: "For daily hours, set the end to the last day (e.g. 10 Oct, 17:00).",
+    path: ["endsAt"],
+  })
+  .refine((v) => !v.dailyHours || !v.endsAt || formatTime(v.endsAt) > formatTime(v.startsAt), {
+    message: "The closing time must be later in the day than the opening time.",
     path: ["endsAt"],
   });
 

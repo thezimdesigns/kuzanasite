@@ -28,6 +28,7 @@ export default async function NewEvent() {
           startsAt: `${dateKey(new Date())}T09:00`,
           endsAt: "",
           timeTbc: false,
+          dailyHours: false,
           isConference: false,
           featured: false,
           ticketRequired: false,

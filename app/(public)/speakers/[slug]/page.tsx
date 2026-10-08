@@ -97,7 +97,7 @@ export default async function SpeakerPage({ params }: PageProps<"/speakers/[slug
                     {r.event.title}
                   </Link>
                   <span className="block text-muted">
-                    {PARTICIPANT_ROLE_LABELS[r.role]} · {formatRange(r.event.startsAt, r.event.endsAt, r.event.timeTbc)}
+                    {PARTICIPANT_ROLE_LABELS[r.role]} · {formatRange(r.event.startsAt, r.event.endsAt, r.event.timeTbc, r.event.dailyHours)}
                   </span>
                 </li>
               ))}

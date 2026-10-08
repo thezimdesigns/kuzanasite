@@ -84,7 +84,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
           items: results[0].map((e) => ({
             href: `/events/${e.slug}`,
             title: e.title,
-            meta: formatRange(e.startsAt, e.endsAt, e.timeTbc),
+            meta: formatRange(e.startsAt, e.endsAt, e.timeTbc, e.dailyHours),
           })),
         },
         {

@@ -79,6 +79,7 @@ export default async function AdminEvent({ params }: PageProps<"/admin/events/[i
             startsAt: toLocalInput(e.startsAt),
             endsAt: toLocalInput(e.endsAt),
             timeTbc: e.timeTbc,
+            dailyHours: e.dailyHours,
             isConference: e.isConference,
             featured: e.featured,
             ticketRequired: e.ticketRequired,

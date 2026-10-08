@@ -57,7 +57,7 @@ export default async function AdminEvents() {
                   {e.isConference && ` · ${e._count.sessions} sessions`}
                 </div>
               </td>
-              <td className="whitespace-nowrap">{formatRange(e.startsAt, e.endsAt, e.timeTbc)}</td>
+              <td className="whitespace-nowrap">{formatRange(e.startsAt, e.endsAt, e.timeTbc, e.dailyHours)}</td>
               <td>{e.venue?.name ?? "-"}</td>
               <td>
                 <Badge tone={computeStatus(e, now) === "LIVE" ? "orange" : "neutral"}>{STATUS_LABELS[computeStatus(e, now)]}</Badge>

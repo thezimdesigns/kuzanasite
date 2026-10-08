@@ -74,7 +74,7 @@ export default async function LivePage() {
                     <Link href={`/events/${e.slug}`} className="flex flex-wrap items-baseline justify-between gap-2 rounded-[var(--radius-control)] border border-line bg-white px-4 py-3 hover:border-green-800">
                       <span className="font-heading font-bold">{e.title}</span>
                       <span className="text-sm text-muted">
-                        {formatRange(e.startsAt, e.endsAt, e.timeTbc)}
+                        {formatRange(e.startsAt, e.endsAt, e.timeTbc, e.dailyHours)}
                         {e.venue && ` · ${e.venue.name}`}
                       </span>
                     </Link>

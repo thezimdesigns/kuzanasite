@@ -41,7 +41,7 @@ export default async function EventRoutePage({ params }: PageProps<"/events/[slu
       <PageHeader
         back={{ href: `/events/${event.slug}`, label: event.title }}
         title="Route map"
-        intro={`${formatRange(event.startsAt, event.endsAt, event.timeTbc)}${event.venue ? `, from ${event.venue.name}` : ""}. Choose a distance to see its course.`}
+        intro={`${formatRange(event.startsAt, event.endsAt, event.timeTbc, event.dailyHours)}${event.venue ? `, from ${event.venue.name}` : ""}. Choose a distance to see its course.`}
       />
       <Section>
         {routes.length === 0 ? (

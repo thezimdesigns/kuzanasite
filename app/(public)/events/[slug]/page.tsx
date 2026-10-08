@@ -87,7 +87,7 @@ export async function generateMetadata({ params }: PageProps<"/events/[slug]">):
   const image = fileUrl(event.posterKey ?? event.imageKey);
   return {
     title: event.title,
-    description: event.summary ?? `${event.title}: ${formatRange(event.startsAt, event.endsAt, event.timeTbc)}`,
+    description: event.summary ?? `${event.title}: ${formatRange(event.startsAt, event.endsAt, event.timeTbc, event.dailyHours)}`,
     alternates: { canonical: `/events/${event.slug}` },
     openGraph: image ? { images: [image] } : undefined,
   };
@@ -101,7 +101,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
   const now = new Date();
   const status = computeStatus(event, now);
   const image = fileUrl(event.posterKey ?? event.imageKey);
-  const when = formatRange(event.startsAt, event.endsAt, event.timeTbc);
+  const when = formatRange(event.startsAt, event.endsAt, event.timeTbc, event.dailyHours);
   const shareTitle = `KUZANA ${event.title}: ${when}${event.venue ? ` at ${event.venue.name}` : ""}`;
 
   // Group sessions by day for multi-day conferences.
