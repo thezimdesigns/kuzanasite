@@ -3,18 +3,27 @@ import Link from "next/link";
 import { FileDown, MapPin, Radio } from "lucide-react";
 import type { ProgrammeItem } from "@/lib/programme";
 import { fileUrl } from "@/lib/files";
-import { formatTimes } from "@/lib/time";
+import { formatTime, formatTimes } from "@/lib/time";
 import { cn } from "@/components/ui";
 import { StatusBadge } from "@/components/public/status-badge";
 
-export function ProgrammeList({ items, className }: { items: ProgrammeItem[]; className?: string }) {
+/**
+ * A list of programme rows. With `nest`, sessions whose event is also in the
+ * list are shown inside that event's card ("now on stage") instead of as
+ * separate cards; sessions without their event in the list stand alone.
+ */
+export function ProgrammeList({ items, className, nest = false }: { items: ProgrammeItem[]; className?: string; nest?: boolean }) {
+  const eventIds = new Set(items.filter((i) => i.kind === "event").map((i) => i.id));
+  const nested = (i: ProgrammeItem) => nest && i.kind === "session" && !!i.parentId && eventIds.has(i.parentId);
   return (
     <ol className={cn("reveal-list space-y-3", className)}>
-      {items.map((item) => (
-        <li key={`${item.kind}-${item.id}`}>
-          <ProgrammeRow item={item} />
-        </li>
-      ))}
+      {items
+        .filter((item) => !nested(item))
+        .map((item) => (
+          <li key={`${item.kind}-${item.id}`}>
+            <ProgrammeRow item={item} sessions={nest && item.kind === "event" ? items.filter((s) => nested(s) && s.parentId === item.id) : []} />
+          </li>
+        ))}
     </ol>
   );
 }
@@ -42,7 +51,7 @@ export function ProgrammeBanner({ banner, className, priority }: { banner: { wid
  * One programme entry. The title link stretches over the whole card, so the
  * PDF and map links can sit inside without nesting links.
  */
-export function ProgrammeRow({ item }: { item: ProgrammeItem }) {
+export function ProgrammeRow({ item, sessions = [] }: { item: ProgrammeItem; sessions?: ProgrammeItem[] }) {
   const done = item.status === "COMPLETED" || item.status === "CANCELLED";
   const live = item.status === "LIVE";
   const poster = fileUrl(item.posterKey);
@@ -54,9 +63,9 @@ export function ProgrammeRow({ item }: { item: ProgrammeItem }) {
       className={cn(
         "group relative overflow-hidden rounded-[var(--radius-card)] border transition-[border-color,box-shadow,transform] duration-300 ease-[var(--ease-out-expo)]",
         "hover:-translate-y-0.5 hover:border-green-800/50 hover:shadow-[var(--shadow-lift)]",
-        live ? "border-orange/50 bg-orange-50/70" : "border-line bg-white",
+        // Solid fills: these cards also sit on dark panels, where a tint turns muddy.
+        live ? "border-orange/60 bg-orange-50" : "border-line bg-white",
         done && "opacity-60 hover:opacity-100",
-        item.kind === "session" && "ml-3 sm:ml-6",
       )}
     >
       {item.banner && <ProgrammeBanner banner={item.banner} />}
@@ -137,6 +146,24 @@ export function ProgrammeRow({ item }: { item: ProgrammeItem }) {
           <span />
         )}
       </div>
+      {sessions.length > 0 && (
+        <ul className="relative z-10 divide-y divide-orange/15 border-t border-orange/25 bg-white" aria-label={`Now at ${item.title}`}>
+          {sessions.map((s) => (
+            <li key={s.id}>
+              <Link
+                href={s.href}
+                className="grid grid-cols-[4.25rem_1fr] items-center gap-3 px-3.5 py-2.5 transition-colors hover:bg-cream sm:grid-cols-[5.5rem_1fr] sm:gap-5 sm:px-4"
+              >
+                <span className="font-heading text-sm font-bold text-green-900 tabular-nums">{formatTime(s.startsAt)}</span>
+                <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="text-[0.95rem] font-semibold text-ink">{s.title}</span>
+                  <StatusBadge status={s.status} hideUpcoming />
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </article>
   );
 }

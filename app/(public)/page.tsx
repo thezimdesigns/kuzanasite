@@ -193,7 +193,7 @@ export default async function HomePage() {
               </Link>
             </div>
             {happening.length > 0 ? (
-              <ProgrammeList items={happening} />
+              <ProgrammeList items={happening} nest />
             ) : board.laterToday.length > 0 ? (
               <>
                 <p className="mb-3 text-sm text-white/75">Nothing is live right now. Next up today:</p>

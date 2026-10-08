@@ -47,7 +47,7 @@ export default async function LivePage() {
         <div className="space-y-10">
           <div>
             <SectionTitle>Live now</SectionTitle>
-            {board.live.length ? <ProgrammeList items={board.live} /> : <EmptyState>Nothing is live at the moment.</EmptyState>}
+            {board.live.length ? <ProgrammeList items={board.live} nest /> : <EmptyState>Nothing is live at the moment.</EmptyState>}
           </div>
           {board.startingSoon.length > 0 && (
             <div>

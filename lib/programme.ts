@@ -18,6 +18,8 @@ export type ProgrammeItem = {
   venue: string | null;
   room: string | null;
   parentTitle?: string;
+  /** For sessions: the id of the event they belong to. */
+  parentId?: string;
   category?: string | null;
   posterKey?: string | null;
   pdf?: { key: string; name: string | null } | null;
@@ -148,6 +150,7 @@ export async function getDayProgramme(key = dateKey(new Date()), now = new Date(
         venue: e.venue?.name ?? null,
         room: s.room ?? e.room,
         parentTitle: e.title,
+        parentId: e.id,
         posterKey: s.posterKey,
         venueMapUrl: venueMapUrl(e.venue),
         watchHref: s._count.streams ? `/events/${e.slug}#watch-${s.id}` : null,
