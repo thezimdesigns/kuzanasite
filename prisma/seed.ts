@@ -8,8 +8,8 @@ import { randomUUID } from "node:crypto";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { hashPassword } from "better-auth/crypto";
 import { PrismaClient } from "../lib/generated/prisma/client";
-import type { SessionType } from "../lib/generated/prisma/enums";
 import { DEFAULT_FOOTER_LINKS } from "../lib/footer-defaults";
+import { applyConferenceProgrammes } from "./content/conferences-2026";
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 
@@ -106,11 +106,11 @@ async function main() {
     },
     {
       slug: "sports-industry-conference",
-      title: "Sports Industry Conference",
+      title: "Sport Industry Conference",
       summary: "Keynotes and panels on the business of sport, infrastructure, branding and safeguarding.",
       startsAt: at("2026-10-07T08:00:00"),
-      endsAt: null,
-      timeTbc: true,
+      endsAt: at("2026-10-07T16:00:00"),
+      room: "Hall 2",
       venueId: venues.zitf,
       category: "Conference",
       isConference: true,
@@ -118,12 +118,14 @@ async function main() {
       sortOrder: 1,
     },
     {
-      slug: "conference-2",
-      title: "Conference 2",
-      summary: "Day two of the KUZANA conference programme.",
+      slug: "creative-economy-conference",
+      // Earlier placeholder name, so existing databases are matched rather than duplicated.
+      aliases: ["conference-2"],
+      title: "Creative Economy Conference",
+      summary: "Investing in Zimbabwe's creative economy, value chains, research and the road to Vision 2030.",
       startsAt: at("2026-10-08T08:00:00"),
-      endsAt: null,
-      timeTbc: true,
+      endsAt: at("2026-10-08T17:00:00"),
+      room: "Hall 2",
       venueId: venues.zitf,
       category: "Conference",
       isConference: true,
@@ -180,8 +182,8 @@ async function main() {
 
   const eventIds: Record<string, string> = {};
   for (const e of events) {
-    const { category, ...data } = e;
-    const existing = await db.event.findUnique({ where: { slug: e.slug } });
+    const { category, aliases, ...data } = e as typeof e & { aliases?: string[] };
+    const existing = await db.event.findFirst({ where: { slug: { in: [e.slug, ...(aliases ?? [])] } } });
     const event =
       existing ??
       (await db.event.create({
@@ -195,47 +197,8 @@ async function main() {
     eventIds[e.slug] = event.id;
   }
 
-  // Sports Industry Conference running order --------------------------------
-  // Seeded as DRAFT with placeholder times: staff set the real times, then publish.
-  const conferenceId = eventIds["sports-industry-conference"];
-  const sessionCount = await db.session.count({ where: { eventId: conferenceId } });
-  if (sessionCount === 0) {
-    const order: [string, SessionType][] = [
-      ["Arrival and Registration", "REGISTRATION"],
-      ["Arrival of Guest of Honour", "OPENING_CEREMONY"],
-      ["Briefing of Guest of Honour", "OPENING_CEREMONY"],
-      ["National Anthem and Prayer", "OPENING_CEREMONY"],
-      ["Welcome Remarks", "OPENING_CEREMONY"],
-      ["Cultural and Artistic Performance", "CULTURAL_PERFORMANCE"],
-      ["Introduction of Guest of Honour", "OPENING_CEREMONY"],
-      ["Keynote Address", "KEYNOTE"],
-      ["Sports Infrastructure Keynote", "KEYNOTE"],
-      ["Presentation of Gifts", "OPENING_CEREMONY"],
-      ["Vote of Thanks", "OPENING_CEREMONY"],
-      ["Photoshoot", "NETWORKING"],
-      ["Exhibition Tour", "NETWORKING"],
-      ["Panel 1: Business of Play", "PANEL_DISCUSSION"],
-      ["Question and Answer Session", "QA"],
-      ["Lunch", "LUNCH"],
-      ["Panel 2: From Jersey to Brand", "PANEL_DISCUSSION"],
-      ["Question and Answer Session", "QA"],
-      ["Panel 3: Safeguarding the Game", "PANEL_DISCUSSION"],
-      ["Question and Answer Session", "QA"],
-      ["Call for Action", "CLOSING_SESSION"],
-      ["End of Programme", "CLOSING_SESSION"],
-    ];
-    const base = at("2026-10-07T08:00:00").getTime();
-    await db.session.createMany({
-      data: order.map(([title, type], i) => ({
-        eventId: conferenceId,
-        title,
-        type,
-        startsAt: new Date(base + i * 15 * 60 * 1000),
-        sortOrder: i,
-        publishStatus: "DRAFT",
-      })),
-    });
-  }
+  // Official conference running orders (applied once; later CMS edits are kept).
+  await applyConferenceProgrammes(db);
 
   // Partners ------------------------------------------------------------------
   if ((await db.partner.count()) === 0) {
