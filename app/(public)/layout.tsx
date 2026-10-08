@@ -6,6 +6,7 @@ import { AnnouncementBanner } from "@/components/public/announcement-banner";
 import { MobileTabBar } from "@/components/public/mobile-tab-bar";
 import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
+import { Analytics } from "@/components/public/analytics";
 import { FxLayer } from "@/components/public/fx";
 import { ScrollToTop } from "@/components/public/site-chrome";
 
@@ -26,6 +27,7 @@ export default async function PublicLayout({ children }: LayoutProps<"/">) {
       <MobileTabBar />
       <ScrollToTop />
       <FxLayer />
+      <Analytics />
       {/* Who runs the site and how to search it, for search engines. */}
       <script
         type="application/ld+json"

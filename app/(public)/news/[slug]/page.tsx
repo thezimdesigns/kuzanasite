@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { shareMetadata } from "@/lib/seo";
+import { siteUrl } from "@/lib/site";
+import { DEFAULT_SHARE_IMAGE, shareMetadata } from "@/lib/seo";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -40,6 +41,23 @@ export default async function NewsArticle({ params }: PageProps<"/news/[slug]">)
 
   return (
     <article>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "NewsArticle",
+            headline: p.title,
+            description: p.excerpt ?? undefined,
+            datePublished: p.publishedAt.toISOString(),
+            dateModified: p.updatedAt.toISOString(),
+            image: [siteUrl(cover ?? DEFAULT_SHARE_IMAGE.url)],
+            author: p.author ? { "@type": "Person", name: p.author } : { "@type": "Organization", name: "KUZANA SCEEZ" },
+            publisher: { "@type": "Organization", name: "KUZANA SCEEZ", logo: { "@type": "ImageObject", url: siteUrl("/brand/kuzana-icon.png") } },
+            mainEntityOfPage: siteUrl(`/news/${p.slug}`),
+          }).replace(/</g, "\\u003c"),
+        }}
+      />
       <header className="bg-ivory-pattern">
         <div className="mx-auto max-w-3xl px-4 pt-8 pb-6 sm:px-6 sm:pt-12">
           <BackLink href="/news" label="News" />
