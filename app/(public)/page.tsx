@@ -12,13 +12,13 @@ import { AutoRefresh } from "@/components/public/auto-refresh";
 import { AlbumCard, EventCard, ExhibitorCard, VideoCard } from "@/components/public/cards";
 import { CoverageColumns } from "@/components/public/coverage-columns";
 import { HeroSlides } from "@/components/public/hero-slides";
-import { InterestForm } from "@/components/public/interest-form";
+import { InterestPanel } from "@/components/public/interest-panel";
 import { LeadStory, NewsRow } from "@/components/public/news-blocks";
 import { PartnerStrip } from "@/components/public/partner-strip";
 import { ProgrammeList } from "@/components/public/programme-list";
 import { Rail } from "@/components/public/rail";
 import { WeekStrip } from "@/components/public/week-strip";
-import { Card, cn, EmptyState, Section, SectionTitle } from "@/components/ui";
+import { cn, EmptyState, Section, SectionTitle } from "@/components/ui";
 
 const SectionLink = ({ href, children }: { href: string; children: string }) => (
   <Link href={href} className="group inline-flex items-center gap-1 text-sm font-semibold text-green-800">
@@ -130,7 +130,7 @@ export default async function HomePage() {
           <div className="hero-fade mt-9 flex flex-col gap-3 sm:flex-row" style={{ "--i": 2 } as CSSProperties}>
             <Link
               href="/live"
-              data-sfx="kick"
+              data-fx="kick"
               className="group inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-orange-bright px-6 py-3.5 font-heading font-bold text-green-950 transition-[filter,transform] duration-200 hover:brightness-105 active:scale-[0.98]"
             >
               What&apos;s on now <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
@@ -390,19 +390,20 @@ export default async function HomePage() {
 
       {/* Stay connected */}
       <section className="relative overflow-hidden bg-green-900 text-white">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.8fr_1.2fr]">
-          <div>
-            <h2 className="text-3xl font-extrabold">
-              Stay <span className="text-orange-bright">connected</span>
-            </h2>
-            <p className="mt-3 text-white/85">
-              Register your interest for future KUZANA editions as a sponsor, exhibitor, speaker, artist, athlete, investor or partner.
-            </p>
-            <Image src="/brand/lets-do-business.png" alt="Let's do business" width={220} height={60} className="mt-6 h-auto w-48" />
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+          <div className="grid items-start gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:gap-10">
+            <div>
+              <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+                <h2 className="text-3xl font-extrabold">
+                  Stay <span className="text-orange-bright">connected</span>
+                </h2>
+                <Image src="/brand/lets-do-business.png" alt="Let's do business" width={220} height={60} className="h-auto w-36 lg:hidden" />
+              </div>
+              <p className="mt-2 max-w-[46ch] text-white/85">Want a part in a future KUZANA edition? Tell us how you&apos;d like to take part.</p>
+              <Image src="/brand/lets-do-business.png" alt="" width={220} height={60} className="mt-5 hidden h-auto w-44 lg:block" />
+            </div>
+            <InterestPanel />
           </div>
-          <Card className="p-5 text-ink sm:p-6">
-            <InterestForm />
-          </Card>
         </div>
       </section>
     </>

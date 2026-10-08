@@ -6,7 +6,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, CalendarDays, ChevronDown, Map as MapIcon, Menu, Radio, Search, Store, X } from "lucide-react";
 import { isActivePath, NAV_GROUPS, PRIMARY_NAV, QUICK_NAV } from "@/lib/nav";
-import { SfxToggle } from "@/components/public/site-chrome";
 import { cn } from "@/components/ui";
 
 const QUICK_ICONS = {
@@ -114,7 +113,7 @@ export function SiteHeader({ logoUrl }: { logoUrl: string }) {
           </Link>
           <Link
             href="/register"
-            data-sfx="drum"
+            data-fx="drum"
             className="hidden rounded-[var(--radius-control)] bg-orange-dark px-4 py-2.5 font-heading text-sm font-semibold text-white transition-[background-color,transform] duration-200 hover:bg-orange-deeper active:scale-[0.98] sm:inline-flex"
           >
             Register as a visitor
@@ -159,13 +158,6 @@ export function SiteHeader({ logoUrl }: { logoUrl: string }) {
                 </ul>
               </div>
             ))}
-          </div>
-          <div className="border-t border-line bg-cream">
-            <div className="mx-auto max-w-6xl px-6 py-3">
-              <div className="max-w-xs">
-                <SfxToggle />
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -242,14 +234,11 @@ export function SiteHeader({ logoUrl }: { logoUrl: string }) {
                 ))}
                 <Link
                   href="/register"
-                  data-sfx="drum"
+                  data-fx="drum"
                   className="mt-5 flex items-center justify-center rounded-[var(--radius-control)] bg-orange-dark px-4 py-3 font-heading font-bold text-white active:scale-[0.98]"
                 >
                   Register as a visitor
                 </Link>
-                <div className="mt-6 rounded-[var(--radius-card)] bg-cream p-3.5">
-                  <SfxToggle />
-                </div>
               </div>
             </div>
           </div>,

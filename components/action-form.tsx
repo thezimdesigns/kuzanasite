@@ -1,10 +1,10 @@
 "use client";
 
-import { startTransition, useActionState, type FormEvent, type ReactNode } from "react";
+import { startTransition, useActionState, useRef, type FormEvent, type ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import type { FormState } from "@/lib/forms";
 import { Alert } from "@/components/ui";
-import { playSfx } from "@/components/public/sfx";
+import { fireFx } from "@/components/public/fx";
 import { useRecaptcha } from "@/components/public/use-recaptcha";
 
 type Action = (state: FormState, fd: FormData) => Promise<FormState>;
@@ -31,10 +31,12 @@ export function ActionForm({
   onSuccess?: (state: FormState) => void;
 }) {
   const getToken = useRecaptcha();
+  // The submit button, so a successful send can "beat the drum" on it.
+  const submitter = useRef<Element | null>(null);
   const [state, formAction, pending] = useActionState(async (prev: FormState, fd: FormData) => {
     const next = await action(prev, fd);
     if (next.ok) {
-      playSfx("drum");
+      if (submitter.current?.isConnected) fireFx("drum", submitter.current);
       onSuccess?.(next);
     }
     return next;
@@ -42,6 +44,7 @@ export function ActionForm({
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    submitter.current = (e.nativeEvent as SubmitEvent).submitter;
     const fd = new FormData(e.currentTarget);
     if (recaptchaAction) fd.set("recaptchaToken", await getToken(recaptchaAction));
     startTransition(() => formAction(fd));

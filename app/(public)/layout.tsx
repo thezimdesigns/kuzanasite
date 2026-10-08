@@ -5,7 +5,8 @@ import { AnnouncementBanner } from "@/components/public/announcement-banner";
 import { MobileTabBar } from "@/components/public/mobile-tab-bar";
 import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
-import { ScrollToTop, SfxListener } from "@/components/public/site-chrome";
+import { FxLayer } from "@/components/public/fx";
+import { ScrollToTop } from "@/components/public/site-chrome";
 
 export default async function PublicLayout({ children }: LayoutProps<"/">) {
   const { logoUrl } = await getBranding();
@@ -23,7 +24,7 @@ export default async function PublicLayout({ children }: LayoutProps<"/">) {
       <SiteFooter />
       <MobileTabBar />
       <ScrollToTop />
-      <SfxListener />
+      <FxLayer />
     </>
   );
 }

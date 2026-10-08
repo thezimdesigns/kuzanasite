@@ -5,7 +5,7 @@ import { ActionForm } from "@/components/action-form";
 import { Button, Checkbox, Field, Input, Select, Textarea } from "@/components/ui";
 import { INTEREST_TYPES } from "@/lib/options";
 
-export function InterestForm() {
+export function InterestForm({ interest = "" }: { interest?: string }) {
   return (
     <ActionForm action={submitInterest} recaptchaAction="interest" className="grid gap-4 sm:grid-cols-2">
       {(state, pending) => (
@@ -23,7 +23,7 @@ export function InterestForm() {
             <Input name="phone" type="tel" autoComplete="tel" />
           </Field>
           <Field label="I am interested as a" required error={state.errors?.interest}>
-            <Select name="interest" defaultValue="">
+            <Select key={interest} name="interest" defaultValue={interest}>
               <option value="" disabled>
                 Choose…
               </option>
