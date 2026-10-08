@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   const staff = await getStaff();
   let prefix: string;
   if (staff) {
-    if (staff.role === "VIEWER") return NextResponse.json({ error: "Read-only account." }, { status: 403 });
+    if (staff.role === "VIEWER" || staff.role === "QA_MODERATOR") return NextResponse.json({ error: "Read-only account." }, { status: 403 });
     prefix = `staff/${String(form.get("folder") ?? "misc").replace(/[^a-z-]/g, "") || "misc"}`;
   } else {
     const claim = form.get("claim") as string | null;

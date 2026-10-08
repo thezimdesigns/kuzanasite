@@ -19,7 +19,7 @@ type Tab = (typeof TABS)[number];
 const TAB_LABELS: Record<Tab, string> = { PENDING: "Waiting", APPROVED: "Live list", ANSWERED: "Answered", HIDDEN: "Hidden", CONTRIBUTIONS: "Contributions" };
 
 export default async function AdminQaConference({ params, searchParams }: PageProps<"/admin/qa/[id]">) {
-  const user = await requireStaff();
+  const user = await requireStaff({ moderatorOk: true });
   const editable = can(user, "qa");
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   const tab: Tab = TABS.includes(sp.tab as Tab) ? (sp.tab as Tab) : "PENDING";

@@ -11,7 +11,10 @@ export async function SiteFooter() {
     <footer className="bg-green-950 pb-20 text-white/85 lg:pb-0">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-[1.2fr_1fr_1fr] sm:px-6">
         <div>
-          <div className="font-heading text-xl font-extrabold text-white">KUZANA SCEEZ</div>
+          <Link href="/" aria-label="KUZANA SCEEZ home" className="inline-block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/kuzana-sceez-white.png" alt="KUZANA SCEEZ: Sport Creative Economy Expo of Zimbabwe" width={828} height={303} loading="lazy" className="h-16 w-auto sm:h-[4.5rem]" />
+          </Link>
           {s["footer.tagline"] && <p className="mt-2 max-w-xs text-sm">{s["footer.tagline"]}</p>}
           <ul className="mt-4 space-y-2 text-sm">
             {s["footer.location"] && (

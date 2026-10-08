@@ -13,7 +13,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || "KUZANA SCEEZ", {
       body: data.body || "",
-      icon: "/brand/kuzana-icon.png",
+      icon: "/brand/icon-192.png",
       badge: "/brand/kuzana-icon.png",
       data: { url: data.url || "/live" },
     }),

@@ -13,6 +13,7 @@ const ROLE_AREAS: Record<Role, Area[]> = {
   PRESS_OFFICER: ["press"],
   EXHIBITOR_MANAGER: ["exhibitors"],
   FEEDBACK_MANAGER: ["feedback", "qa"],
+  QA_MODERATOR: ["qa"],
   VIEWER: [],
 };
 
@@ -23,6 +24,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   PRESS_OFFICER: "Press officer",
   EXHIBITOR_MANAGER: "Exhibitor manager",
   FEEDBACK_MANAGER: "Feedback manager",
+  QA_MODERATOR: "Conference Q&A moderator",
   VIEWER: "Viewer (read only)",
 };
 
@@ -45,10 +47,14 @@ export async function getStaff(): Promise<StaffUser | null> {
   return { id: user.id, name: user.name, email: user.email, role: user.role };
 }
 
-/** For admin pages: any signed-in staff member may view. */
-export async function requireStaff() {
+/**
+ * For admin pages: any signed-in staff member may view. Conference Q&A
+ * moderators only ever see the Q&A pages (which pass moderatorOk).
+ */
+export async function requireStaff(opts: { moderatorOk?: boolean } = {}) {
   const user = await getStaff();
   if (!user) redirect("/admin/login");
+  if (user.role === "QA_MODERATOR" && !opts.moderatorOk) redirect("/admin/qa");
   return user;
 }
 

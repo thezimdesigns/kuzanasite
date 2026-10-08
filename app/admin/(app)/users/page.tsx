@@ -26,7 +26,8 @@ export default async function AdminUsers() {
                     MEDIA_EDITOR: ": photo galleries and videos",
                     PRESS_OFFICER: ": press releases, speeches, presentations, documents",
                     EXHIBITOR_MANAGER: ": exhibitor capture, review and completion links",
-                    FEEDBACK_MANAGER: ": visitor feedback",
+                    FEEDBACK_MANAGER: ": visitor feedback and conference Q&A",
+                    QA_MODERATOR: ": conference questions only (approve, put on the hall screen, mark answered)",
                     VIEWER: ": read-only access to the admin",
                   }[k]
                 }

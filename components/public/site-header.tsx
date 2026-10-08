@@ -65,7 +65,7 @@ export function SiteHeader({ logoUrl }: { logoUrl: string }) {
       <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center gap-4 px-4 sm:h-[4.75rem] sm:px-6">
         <Link href="/" className="flex shrink-0 items-center" aria-label="KUZANA SCEEZ home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logoUrl} alt="KUZANA SCEEZ" width={180} height={74} className="h-14 w-auto sm:h-[3.75rem]" />
+          <img src={logoUrl} alt="KUZANA SCEEZ" width={828} height={303} className="h-14 w-auto sm:h-[3.75rem]" />
         </Link>
 
         {/* Desktop bar */}

@@ -11,6 +11,7 @@ const ROLES = [
   ["PRESS_OFFICER", "Press officer"],
   ["EXHIBITOR_MANAGER", "Exhibitor manager"],
   ["FEEDBACK_MANAGER", "Feedback manager"],
+  ["QA_MODERATOR", "Conference Q&A moderator"],
   ["SUPER_ADMIN", "Super admin"],
 ];
 

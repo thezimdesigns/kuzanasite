@@ -31,7 +31,10 @@ export const metadata: Metadata = {
     type: "website",
     images: ["/brand/hero-collage.png"],
   },
-  icons: { icon: "/brand/kuzana-icon.png", apple: "/brand/kuzana-icon.png" },
+  icons: {
+    icon: [{ url: "/favicon.ico", sizes: "48x48" }, { url: "/brand/kuzana-icon.png", type: "image/png", sizes: "512x512" }],
+    apple: "/brand/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {

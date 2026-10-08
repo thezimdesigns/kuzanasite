@@ -10,12 +10,9 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#fbfaf6",
     theme_color: "#00512d",
     icons: [
-      {
-        src: "/brand/kuzana-icon.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any",
-      },
+      { src: "/brand/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/brand/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/brand/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

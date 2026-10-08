@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui";
 export const metadata = { title: "Conference Q&A" };
 
 export default async function AdminQa() {
-  const user = await requireStaff();
+  const user = await requireStaff({ moderatorOk: true });
   const [conferences, counts, auto] = await Promise.all([
     db.event.findMany({ where: { isConference: true }, orderBy: { startsAt: "asc" } }),
     db.conferenceQuestion.groupBy({ by: ["eventId", "status", "kind"], _count: true }),

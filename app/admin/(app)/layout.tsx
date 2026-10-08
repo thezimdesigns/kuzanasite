@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
-  const user = await requireStaff();
+  const user = await requireStaff({ moderatorOk: true });
   const items: NavItem[] = [
     { href: "/admin", label: "Dashboard", icon: "dashboard" },
     {
@@ -152,7 +152,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
 
   return (
     <div className="min-h-dvh bg-cream lg:grid lg:grid-cols-[15rem_1fr]">
-      <AdminNav items={items.filter((i) => !i.hidden)} user={{ name: user.name, role: ROLE_LABELS[user.role] }} />
+      <AdminNav items={user.role === "QA_MODERATOR" ? items.filter((i) => i.href === "/admin/qa") : items.filter((i) => !i.hidden)} user={{ name: user.name, role: ROLE_LABELS[user.role] }} />
       <main className="min-w-0 pb-16">{children}</main>
     </div>
   );
