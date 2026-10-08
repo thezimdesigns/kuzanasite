@@ -307,6 +307,11 @@ h4 {
   background: var(--color-cream-dark);
 }
 
+@keyframes bar-rise {
+  from {
+    transform: scaleY(0);
+  }
+}
 @keyframes fade-in {
   from {
     opacity: 0;

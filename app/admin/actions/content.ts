@@ -215,16 +215,17 @@ export async function deleteMention(id: string) {
 
 const dayKey = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a date.");
 
-/** Starts a day's report, copying the groups and labels of the latest one so only the numbers change. */
+/** Starts a day's report from the previous day's groups and figures, so only what changed needs editing. */
 export async function createDailyReport(day: string) {
   const key = dayKey.parse(day);
   const report = await runAdmin("press", async () => {
     const existing = await db.dailyReport.findUnique({ where: { day: keyToReportDay(key) } });
     if (existing) return existing;
-    const latest = await db.dailyReport.findFirst({ orderBy: { day: "desc" } });
-    const groups = latest
-      ? readGroups(latest.groups).map((g) => ({ ...g, items: g.items.map((i) => ({ ...i, value: 0 })) }))
-      : [{ title: "Exhibitors", showTotal: true, items: [{ label: "", value: 0 }] }];
+    // Start from the day before (numbers included), so only what changed needs typing.
+    const previous =
+      (await db.dailyReport.findFirst({ where: { day: { lt: keyToReportDay(key) } }, orderBy: { day: "desc" } })) ??
+      (await db.dailyReport.findFirst({ orderBy: { day: "desc" } }));
+    const groups = previous ? readGroups(previous.groups) : [{ title: "Exhibitors", showTotal: true, items: [{ label: "", value: 0 }] }];
     return db.dailyReport.create({ data: { day: keyToReportDay(key), groups } });
   });
   redirect(`/admin/stats/${report.id}`);

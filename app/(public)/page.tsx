@@ -31,7 +31,7 @@ const SectionLink = ({ href, children }: { href: string; children: string }) => 
 
 export default async function HomePage() {
   const edition = await getCurrentEdition();
-  const [board, events, announcements, news, albums, videos, exhibitors, exhibitorCount, partners, branding, mentions, [stats], qaConference] = await Promise.all([
+  const [board, events, announcements, news, albums, videos, exhibitors, exhibitorCount, partners, branding, mentions, [stats, statsBefore], qaConference] = await Promise.all([
     getLiveBoard(),
     getEditionEvents(),
     getActiveAnnouncements(3),
@@ -73,7 +73,7 @@ export default async function HomePage() {
       // Three on the homepage (one per column); the rest are at /media/coverage.
       take: 3,
     }),
-    getPublishedReports(1),
+    getPublishedReports(2),
     currentQaConference(),
   ]);
 
@@ -258,11 +258,16 @@ export default async function HomePage() {
                 </h2>
                 {stats.headline && <p className="mt-2 max-w-[60ch] text-white/85">{stats.headline}</p>}
               </div>
-              <Link href="/stats" className="text-sm font-semibold text-orange-bright hover:underline">
-                Every day&apos;s figures
+              <Link href={statsBefore ? "/stats?view=week" : "/stats"} className="text-sm font-semibold text-orange-bright hover:underline">
+                {statsBefore ? "Compare the days" : "Every day's figures"}
               </Link>
             </div>
-            <StatsBoard groups={stats.groups} tone="dark" />
+            <StatsBoard
+              groups={stats.groups}
+              tone="dark"
+              previous={statsBefore?.groups}
+              previousLabel={statsBefore ? (statsBefore.dayNumber ? `Day ${statsBefore.dayNumber}` : statsBefore.short) : undefined}
+            />
             {stats.note && <p className="mt-6 max-w-[65ch] text-sm text-white/65">{stats.note}</p>}
           </Section>
         </section>

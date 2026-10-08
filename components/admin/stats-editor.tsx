@@ -8,7 +8,7 @@ import { Alert, Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { formatNumber, groupTotal, type StatGroup } from "@/lib/stats";
 
 type Row = { key: number; label: string; value: string };
-type Group = { key: number; title: string; showTotal: boolean; items: Row[] };
+type Group = { key: number; title: string; note: string; showTotal: boolean; items: Row[] };
 
 let nextKey = 1;
 const key = () => nextKey++;
@@ -29,6 +29,7 @@ export function StatsEditor({
     initial.groups.map((g) => ({
       key: key(),
       title: g.title,
+      note: g.note ?? "",
       showTotal: g.showTotal,
       items: g.items.map((i) => ({ key: key(), label: i.label, value: i.value ? String(i.value) : "" })),
     })),
@@ -58,7 +59,7 @@ export function StatsEditor({
             headline,
             note,
             publishStatus: publishStatus as "PUBLISHED" | "DRAFT",
-            groups: groups.map((g) => ({ title: g.title, showTotal: g.showTotal, items: g.items.map((r) => ({ label: r.label, value: toNumber(r.value) })) })),
+            groups: groups.map((g) => ({ title: g.title, note: g.note.trim() || undefined, showTotal: g.showTotal, items: g.items.map((r) => ({ label: r.label, value: toNumber(r.value) })) })),
           }),
         );
       } catch (e) {
@@ -102,6 +103,14 @@ export function StatsEditor({
                 />
               }
             >
+              <input
+                value={g.note}
+                onChange={(e) => patchGroup(g.key, { note: e.target.value })}
+                placeholder="Note, e.g. Creative Economy Conference, Hall 2 (optional)"
+                aria-label="Group note"
+                maxLength={120}
+                className="-mt-2 mb-3 w-full rounded-[var(--radius-control)] border border-line bg-cream/60 px-3 py-1.5 text-sm placeholder:text-[#767676] focus:border-green-800 focus:outline-none"
+              />
               <ul className="space-y-2">
                 {g.items.map((r) => (
                   <li key={r.key} className="grid grid-cols-[1fr_8.5rem_auto] items-center gap-2">
@@ -151,7 +160,7 @@ export function StatsEditor({
         <Button
           type="button"
           variant="outline"
-          onClick={() => setGroups((gs) => [...gs, { key: key(), title: "", showTotal: false, items: [{ key: key(), label: "", value: "" }] }])}
+          onClick={() => setGroups((gs) => [...gs, { key: key(), title: "", note: "", showTotal: false, items: [{ key: key(), label: "", value: "" }] }])}
         >
           <Plus className="size-4" /> Add group
         </Button>
