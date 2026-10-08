@@ -334,6 +334,7 @@ model Event {
   @@index([startsAt])
   @@index([publishStatus, startsAt])
   @@index([editionId])
+  questions            ConferenceQuestion[]
 }
 
 model Session {
@@ -360,6 +361,7 @@ model Session {
   streams      EventStream[]
 
   @@index([eventId, startsAt])
+  questions      ConferenceQuestion[]
 }
 
 model Person {
@@ -1050,4 +1052,54 @@ model DailyReport {
   publishStatus PublishStatus @default(DRAFT)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Conference Q&A: questions and contributions from delegates
+// ---------------------------------------------------------------------------
+
+enum QuestionKind {
+  QUESTION
+  CONTRIBUTION
+}
+
+enum QuestionStatus {
+  PENDING
+  APPROVED
+  ANSWERED
+  HIDDEN
+}
+
+model ConferenceQuestion {
+  id           String         @id @default(cuid())
+  eventId      String
+  event        Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  /// The session asked about; empty for a question to the conference in general.
+  sessionId    String?
+  session      Session?       @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  kind         QuestionKind   @default(QUESTION)
+  body         String
+  name         String?
+  organisation String?
+  status       QuestionStatus @default(PENDING)
+  /// Being put to the panel right now (shown big on the hall screen).
+  pinned       Boolean        @default(false)
+  votes        Int            @default(0)
+  answeredAt   DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  voters       QuestionVote[]
+
+  @@index([eventId, status])
+  @@index([sessionId, status])
+}
+
+model QuestionVote {
+  questionId String
+  question   ConferenceQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  /// Hash of the voter's browser id: one vote per phone.
+  voter      String
+  createdAt  DateTime           @default(now())
+
+  @@id([questionId, voter])
 }

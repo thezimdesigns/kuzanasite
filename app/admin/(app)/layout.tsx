@@ -42,6 +42,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
       editable: can(user, "press"),
     },
     { href: "/admin/stats", label: "Daily figures", icon: "stats", editable: can(user, "press") },
+    { href: "/admin/qa", label: "Conference Q&A", icon: "qa", editable: can(user, "qa") },
     {
       href: "/admin/exhibitors",
       label: "Exhibitors",

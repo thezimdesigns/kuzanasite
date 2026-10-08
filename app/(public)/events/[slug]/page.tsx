@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, Download, ExternalLink, FileDown, MapPin, Phone, Navigation, Route as RouteIcon, Ticket, UserCheck } from "lucide-react";
+import { CalendarDays, Download, MessageCircleQuestion, ExternalLink, FileDown, MapPin, Phone, Navigation, Route as RouteIcon, Ticket, UserCheck } from "lucide-react";
 import { db } from "@/lib/db";
 import { fileUrl, formatBytes } from "@/lib/files";
 import { DOCUMENT_TYPE_LABELS, PARTICIPANT_ROLE_LABELS, SESSION_TYPE_LABELS } from "@/lib/options";
@@ -186,6 +186,16 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                 {event.programmePdfSize ? <span className="font-normal text-white/80">{formatBytes(event.programmePdfSize)}</span> : null}
               </ButtonLink>
             )}
+            {event.isConference && (
+              <ButtonLink
+                href={`/events/${event.slug}/qa`}
+                variant={status === "LIVE" ? "primary" : "outline"}
+                size="lg"
+                className="mt-3 w-full sm:mr-3 sm:w-auto"
+              >
+                <MessageCircleQuestion className="size-5" /> Ask a question
+              </ButtonLink>
+            )}
             {event._count.routes > 0 && (
               <ButtonLink href={`/events/${event.slug}/route`} variant="outline" size="lg" className="mt-3 w-full sm:ml-3 sm:w-auto">
                 <RouteIcon className="size-5" /> Route map
@@ -327,6 +337,14 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                                   <StreamPlayer streams={s.streams} title={s.title} live={sStatus === "LIVE"} />
                                 </div>
                               </details>
+                            )}
+                            {event.isConference && ["PANEL_DISCUSSION", "KEYNOTE", "PRESENTATION", "WORKSHOP", "CLOSING_SESSION"].includes(s.type) && sStatus !== "COMPLETED" && (
+                              <Link
+                                href={`/events/${event.slug}/qa?session=${s.id}`}
+                                className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-orange-deeper hover:underline"
+                              >
+                                <MessageCircleQuestion className="size-3.5" aria-hidden /> Ask about this session
+                              </Link>
                             )}
                             {now >= s.startsAt && (
                               <details className="mt-2">

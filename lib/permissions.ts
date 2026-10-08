@@ -4,15 +4,15 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import type { Role } from "@/lib/generated/prisma/enums";
 
-export type Area = "programme" | "announcements" | "media" | "press" | "exhibitors" | "feedback" | "visitors" | "messages" | "site" | "users";
+export type Area = "programme" | "announcements" | "media" | "press" | "exhibitors" | "feedback" | "qa" | "visitors" | "messages" | "site" | "users";
 
 const ROLE_AREAS: Record<Role, Area[]> = {
-  SUPER_ADMIN: ["programme", "announcements", "media", "press", "exhibitors", "feedback", "visitors", "messages", "site", "users"],
-  PROGRAMME_EDITOR: ["programme", "announcements", "messages", "visitors"],
+  SUPER_ADMIN: ["programme", "announcements", "media", "press", "exhibitors", "feedback", "qa", "visitors", "messages", "site", "users"],
+  PROGRAMME_EDITOR: ["programme", "announcements", "messages", "visitors", "qa"],
   MEDIA_EDITOR: ["media"],
   PRESS_OFFICER: ["press"],
   EXHIBITOR_MANAGER: ["exhibitors"],
-  FEEDBACK_MANAGER: ["feedback"],
+  FEEDBACK_MANAGER: ["feedback", "qa"],
   VIEWER: [],
 };
 

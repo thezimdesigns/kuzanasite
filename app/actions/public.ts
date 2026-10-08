@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { findValidClaim } from "@/lib/claim";
 import { db } from "@/lib/db";
@@ -8,6 +9,7 @@ import { exhibitorCodeValid } from "@/lib/exhibitor-access";
 import { checkbox, formToObject, invalid, optionalEmail, optionalText, optionalUrl, phone, requiredText, stringValues, type FormState } from "@/lib/forms";
 import { ExhibitorMediaKind } from "@/lib/generated/prisma/enums";
 import { FEEDBACK_CATEGORIES, INTEREST_TYPES, OPPORTUNITIES, VISITOR_INTERESTS, VISITOR_TYPES } from "@/lib/options";
+import { qaAutoApprove, voterId } from "@/lib/qa";
 import { rateLimit } from "@/lib/rate-limit";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { uniqueSlug } from "@/lib/slug";
@@ -406,4 +408,67 @@ export async function submitRating(_: FormState, fd: FormData): Promise<FormStat
     data: sessionId ? { ...rest, sessionId } : exhibitorId ? { ...rest, exhibitorId } : { ...rest, eventId },
   });
   return { ok: true, message: "Thanks for rating!" };
+}
+
+// ---------------------------------------------------------------------------
+// Conference Q&A
+// ---------------------------------------------------------------------------
+
+const questionSchema = z.object({
+  eventId: z.string().min(1).max(40),
+  sessionId: optionalText(40),
+  kind: z.enum(["QUESTION", "CONTRIBUTION"]).catch("QUESTION"),
+  body: z.string().trim().min(8, "Please write a little more.").max(600, "Keep it under 600 characters."),
+  name: optionalText(80),
+  organisation: optionalText(120),
+});
+
+export async function askQuestion(_: FormState, fd: FormData): Promise<FormState> {
+  const blocked = await guard(fd, "qa", 6, 600);
+  if (blocked) return blocked;
+  const parsed = questionSchema.safeParse(formToObject(fd));
+  if (!parsed.success) return invalid(parsed.error, fd);
+  const d = parsed.data;
+  const event = await db.event.findFirst({ where: { id: d.eventId, isConference: true }, select: { id: true } });
+  if (!event) return { ok: false, message: "This conference is not taking questions." };
+  if (d.sessionId && !(await db.session.findFirst({ where: { id: d.sessionId, eventId: d.eventId }, select: { id: true } }))) {
+    return { ok: false, message: "Choose a session from the list." };
+  }
+  const auto = await qaAutoApprove();
+  await db.conferenceQuestion.create({
+    data: {
+      eventId: d.eventId,
+      sessionId: d.sessionId ?? null,
+      kind: d.kind,
+      body: d.body,
+      name: d.name ?? null,
+      organisation: d.organisation ?? null,
+      status: auto ? "APPROVED" : "PENDING",
+    },
+  });
+  revalidatePath("/events/[slug]/qa", "page");
+  return {
+    ok: true,
+    message:
+      d.kind === "CONTRIBUTION"
+        ? "Thank you. Your contribution has been sent to the organisers."
+        : auto
+          ? "Thank you. Your question is in the list."
+          : "Thank you. Your question has been sent to the moderator.",
+  };
+}
+
+/** Toggles this browser's vote on a question. Returns the new count. */
+export async function voteQuestion(questionId: string) {
+  if (!(await rateLimit("qa-vote", 60, 600))) return { ok: false as const, message: "Too many votes. Please wait a moment." };
+  const voter = await voterId(true);
+  const question = await db.conferenceQuestion.findUnique({ where: { id: questionId }, select: { status: true } });
+  if (!voter || !question || question.status !== "APPROVED") return { ok: false as const, message: "Voting is closed for this question." };
+  const existing = await db.questionVote.findUnique({ where: { questionId_voter: { questionId, voter } } });
+  const [, updated] = await db.$transaction(
+    existing
+      ? [db.questionVote.delete({ where: { questionId_voter: { questionId, voter } } }), db.conferenceQuestion.update({ where: { id: questionId }, data: { votes: { decrement: 1 } } })]
+      : [db.questionVote.create({ data: { questionId, voter } }), db.conferenceQuestion.update({ where: { id: questionId }, data: { votes: { increment: 1 } } })],
+  );
+  return { ok: true as const, votes: updated.votes, voted: !existing };
 }

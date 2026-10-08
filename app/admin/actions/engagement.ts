@@ -7,7 +7,8 @@ import { adminFormAction, runAdmin } from "@/lib/admin-action";
 import { db } from "@/lib/db";
 import { checkbox, optionalEmail, optionalText, requiredText } from "@/lib/forms";
 import { VISITOR_INTERESTS, VISITOR_TYPES } from "@/lib/options";
-import { Channel, FeedbackStatus } from "@/lib/generated/prisma/enums";
+import { Channel, FeedbackStatus, type QuestionStatus } from "@/lib/generated/prisma/enums";
+import { setQaAutoApprove } from "@/lib/qa";
 import { deliverMessage, resolveAudience } from "@/lib/messaging";
 
 // ---------------------------------------------------------------------------
@@ -123,3 +124,35 @@ export const createVisitor = adminFormAction(
   },
   { arrays: ["interests"] },
 );
+
+// ---------------------------------------------------------------------------
+// Conference Q&A moderation
+// ---------------------------------------------------------------------------
+
+export async function setQuestionStatus(id: string, status: QuestionStatus) {
+  return runAdmin("qa", () =>
+    db.conferenceQuestion.update({
+      where: { id },
+      data: { status, ...(status !== "APPROVED" && { pinned: false }), answeredAt: status === "ANSWERED" ? new Date() : null },
+    }),
+  );
+}
+
+/** Puts one question on the hall screen ("being answered now"); only one per conference at a time. */
+export async function pinQuestion(id: string, pinned: boolean) {
+  return runAdmin("qa", async () => {
+    const q = await db.conferenceQuestion.findUniqueOrThrow({ where: { id } });
+    await db.$transaction([
+      db.conferenceQuestion.updateMany({ where: { eventId: q.eventId, pinned: true }, data: { pinned: false } }),
+      ...(pinned ? [db.conferenceQuestion.update({ where: { id }, data: { pinned: true, status: "APPROVED" } })] : []),
+    ]);
+  });
+}
+
+export async function deleteQuestion(id: string) {
+  return runAdmin("qa", () => db.conferenceQuestion.delete({ where: { id } }));
+}
+
+export async function setAutoApprove(on: boolean) {
+  return runAdmin("qa", () => setQaAutoApprove(on));
+}
