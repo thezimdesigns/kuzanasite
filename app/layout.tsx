@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { shareMetadata } from "@/lib/seo";
 import { Bricolage_Grotesque, Open_Sans } from "next/font/google";
 import { siteUrl } from "@/lib/site";
 import "./globals.css";
@@ -26,11 +27,7 @@ export const metadata: Metadata = {
   },
   description:
     "KUZANA SCEEZ 2026: live programme, exhibitors, media and visitor information for the sport, creative economy and investment platform in Bulawayo, 7–11 October 2026.",
-  openGraph: {
-    siteName: "KUZANA SCEEZ",
-    type: "website",
-    images: ["/brand/hero-collage.png"],
-  },
+  ...shareMetadata(),
   icons: {
     icon: [{ url: "/favicon.ico", sizes: "48x48" }, { url: "/brand/kuzana-icon.png", type: "image/png", sizes: "512x512" }],
     apple: "/brand/apple-touch-icon.png",

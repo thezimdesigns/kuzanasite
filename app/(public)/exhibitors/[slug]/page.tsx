@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { shareMetadata } from "@/lib/seo";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: PageProps<"/exhibitors/[slug]
   return {
     title: `${x.name}: Exhibitor`,
     description: x.description ?? `${x.name} at KUZANA SCEEZ ${x.edition.year}`,
-    openGraph: image ? { images: [image] } : undefined,
+    ...shareMetadata({ image, imageAlt: x.name }),
   };
 }
 

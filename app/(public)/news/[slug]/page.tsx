@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { shareMetadata } from "@/lib/seo";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -19,11 +20,7 @@ export async function generateMetadata({ params }: PageProps<"/news/[slug]">): P
     title: p.title,
     description: p.excerpt ?? undefined,
     alternates: { canonical: `/news/${p.slug}` },
-    openGraph: {
-      type: "article",
-      publishedTime: p.publishedAt.toISOString(),
-      ...(cover && { images: [cover] }),
-    },
+    ...shareMetadata({ image: cover, imageAlt: p.coverAlt ?? p.title, type: "article", publishedTime: p.publishedAt.toISOString() }),
   };
 }
 

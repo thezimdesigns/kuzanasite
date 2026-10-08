@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { fileUrl } from "@/lib/files";
+import { shareMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Globe } from "lucide-react";
@@ -36,7 +38,10 @@ export async function generateMetadata({ params }: PageProps<"/speakers/[slug]">
   if (!person) return {};
   return {
     title: person.name,
-    description: [person.jobTitle, person.organisation].filter(Boolean).join(", ") || undefined,
+    description:
+      [person.jobTitle, person.organisation].filter(Boolean).join(", ") || `${person.name} is taking part in KUZANA SCEEZ 2026 in Bulawayo.`,
+    alternates: { canonical: `/speakers/${person.slug}` },
+    ...shareMetadata({ image: fileUrl(person.photoKey), imageAlt: person.name, type: "profile" }),
   };
 }
 

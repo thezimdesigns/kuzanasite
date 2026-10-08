@@ -47,7 +47,13 @@ async function getEdition(year: number) {
 
 export async function generateMetadata({ params }: PageProps<"/archive/[year]">): Promise<Metadata> {
   const edition = await getEdition(Number((await params).year));
-  return edition ? { title: `${edition.name} archive` } : {};
+  return edition
+    ? {
+        title: `${edition.name} archive`,
+        description: `Programme, photos, videos and documents from ${edition.name}, the Sport & Creative Economy Expo of Zimbabwe.`,
+        alternates: { canonical: `/archive/${edition.year}` },
+      }
+    : {};
 }
 
 export default async function EditionArchivePage({ params }: PageProps<"/archive/[year]">) {

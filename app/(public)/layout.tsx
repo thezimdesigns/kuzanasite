@@ -1,4 +1,5 @@
 import { getBranding } from "@/lib/branding";
+import { SOCIAL_LINKS, siteUrl } from "@/lib/site";
 import { recaptchaConfig } from "@/lib/recaptcha";
 import { RecaptchaProvider } from "@/components/public/use-recaptcha";
 import { AnnouncementBanner } from "@/components/public/announcement-banner";
@@ -25,6 +26,34 @@ export default async function PublicLayout({ children }: LayoutProps<"/">) {
       <MobileTabBar />
       <ScrollToTop />
       <FxLayer />
+      {/* Who runs the site and how to search it, for search engines. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "KUZANA SCEEZ",
+              alternateName: "Sport & Creative Economy Expo of Zimbabwe",
+              url: siteUrl("/"),
+              logo: siteUrl("/brand/kuzana-icon.png"),
+              sameAs: Object.values(SOCIAL_LINKS),
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "KUZANA SCEEZ",
+              url: siteUrl("/"),
+              potentialAction: {
+                "@type": "SearchAction",
+                target: `${siteUrl("/search")}?q={search_term_string}`,
+                "query-input": "required name=search_term_string",
+              },
+            },
+          ]).replace(/</g, "\\u003c"),
+        }}
+      />
     </>
   );
 }

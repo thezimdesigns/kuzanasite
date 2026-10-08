@@ -7,7 +7,14 @@ import { EmptyState, PageHeader, Section } from "@/components/ui";
 
 export async function generateMetadata({ params }: PageProps<"/media/[section]">): Promise<Metadata> {
   const s = MEDIA_SECTIONS[(await params).section];
-  return s ? { title: s.title } : {};
+  const section = (await params).section;
+  return s
+    ? {
+        title: s.title,
+        description: `${s.title} from KUZANA SCEEZ, the Sport & Creative Economy Expo of Zimbabwe, for journalists, partners and the public.`,
+        alternates: { canonical: `/media/${section}` },
+      }
+    : {};
 }
 
 export default async function MediaSectionPage({ params }: PageProps<"/media/[section]">) {

@@ -9,6 +9,7 @@ export async function generateMetadata({ params }: PageProps<"/floor-plan/[slug]
   return plan
     ? {
         title: `${plan.title} floor plan`,
+        description: `Find exhibitor stands on the ${plan.title} floor plan at KUZANA SCEEZ: search by exhibitor or stand number.`,
         alternates: { canonical: `/floor-plan/${plan.slug}` },
       }
     : {};

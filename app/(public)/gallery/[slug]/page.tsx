@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { shareMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: PageProps<"/gallery/[slug]">)
   return {
     title: album.title,
     description: album.description ?? undefined,
-    openGraph: cover ? { images: [cover] } : undefined,
+    ...shareMetadata({ image: cover }),
   };
 }
 

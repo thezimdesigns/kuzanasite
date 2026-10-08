@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { shareMetadata } from "@/lib/seo";
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -90,7 +91,7 @@ export async function generateMetadata({ params }: PageProps<"/events/[slug]">):
     title: event.title,
     description: event.summary ?? `${event.title}: ${formatRange(event.startsAt, event.endsAt, event.timeTbc, event.dailyHours)}`,
     alternates: { canonical: `/events/${event.slug}` },
-    openGraph: image ? { images: [image] } : undefined,
+    ...shareMetadata({ image, imageAlt: `${event.title} poster` }),
   };
 }
 

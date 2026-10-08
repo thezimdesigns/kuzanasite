@@ -6,7 +6,12 @@ import { DayProgramme } from "@/components/public/day-programme";
 export async function generateMetadata({ params }: PageProps<"/programme/[day]">): Promise<Metadata> {
   const { day } = await params;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return {};
-  return { title: `Programme: ${formatLongDay(startOfDay(day))}` };
+  const label = formatLongDay(startOfDay(day));
+  return {
+    title: `Programme: ${label}`,
+    description: `Everything on at KUZANA SCEEZ on ${label}: times, venues and live status for exhibitions, conferences, sport and music.`,
+    alternates: { canonical: `/programme/${day}` },
+  };
 }
 
 export default async function DayPage({ params }: PageProps<"/programme/[day]">) {
