@@ -193,10 +193,12 @@ export function ExhibitorCard({
       </div>
       <div className="min-w-0">
         <h3 className="font-heading font-bold leading-snug group-hover:text-green-800">{exhibitor.name}</h3>
-        <p className="mt-0.5 text-xs text-muted">
+        <p className="mt-0.5 flex flex-wrap gap-x-2.5 text-xs text-muted">
           {[exhibitor.category?.name, exhibitor.hall && `Hall ${exhibitor.hall}`, exhibitor.stand && `Stand ${exhibitor.stand}`]
             .filter(Boolean)
-            .join(" · ")}
+            .map((t) => (
+              <span key={t as string}>{t}</span>
+            ))}
         </p>
         {exhibitor.description && <p className="mt-1 line-clamp-2 text-sm text-muted">{exhibitor.description}</p>}
       </div>

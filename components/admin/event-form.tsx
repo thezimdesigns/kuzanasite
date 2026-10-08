@@ -29,6 +29,8 @@ export type EventValues = {
   contact: string;
   posterKey: string;
   imageKey: string;
+  bannerKey: string;
+  bannerMobileKey: string;
   programmePdfKey: string;
   programmePdfName: string;
   statusOverride: string;
@@ -147,6 +149,17 @@ export function EventForm({
               <Field label="Contact details">
                 <Input name="contact" defaultValue={v.contact} />
               </Field>
+            </div>
+          </Panel>
+
+          <Panel title="Programme banner">
+            <p className="mb-3 text-sm text-muted">
+              A wide image shown above this item in the programme and at the top of its page. Use about 1600 × 500 px; add a
+              taller crop (about 800 × 450 px) for phones if the wide one gets too thin.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <UploadField name="bannerKey" label="Banner (wide)" current={v.bannerKey} folder="banners" maxDim={2400} />
+              <UploadField name="bannerMobileKey" label="Phone banner (optional)" current={v.bannerMobileKey} folder="banners" maxDim={1200} />
             </div>
           </Panel>
 

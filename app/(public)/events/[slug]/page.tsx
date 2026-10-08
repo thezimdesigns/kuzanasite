@@ -3,12 +3,14 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, Download, ExternalLink, FileDown, MapPin, Phone, Ticket, UserCheck } from "lucide-react";
+import { CalendarDays, Download, ExternalLink, FileDown, MapPin, Phone, Navigation, Route as RouteIcon, Ticket, UserCheck } from "lucide-react";
 import { db } from "@/lib/db";
 import { fileUrl, formatBytes } from "@/lib/files";
 import { DOCUMENT_TYPE_LABELS, PARTICIPANT_ROLE_LABELS, SESSION_TYPE_LABELS } from "@/lib/options";
+import { venueMapUrl } from "@/lib/programme";
 import { computeStatus, dateKey, formatRange, formatTimes, formatLongDay } from "@/lib/time";
 import { AlbumCard, VideoCard } from "@/components/public/cards";
+import { ProgrammeBanner } from "@/components/public/programme-list";
 import { PushOptIn } from "@/components/public/push-opt-in";
 import { RatingForm } from "@/components/public/rating-form";
 import { ShareButtons } from "@/components/public/share-buttons";
@@ -40,6 +42,7 @@ async function getEvent(slug: string) {
         include: { _count: { select: { photos: true } }, photos: { take: 1, orderBy: { sortOrder: "asc" } } },
       },
       videos: { where: { publishStatus: "PUBLISHED", sessionId: null }, orderBy: { date: "desc" } },
+      _count: { select: { routes: true } },
       announcements: {
         where: { publishStatus: "PUBLISHED", OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
         orderBy: { createdAt: "desc" },
@@ -81,6 +84,9 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 
   return (
     <>
+      {event.bannerKey && (
+        <ProgrammeBanner banner={{ wide: event.bannerKey, mobile: event.bannerMobileKey }} priority className="border-b border-line" />
+      )}
       <header className="border-b border-line bg-ivory-pattern">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 sm:py-12 md:grid-cols-[1.4fr_1fr]">
           <div>
@@ -107,6 +113,17 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                       {[event.room, event.venue.name].filter(Boolean).join(", ")}
                     </Link>
                   </dd>
+                  {venueMapUrl(event.venue) && (
+                    <a
+                      href={venueMapUrl(event.venue)!}
+                      target="_blank"
+                      rel="noopener"
+                      className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-line bg-white px-2 py-1 text-xs font-semibold text-green-900 transition-colors hover:border-green-800"
+                      aria-label={`Open ${event.venue.name} in Google Maps`}
+                    >
+                      <Navigation className="size-3.5" aria-hidden /> Map
+                    </a>
+                  )}
                 </div>
               )}
               {event.contact && (
@@ -135,6 +152,11 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
               >
                 <FileDown className="size-5" /> Download detailed programme (PDF)
                 {event.programmePdfSize ? <span className="font-normal text-white/80">{formatBytes(event.programmePdfSize)}</span> : null}
+              </ButtonLink>
+            )}
+            {event._count.routes > 0 && (
+              <ButtonLink href={`/events/${event.slug}/route`} variant="outline" size="lg" className="mt-3 w-full sm:ml-3 sm:w-auto">
+                <RouteIcon className="size-5" /> Route map
               </ButtonLink>
             )}
             <div className="mt-6 flex flex-col gap-4">

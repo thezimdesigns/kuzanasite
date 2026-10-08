@@ -125,6 +125,8 @@ enum VideoCategory {
 
 enum PartnerTier {
   HOST
+  CONVENOR
+  TECHNICAL_PARTNER
   PARTNER
   SPONSOR
   MEDIA
@@ -236,6 +238,7 @@ model Edition {
   documents     Document[]
   announcements Announcement[]
   partners      Partner[]
+  news          NewsPost[]
 }
 
 model Venue {
@@ -287,6 +290,9 @@ model Event {
   room                 String?
   posterKey            String?
   imageKey             String?
+  // Wide banner shown above the programme row and event page (optional phone crop).
+  bannerKey            String?
+  bannerMobileKey      String?
   // Detailed programme / activity sheet (PDF) offered as a download.
   programmePdfKey      String?
   programmePdfName     String?
@@ -310,6 +316,8 @@ model Event {
 
   sessions      Session[]
   participants  EventParticipant[]
+  routes        EventRoute[]
+  news          NewsPost[]
   albums        PhotoAlbum[]
   videos        Video[]
   documents     Document[]
@@ -594,20 +602,25 @@ model Document {
 }
 
 model Partner {
-  id        String      @id @default(cuid())
-  editionId String?
-  edition   Edition?    @relation(fields: [editionId], references: [id], onDelete: SetNull)
-  name      String
-  logoKey   String?
-  logoUrl   String?
-  url       String?
-  tier      PartnerTier @default(PARTNER)
-  caption   String?
+  id          String      @id @default(cuid())
+  editionId   String?
+  edition     Edition?    @relation(fields: [editionId], references: [id], onDelete: SetNull)
+  name        String
+  logoKey     String?
+  logoUrl     String?
+  url         String?
+  tier        PartnerTier @default(PARTNER)
+  caption     String?
+  description String?
+  facebook    String?
+  instagram   String?
+  linkedin    String?
+  youtube     String?
   // Shown larger than other partners (e.g. the hosting ministry).
-  prominent Boolean     @default(false)
-  sortOrder Int         @default(0)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  prominent   Boolean     @default(false)
+  sortOrder   Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
 
 // Editable content pages (Plan Your Visit, Privacy, ...). Body is Markdown.
@@ -800,4 +813,84 @@ model FooterLink {
   updatedAt DateTime @updatedAt
 
   @@index([column, sortOrder])
+}
+
+// ---------------------------------------------------------------------------
+// News
+// ---------------------------------------------------------------------------
+
+model NewsPost {
+  id            String        @id @default(cuid())
+  editionId     String?
+  edition       Edition?      @relation(fields: [editionId], references: [id], onDelete: SetNull)
+  eventId       String?
+  event         Event?        @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  title         String
+  slug          String        @unique
+  excerpt       String?
+  body          String
+  coverKey      String?
+  coverAlt      String?
+  author        String?
+  featured      Boolean       @default(false)
+  publishStatus PublishStatus @default(DRAFT)
+  publishedAt   DateTime      @default(now())
+  createdById   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([publishStatus, publishedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Homepage hero slides (background images behind the hero)
+// ---------------------------------------------------------------------------
+
+model HeroSlide {
+  id        String   @id @default(cuid())
+  imageKey  String?
+  imageUrl  String?
+  alt       String?
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Routes (e.g. marathon 5 km / 10 km / 21.1 km / 42.2 km)
+// ---------------------------------------------------------------------------
+
+enum RoutePointKind {
+  START
+  TURN
+  WAYPOINT
+  FINISH
+}
+
+model EventRoute {
+  id         String       @id @default(cuid())
+  eventId    String
+  event      Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name       String
+  distanceKm Float?
+  color      String       @default("#f36c21")
+  sortOrder  Int          @default(0)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  points     RoutePoint[]
+
+  @@index([eventId])
+}
+
+model RoutePoint {
+  id        String         @id @default(cuid())
+  routeId   String
+  route     EventRoute     @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  kind      RoutePointKind @default(WAYPOINT)
+  label     String?
+  latitude  Float
+  longitude Float
+  sortOrder Int            @default(0)
+
+  @@index([routeId, sortOrder])
 }

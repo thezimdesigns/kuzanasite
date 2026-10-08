@@ -3,7 +3,7 @@
 import { createPartner, updatePartner } from "@/app/admin/actions/site";
 import { AdminForm } from "@/components/admin/admin-form";
 import { UploadField } from "@/components/admin/upload-field";
-import { Button, Checkbox, Field, Input, Select } from "@/components/ui";
+import { Button, Checkbox, Field, Input, Select, Textarea } from "@/components/ui";
 import { PARTNER_TIER_LABELS } from "@/lib/options";
 
 export type PartnerValues = {
@@ -13,6 +13,11 @@ export type PartnerValues = {
   tier: string;
   caption: string;
   logoKey: string;
+  description: string;
+  facebook: string;
+  instagram: string;
+  linkedin: string;
+  youtube: string;
   prominent: boolean;
   sortOrder: number;
 };
@@ -45,6 +50,16 @@ export function PartnerForm({ values: v }: { values: PartnerValues }) {
             <Field label="Sort order">
               <Input type="number" name="sortOrder" defaultValue={v.sortOrder} />
             </Field>
+          </div>
+          <Field label="Short description" hint="One or two sentences shown on the partners page.">
+            <Textarea name="description" rows={2} defaultValue={v.description} maxLength={1000} />
+          </Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(["facebook", "instagram", "linkedin", "youtube"] as const).map((k) => (
+              <Field key={k} label={k === "youtube" ? "YouTube" : k === "linkedin" ? "LinkedIn" : k[0].toUpperCase() + k.slice(1)} error={state.errors?.[k]}>
+                <Input name={k} defaultValue={v[k]} placeholder="https://" />
+              </Field>
+            ))}
           </div>
           <Checkbox name="prominent" defaultChecked={v.prominent} label="Prominent (shown larger, e.g. the hosting ministry)" />
           <UploadField name="logoKey" label="Logo" current={v.logoKey} folder="partners" maxDim={800} />

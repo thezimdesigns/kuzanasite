@@ -26,10 +26,14 @@ export function DocumentList({ docs }: { docs: Doc[] }) {
             <FileText className="mt-0.5 size-5 shrink-0 text-orange-dark" />
             <div className="min-w-0">
               <p className="font-heading font-bold">{d.title}</p>
-              <p className="mt-0.5 text-xs text-muted">
+              <p className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-muted">
                 {[DOCUMENT_TYPE_LABELS[d.type], d.date && formatDate(d.date), d.author, d.event?.title, d.size && formatBytes(d.size)]
                   .filter(Boolean)
-                  .join(" · ")}
+                  .map((t, i) => (
+                    <span key={i} className={i === 0 ? "font-semibold text-green-900" : undefined}>
+                      {t}
+                    </span>
+                  ))}
               </p>
               {d.description && <p className="mt-1 line-clamp-2 text-sm text-muted">{d.description}</p>}
             </div>

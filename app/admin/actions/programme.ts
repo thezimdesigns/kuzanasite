@@ -9,12 +9,14 @@ import { checkbox, optionalText, optionalUrl, requiredText } from "@/lib/forms";
 import {
   AnnouncementPriority,
   ParticipantRole,
+  RoutePointKind,
   ProgrammeStatus,
   PublishStatus,
   SessionType,
 } from "@/lib/generated/prisma/enums";
 import { slugify, uniqueSlug } from "@/lib/slug";
 import { parseLocalInput } from "@/lib/time";
+import { resolveMapLink } from "@/lib/geo-server";
 
 const localDate = (label: string) =>
   z
@@ -89,6 +91,8 @@ const eventSchema = z
     contact: optionalText(300),
     posterKey: optionalText(300),
     imageKey: optionalText(300),
+    bannerKey: optionalText(300),
+    bannerMobileKey: optionalText(300),
     programmePdf: uploadedFile,
     removeProgrammePdf: checkbox,
     statusOverride: optionalStatus,
@@ -116,6 +120,8 @@ function eventData(d: z.infer<typeof eventSchema>) {
     contact: d.contact ?? null,
     posterKey: d.posterKey ?? null,
     imageKey: d.imageKey ?? null,
+    bannerKey: d.bannerKey ?? null,
+    bannerMobileKey: d.bannerMobileKey ?? null,
     statusNote: d.statusNote ?? null,
   };
 }
@@ -294,23 +300,34 @@ const venueSchema = z.object({
   openingTimes: optionalText(1000),
   contact: optionalText(300),
   imageKey: optionalText(300),
+  googleLocation: optionalText(1000),
   sortOrder: z.coerce.number().int().default(0),
 });
 
-const venueData = (d: z.infer<typeof venueSchema>) => {
-  const { slug: _s, ...rest } = d;
-  void _s;
-  return Object.fromEntries(Object.entries(rest).map(([k, v]) => [k, v ?? null])) as typeof rest;
-};
+/** A pasted Google Maps link (or "lat, lng") fills in the pin and the map link. */
+async function venueData(d: z.infer<typeof venueSchema>) {
+  const { slug: _s, googleLocation, ...rest } = d;
+  const data = Object.fromEntries(Object.entries(rest).map(([k, v]) => [k, v ?? null])) as Record<string, unknown>;
+  if (googleLocation) {
+    const { point, url } = await resolveMapLink(googleLocation);
+    if (point) {
+      data.latitude = point.lat;
+      data.longitude = point.lng;
+    }
+    if (url) data.mapUrl = url;
+    if (!point && !url) throw new Error("That location could not be read. Paste a Google Maps link or coordinates like -20.15, 28.58.");
+  }
+  return data;
+}
 
 export const createVenue = adminFormAction("programme", venueSchema, async (d) => {
   const slug = await uniqueSlug(d.slug ?? d.name, async (s) => !!(await db.venue.findUnique({ where: { slug: s } })));
-  const v = await db.venue.create({ data: { ...venueData(d), slug, sortOrder: d.sortOrder } });
+  const v = await db.venue.create({ data: { ...(await venueData(d)), name: d.name, slug, sortOrder: d.sortOrder } });
   redirect(`/admin/venues/${v.id}?saved=1`);
 });
 
 export const updateVenue = adminFormAction("programme", venueSchema.and(z.object({ id: z.string() })), async (d) => {
-  await db.venue.update({ where: { id: d.id }, data: { ...venueData(d), sortOrder: d.sortOrder, ...(d.slug && { slug: d.slug }) } });
+  await db.venue.update({ where: { id: d.id }, data: { ...(await venueData(d)), sortOrder: d.sortOrder, ...(d.slug && { slug: d.slug }) } });
   return { ok: true, message: "Venue saved." };
 });
 
@@ -353,4 +370,99 @@ export async function archiveAnnouncement(id: string) {
 
 export async function deleteAnnouncement(id: string) {
   return runAdmin("announcements", () => db.announcement.delete({ where: { id } }));
+}
+
+// ---------------------------------------------------------------------------
+// Routes (e.g. marathon distances) and their map points
+// ---------------------------------------------------------------------------
+
+const routeSchema = z.object({
+  eventId: z.string(),
+  name: requiredText("Name", 60),
+  distanceKm: z.coerce.number().positive().max(500).optional().catch(undefined),
+  color: z
+    .string()
+    .regex(/^#[0-9a-f]{6}$/i, "Pick a colour.")
+    .default("#f36c21"),
+  sortOrder: z.coerce.number().int().default(0),
+});
+
+export const createRoute = adminFormAction("programme", routeSchema, async (d) => {
+  await db.eventRoute.create({ data: { ...d, distanceKm: d.distanceKm ?? null } });
+  return { ok: true, message: `${d.name} route added. Click the map to place its start, turning points and finish.` };
+});
+
+export const updateRoute = adminFormAction("programme", routeSchema.and(z.object({ id: z.string() })), async (d) => {
+  const { id, eventId: _e, ...data } = d;
+  await db.eventRoute.update({ where: { id }, data: { ...data, distanceKm: data.distanceKm ?? null } });
+  return { ok: true, message: "Route saved." };
+});
+
+export async function deleteRoute(id: string) {
+  return runAdmin("programme", () => db.eventRoute.delete({ where: { id } }));
+}
+
+const pointInput = z.object({
+  routeId: z.string(),
+  kind: z.enum(RoutePointKind),
+  label: z.string().trim().max(80).optional(),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+});
+
+/** Adds a point placed on the map (or pasted). START goes first, FINISH last. */
+export async function addRoutePoint(input: z.input<typeof pointInput>) {
+  const p = pointInput.parse(input);
+  return runAdmin("programme", async () => {
+    const points = await db.routePoint.findMany({ where: { routeId: p.routeId }, orderBy: { sortOrder: "asc" } });
+    const finishIndex = points.findIndex((x) => x.kind === "FINISH");
+    let sortOrder = points.length ? points[points.length - 1].sortOrder + 1 : 0;
+    if (p.kind === "START") sortOrder = (points[0]?.sortOrder ?? 1) - 1;
+    else if (p.kind !== "FINISH" && finishIndex >= 0) {
+      // Insert before the finish: shift the finish (and anything after) down.
+      sortOrder = points[finishIndex].sortOrder;
+      await db.$transaction(
+        points.slice(finishIndex).map((x) => db.routePoint.update({ where: { id: x.id }, data: { sortOrder: x.sortOrder + 1 } })),
+      );
+    }
+    return db.routePoint.create({
+      data: { routeId: p.routeId, kind: p.kind, label: p.label || null, latitude: p.lat, longitude: p.lng, sortOrder },
+    });
+  });
+}
+
+/** Adds a point from a pasted Google Maps link or "lat, lng". */
+export async function addRoutePointFromLink(routeId: string, kind: RoutePointKind, label: string, link: string) {
+  const { point } = await resolveMapLink(link);
+  if (!point) throw new Error("Could not read a location from that link.");
+  return addRoutePoint({ routeId, kind, label, lat: point.lat, lng: point.lng });
+}
+
+export async function moveRoutePoint(id: string, lat: number, lng: number) {
+  const c = z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).parse({ lat, lng });
+  return runAdmin("programme", () => db.routePoint.update({ where: { id }, data: { latitude: c.lat, longitude: c.lng } }));
+}
+
+export async function updateRoutePoint(id: string, kind: RoutePointKind, label: string) {
+  const k = z.enum(RoutePointKind).parse(kind);
+  return runAdmin("programme", () => db.routePoint.update({ where: { id }, data: { kind: k, label: label.trim().slice(0, 80) || null } }));
+}
+
+export async function reorderRoutePoint(id: string, direction: -1 | 1) {
+  return runAdmin("programme", async () => {
+    const point = await db.routePoint.findUniqueOrThrow({ where: { id } });
+    const points = await db.routePoint.findMany({ where: { routeId: point.routeId }, orderBy: { sortOrder: "asc" } });
+    const i = points.findIndex((x) => x.id === id);
+    const other = points[i + direction];
+    if (!other) return;
+    await db.$transaction(points.map((x, n) => db.routePoint.update({ where: { id: x.id }, data: { sortOrder: n } })));
+    await db.$transaction([
+      db.routePoint.update({ where: { id }, data: { sortOrder: i + direction } }),
+      db.routePoint.update({ where: { id: other.id }, data: { sortOrder: i } }),
+    ]);
+  });
+}
+
+export async function deleteRoutePoint(id: string) {
+  return runAdmin("programme", () => db.routePoint.delete({ where: { id } }));
 }

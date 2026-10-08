@@ -38,6 +38,8 @@ export default async function NewEvent() {
           contact: "",
           posterKey: "",
           imageKey: "",
+          bannerKey: "",
+          bannerMobileKey: "",
           programmePdfKey: "",
           programmePdfName: "",
           statusOverride: "",

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Route } from "lucide-react";
 import { db } from "@/lib/db";
 import { PARTICIPANT_ROLE_LABELS, SESSION_TYPE_LABELS } from "@/lib/options";
 import { can, requireStaff } from "@/lib/permissions";
@@ -11,7 +11,7 @@ import { EventForm } from "@/components/admin/event-form";
 import { ParticipantForm } from "@/components/admin/participant-form";
 import { SessionForm } from "@/components/admin/session-form";
 import { AdminPage, Panel, PublishBadge, ReadOnlyNotice, RowLink, Table } from "@/components/admin/ui";
-import { Badge } from "@/components/ui";
+import { Badge, ButtonLink } from "@/components/ui";
 
 export default async function AdminEvent({ params }: PageProps<"/admin/events/[id]">) {
   const user = await requireStaff();
@@ -33,6 +33,7 @@ export default async function AdminEvent({ params }: PageProps<"/admin/events/[i
     db.person.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
   if (!e) notFound();
+  const routeCount = await db.eventRoute.count({ where: { eventId: e.id } });
   const drafts = e.sessions.filter((s) => s.publishStatus === "DRAFT").length;
   const lastSession = e.sessions.at(-1);
   const nextStart = lastSession ? toLocalInput(lastSession.endsAt ?? new Date(lastSession.startsAt.getTime() + 15 * 60_000)) : toLocalInput(e.startsAt);
@@ -42,9 +43,14 @@ export default async function AdminEvent({ params }: PageProps<"/admin/events/[i
       title={e.title}
       back={{ href: "/admin/events", label: "Events" }}
       actions={
-        <Link href={`/events/${e.slug}`} target="_blank" className="inline-flex items-center gap-1 text-sm font-semibold text-green-800 underline">
-          View public page <ExternalLink className="size-3.5" />
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <ButtonLink href={`/admin/events/${e.id}/routes`} size="sm" variant="outline">
+            <Route className="size-4" /> Route map{routeCount ? ` (${routeCount})` : ""}
+          </ButtonLink>
+          <Link href={`/events/${e.slug}`} target="_blank" className="inline-flex items-center gap-1 text-sm font-semibold text-green-800 underline">
+            View public page <ExternalLink className="size-3.5" />
+          </Link>
+        </div>
       }
     >
       {!editable && <ReadOnlyNotice />}
@@ -75,6 +81,8 @@ export default async function AdminEvent({ params }: PageProps<"/admin/events/[i
             contact: e.contact ?? "",
             posterKey: e.posterKey ?? "",
             imageKey: e.imageKey ?? "",
+            bannerKey: e.bannerKey ?? "",
+            bannerMobileKey: e.bannerMobileKey ?? "",
             programmePdfKey: e.programmePdfKey ?? "",
             programmePdfName: e.programmePdfName ?? "",
             statusOverride: e.statusOverride ?? "",

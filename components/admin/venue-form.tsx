@@ -3,6 +3,7 @@
 import { createVenue, updateVenue } from "@/app/admin/actions/programme";
 import { AdminForm } from "@/components/admin/admin-form";
 import { Panel } from "@/components/admin/ui";
+import { GoogleLocationField } from "@/components/admin/google-location-field";
 import { UploadField } from "@/components/admin/upload-field";
 import { Button, Field, Input, Textarea } from "@/components/ui";
 
@@ -25,15 +26,23 @@ export function VenueForm({ values: v, readOnly = false }: { values: VenueValues
               <Field label="Address">
                 <Input name="address" defaultValue={v.address} />
               </Field>
-              <Field label="Latitude">
-                <Input name="latitude" inputMode="decimal" defaultValue={v.latitude} />
-              </Field>
-              <Field label="Longitude">
-                <Input name="longitude" inputMode="decimal" defaultValue={v.longitude} />
-              </Field>
-              <Field label="Map link" hint="Google Maps link for “Get directions”." error={state.errors?.mapUrl} className="sm:col-span-2">
-                <Input name="mapUrl" defaultValue={v.mapUrl} />
-              </Field>
+              <div className="sm:col-span-2">
+                <GoogleLocationField current={v.latitude && v.longitude ? `${v.latitude}, ${v.longitude}` : ""} />
+              </div>
+              <details className="sm:col-span-2">
+                <summary className="cursor-pointer text-sm font-semibold text-green-800">Enter coordinates by hand</summary>
+                <div className="mt-3 grid gap-4 sm:grid-cols-3">
+                  <Field label="Latitude">
+                    <Input name="latitude" inputMode="decimal" defaultValue={v.latitude} />
+                  </Field>
+                  <Field label="Longitude">
+                    <Input name="longitude" inputMode="decimal" defaultValue={v.longitude} />
+                  </Field>
+                  <Field label="Map link" error={state.errors?.mapUrl}>
+                    <Input name="mapUrl" defaultValue={v.mapUrl} />
+                  </Field>
+                </div>
+              </details>
             </div>
             <div className="mt-4 space-y-4">
               <Field label="Description" hint="Markdown supported.">

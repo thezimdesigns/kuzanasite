@@ -11,6 +11,8 @@
   --color-orange-dark: #bd4c0e;
   --color-orange-deeper: #a3410b;
   --color-orange-50: #fdeee5;
+  /* Brighter orange for text and buttons on dark green (5:1 on green-950). */
+  --color-orange-bright: #ff7a2e;
   --color-gold: #c89b2b;
   --color-gold-light: #d4a93a;
   --color-cream: #fbfaf6;
@@ -135,6 +137,11 @@ h4 {
     animation: art-in 1s var(--ease-out-expo) 120ms both;
   }
 
+  /* Slow push-in on the active hero photo. */
+  .hero-push {
+    animation: hero-push 9s linear both;
+  }
+
   /* Lists reveal as they scroll into view (supported browsers only). */
   @supports (animation-timeline: view()) {
     .reveal-list > * {
@@ -194,6 +201,14 @@ h4 {
     filter: blur(0);
   }
 }
+@keyframes hero-push {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
 @keyframes header-edge {
   from {
     box-shadow: 0 0 0 transparent;
@@ -213,4 +228,48 @@ h4 {
 }
 .rail > * {
   scroll-snap-align: start;
+}
+
+/* Map pins and popups (Leaflet). */
+.kuzana-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: var(--pin, #00512d);
+  border: 2px solid #fff;
+  box-shadow: 0 6px 14px -4px rgb(0 0 0 / 0.45);
+  color: #fff;
+  font: 800 10px/1 var(--font-heading);
+}
+/* Keep the label upright inside the rotated pin. */
+.kuzana-pin > span {
+  transform: rotate(45deg);
+}
+.kuzana-popup {
+  display: grid;
+  gap: 2px;
+  font-family: var(--font-sans);
+  min-width: 160px;
+}
+.kuzana-popup strong {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  color: var(--color-green-900);
+}
+.kuzana-popup span {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.kuzana-popup a {
+  margin-top: 4px;
+  font-weight: 600;
+  color: var(--color-orange-dark);
+}
+.leaflet-container {
+  font-family: var(--font-sans);
+  z-index: 0;
 }

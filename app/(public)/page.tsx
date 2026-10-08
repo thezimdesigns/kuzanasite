@@ -2,25 +2,36 @@ import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Megaphone, Search } from "lucide-react";
+import { getBranding } from "@/lib/branding";
 import { db } from "@/lib/db";
 import { getCurrentEdition } from "@/lib/edition";
+import { getNews } from "@/lib/news";
 import { getActiveAnnouncements, getEditionEvents, getLiveBoard } from "@/lib/programme";
 import { computeStatus, dateKey, formatLongDay, startOfDay } from "@/lib/time";
 import { AutoRefresh } from "@/components/public/auto-refresh";
 import { AlbumCard, EventCard, ExhibitorCard, VideoCard } from "@/components/public/cards";
+import { HeroSlides } from "@/components/public/hero-slides";
 import { InterestForm } from "@/components/public/interest-form";
+import { LeadStory, NewsRow } from "@/components/public/news-blocks";
 import { PartnerStrip } from "@/components/public/partner-strip";
 import { ProgrammeList } from "@/components/public/programme-list";
 import { Rail } from "@/components/public/rail";
 import { WeekStrip } from "@/components/public/week-strip";
-import { ButtonLink, Card, cn, EmptyState, Section, SectionTitle } from "@/components/ui";
+import { Card, cn, EmptyState, Section, SectionTitle } from "@/components/ui";
+
+const SectionLink = ({ href, children }: { href: string; children: string }) => (
+  <Link href={href} className="group inline-flex items-center gap-1 text-sm font-semibold text-green-800">
+    {children} <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+  </Link>
+);
 
 export default async function HomePage() {
   const edition = await getCurrentEdition();
-  const [board, events, announcements, albums, videos, exhibitors, exhibitorCount, partners] = await Promise.all([
+  const [board, events, announcements, news, albums, videos, exhibitors, exhibitorCount, partners, branding] = await Promise.all([
     getLiveBoard(),
     getEditionEvents(),
     getActiveAnnouncements(3),
+    getNews(4),
     db.photoAlbum.findMany({
       where: { publishStatus: "PUBLISHED" },
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
@@ -36,14 +47,19 @@ export default async function HomePage() {
     }),
     db.exhibitor.count({ where: { status: "APPROVED" } }),
     db.partner.findMany({
-      where: { tier: { in: ["HOST", "PARTNER"] }, ...(edition && { OR: [{ editionId: edition.id }, { editionId: null }] }) },
+      where: {
+        tier: { in: ["CONVENOR", "HOST", "TECHNICAL_PARTNER", "PARTNER"] },
+        ...(edition && { OR: [{ editionId: edition.id }, { editionId: null }] }),
+      },
       orderBy: { sortOrder: "asc" },
     }),
+    getBranding(),
   ]);
 
   const now = new Date();
   const today = dateKey(now);
   const happening = [...board.live, ...board.startingSoon];
+  const [leadStory, ...moreNews] = news.posts;
 
   // "Day 2 of 5" while the edition is running.
   let dayLabel: string | null = null;
@@ -61,76 +77,63 @@ export default async function HomePage() {
     <>
       <AutoRefresh seconds={90} />
 
-      {/* Hero: the focal motion moment. Headline lines rise out of a mask, the collage resolves from blur. */}
-      <section className="relative overflow-hidden bg-ivory-pattern">
-        <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 pt-8 pb-10 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-6 lg:pt-14 lg:pb-16">
-          <div>
-            <h1 className="font-heading leading-[0.9] font-extrabold tracking-[-0.04em] text-green-900">
-              <span className="hero-line text-[clamp(3.25rem,11vw,6rem)]">
-                <span style={{ "--i": 0 } as CSSProperties}>KUZANA</span>
+      {/* Hero: event photos crossfade behind a dark green tint; headline lines rise in. */}
+      <section className="relative isolate overflow-hidden text-white">
+        <HeroSlides slides={branding.slides} />
+        <div className="relative mx-auto flex min-h-[min(80svh,46rem)] max-w-6xl flex-col justify-center px-4 py-16 sm:px-6 sm:py-20">
+          <h1 className="font-heading leading-[0.9] font-extrabold tracking-[-0.04em]">
+            <span className="hero-line text-[clamp(3.5rem,12vw,7rem)]">
+              <span style={{ "--i": 0 } as CSSProperties}>KUZANA</span>
+            </span>
+            <span className="hero-line text-[clamp(2.9rem,10vw,5.75rem)]">
+              <span style={{ "--i": 1 } as CSSProperties}>
+                SCEEZ <span className="text-orange-bright">{edition?.year ?? 2026}</span>
               </span>
-              <span className="hero-line text-[clamp(2.75rem,9.4vw,5rem)]">
-                <span style={{ "--i": 1 } as CSSProperties}>
-                  SCEEZ <span className="text-orange-dark">{edition?.year ?? 2026}</span>
+            </span>
+          </h1>
+          <p className="hero-fade mt-6 max-w-lg font-heading text-lg text-pretty text-white/90 sm:text-xl" style={{ "--i": 0 } as CSSProperties}>
+            Towards Vision 2030 through <strong className="font-bold text-white">sport &amp; creative industries</strong>.{" "}
+            <span className="font-bold whitespace-nowrap text-orange-bright">#FromTalentToGDP</span>
+          </p>
+          <p className="hero-fade mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 font-heading font-semibold text-white/90" style={{ "--i": 1 } as CSSProperties}>
+            <span>7–11 October 2026</span>
+            <span className="h-4 w-px bg-white/30" aria-hidden />
+            <span>Bulawayo, Zimbabwe</span>
+            {dayLabel && (
+              <>
+                <span className="h-4 w-px bg-white/30" aria-hidden />
+                <span className="inline-flex items-center gap-2 text-orange-bright">
+                  <span className="live-dot inline-block size-2 rounded-full bg-orange-bright" aria-hidden />
+                  {dayLabel}
                 </span>
-              </span>
-            </h1>
-            <p className="hero-fade mt-5 max-w-md font-heading text-lg text-pretty sm:text-xl" style={{ "--i": 0 } as CSSProperties}>
-              Towards Vision 2030 through <strong className="text-green-900">sport &amp; creative industries</strong>.{" "}
-              <span className="font-bold whitespace-nowrap text-orange-dark">#FromTalentToGDP</span>
-            </p>
-            <p
-              className="hero-fade mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-heading font-semibold text-green-900"
-              style={{ "--i": 1 } as CSSProperties}
+              </>
+            )}
+          </p>
+          <div className="hero-fade mt-9 flex flex-col gap-3 sm:flex-row" style={{ "--i": 2 } as CSSProperties}>
+            <Link
+              href="/live"
+              className="group inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-orange-bright px-6 py-3.5 font-heading font-bold text-green-950 transition-[filter,transform] duration-200 hover:brightness-105 active:scale-[0.98]"
             >
-              <span>7–11 October 2026</span>
-              <span className="h-4 w-px bg-green-900/25" aria-hidden />
-              <span>Bulawayo, Zimbabwe</span>
-              {dayLabel && (
-                <>
-                  <span className="h-4 w-px bg-green-900/25" aria-hidden />
-                  <span className="inline-flex items-center gap-2 text-orange-dark">
-                    <span className="live-dot inline-block size-2 rounded-full bg-orange" aria-hidden />
-                    {dayLabel}
-                  </span>
-                </>
-              )}
-            </p>
-            <div className="hero-fade mt-8 flex flex-col gap-3 sm:flex-row" style={{ "--i": 2 } as CSSProperties}>
-              <ButtonLink href="/live" size="lg">
-                What&apos;s on now <ArrowRight className="size-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
-              </ButtonLink>
-              <ButtonLink href="/programme/today" variant="outline" size="lg">
-                Today&apos;s programme
-              </ButtonLink>
-            </div>
-          </div>
-          <div className="hero-art mx-auto w-full max-w-md lg:max-w-none">
-            {/* Pre-sized WebP renditions (public/brand/hero-collage-*.webp) keep the LCP image light. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/brand/hero-collage-1000.webp"
-              srcSet="/brand/hero-collage-640.webp 640w, /brand/hero-collage-1000.webp 1000w, /brand/hero-collage-1392.webp 1392w"
-              sizes="(min-width: 1024px) 48vw, 90vw"
-              width={1392}
-              height={964}
-              fetchPriority="high"
-              alt="Athletes, artists and performers of KUZANA SCEEZ"
-              className="h-auto w-full"
-            />
+              What&apos;s on now <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+            </Link>
+            <Link
+              href="/programme/today"
+              className="inline-flex items-center justify-center rounded-[var(--radius-control)] border border-white/50 px-6 py-3.5 font-heading font-semibold text-white backdrop-blur-sm transition-[background-color,border-color,transform] duration-200 hover:border-white hover:bg-white/10 active:scale-[0.98]"
+            >
+              Today&apos;s programme
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Day jump bar */}
-      <section className="border-y border-line bg-white">
+      <section className="border-b border-line bg-white">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 sm:px-6 md:flex-row md:items-center md:gap-6">
           <h2 className="shrink-0 font-heading text-base font-bold text-green-900">Programme by day</h2>
           <WeekStrip selected={today} />
         </div>
       </section>
 
-      {/* Announcements */}
       {announcements.length > 0 && (
         <Section className="pb-0">
           <ul className="reveal-list grid gap-2 md:grid-cols-2">
@@ -161,9 +164,9 @@ export default async function HomePage() {
           <div className="rounded-[var(--radius-card)] bg-green-950 p-5 text-white sm:p-6">
             <div className="mb-4 flex items-center justify-between gap-4">
               <h2 className="flex items-center gap-2.5 text-xl font-extrabold sm:text-2xl">
-                <span className="live-dot inline-block size-2.5 rounded-full bg-orange" aria-hidden /> Happening now
+                <span className="live-dot inline-block size-2.5 rounded-full bg-orange-bright" aria-hidden /> Happening now
               </h2>
-              <Link href="/live" className="text-sm font-semibold text-gold-light underline underline-offset-2">
+              <Link href="/live" className="text-sm font-semibold text-orange-bright">
                 KUZANA Live
               </Link>
             </div>
@@ -184,7 +187,7 @@ export default async function HomePage() {
             )}
           </div>
           <div>
-            <SectionTitle action={<Link href="/programme/today" className="text-sm font-semibold text-green-800 underline underline-offset-2">Full day</Link>}>
+            <SectionTitle action={<SectionLink href="/programme/today">Full day</SectionLink>}>
               Today, {formatLongDay(now).split(" ").slice(0, 3).join(" ")}
             </SectionTitle>
             {board.today.length > 0 ? (
@@ -196,12 +199,27 @@ export default async function HomePage() {
         </div>
       </Section>
 
+      {/* News: one lead story and a column of headlines */}
+      {leadStory && (
+        <Section>
+          <SectionTitle action={<SectionLink href="/news">All news</SectionLink>}>News</SectionTitle>
+          <div className="grid gap-6 lg:grid-cols-[1.7fr_1fr]">
+            <LeadStory post={leadStory} headingLevel="h3" />
+            {moreNews.length > 0 && (
+              <div className="divide-y divide-line">
+                {moreNews.map((p) => (
+                  <NewsRow key={p.id} post={p} />
+                ))}
+              </div>
+            )}
+          </div>
+        </Section>
+      )}
+
       {/* The week: poster-led rail */}
       {events.length > 0 && (
         <Section>
-          <SectionTitle action={<Link href="/programme" className="text-sm font-semibold text-green-800 underline underline-offset-2">Full programme</Link>}>
-            The KUZANA week
-          </SectionTitle>
+          <SectionTitle action={<SectionLink href="/programme">Full programme</SectionLink>}>The KUZANA week</SectionTitle>
           <Rail label="KUZANA week events">
             {events.map((e) => (
               <div key={e.id} className="w-[78%] shrink-0 sm:w-[42%] lg:w-[calc(25%-0.75rem)]">
@@ -239,9 +257,9 @@ export default async function HomePage() {
                   Search
                 </button>
               </form>
-              <Link href="/exhibitors" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-green-800 underline underline-offset-2">
-                Browse all exhibitors <ArrowRight className="size-3.5" />
-              </Link>
+              <div className="mt-4">
+                <SectionLink href="/exhibitors">Browse all exhibitors</SectionLink>
+              </div>
             </div>
             {exhibitors.length > 0 ? (
               <div className="reveal-list grid content-start gap-3 sm:grid-cols-2">
@@ -261,9 +279,7 @@ export default async function HomePage() {
         <Section>
           {albums.length > 0 && (
             <>
-              <SectionTitle action={<Link href="/gallery" className="text-sm font-semibold text-green-800 underline underline-offset-2">Gallery</Link>}>
-                Latest photos
-              </SectionTitle>
+              <SectionTitle action={<SectionLink href="/gallery">Gallery</SectionLink>}>Latest photos</SectionTitle>
               <div className="reveal-list grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {albums.map((a) => (
                   <AlbumCard key={a.id} album={a} />
@@ -273,9 +289,7 @@ export default async function HomePage() {
           )}
           {videos.length > 0 && (
             <div className={albums.length ? "mt-12" : ""}>
-              <SectionTitle action={<Link href="/videos" className="text-sm font-semibold text-green-800 underline underline-offset-2">Videos</Link>}>
-                Latest videos
-              </SectionTitle>
+              <SectionTitle action={<SectionLink href="/videos">Videos</SectionLink>}>Latest videos</SectionTitle>
               <div className="reveal-list grid gap-4 sm:grid-cols-3">
                 {videos.map((v) => (
                   <VideoCard key={v.id} video={v} />
@@ -286,39 +300,27 @@ export default async function HomePage() {
         </Section>
       )}
 
-      {/* About */}
-      <section className="bg-green-950 text-white">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 md:gap-14">
-          <div>
-            <h2 className="text-2xl font-extrabold sm:text-3xl">
-              What is <span className="text-gold-light">KUZANA</span>?
-            </h2>
-            <p className="mt-4 leading-relaxed text-white/85">
-              KUZANA SCEEZ 2026 is an inaugural sport, creative economy and investment platform designed to connect talent,
-              capital, brands, institutions and audiences.
+      {/* About: an editorial statement, light, to break up the dark panels */}
+      <section className="bg-ivory-pattern border-y border-line">
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
+          <h2 className="text-4xl leading-[1] font-extrabold tracking-[-0.03em] text-balance text-green-900 sm:text-5xl lg:text-6xl">
+            From <span className="text-orange-dark">talent</span> to <span className="text-orange-dark">GDP</span>.
+          </h2>
+          <div className="space-y-4 text-lg leading-relaxed text-ink/85">
+            <p>
+              KUZANA SCEEZ 2026 is an inaugural sport, creative economy and investment platform designed to connect talent, capital,
+              brands, institutions and audiences.
             </p>
-            <p className="mt-3 leading-relaxed text-white/85">
-              The event brings together athletes, creatives, investors, exhibitors, sponsors, policymakers, cultural leaders
-              and industry builders to unlock the economic value of sport and creativity.
-            </p>
-          </div>
-          <div>
-            <h2 className="text-2xl font-extrabold sm:text-3xl">
-              From <span className="text-gold-light">talent</span> to <span className="text-gold-light">GDP</span>
-            </h2>
-            <p className="mt-4 leading-relaxed text-white/85">
-              KUZANA is built around a simple idea: talent must move beyond visibility into income, investment, intellectual
-              property, business growth and national economic contribution.
-            </p>
-            <p className="mt-3 leading-relaxed text-white/85">
-              The platform supports Zimbabwe&apos;s Vision 2030 ambitions by creating a marketplace where sport and creative
-              industries can meet capital, infrastructure, policy support, technology and commercial partnerships.
+            <p>
+              Talent must move beyond visibility into income, investment, intellectual property, business growth and national economic
+              contribution. KUZANA creates a marketplace where sport and creative industries meet capital, infrastructure, policy
+              support, technology and commercial partnerships, in support of Zimbabwe&apos;s Vision 2030.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Visitor help: one list, not three identical cards */}
+      {/* Visitor help */}
       <Section>
         <div className="grid gap-6 md:grid-cols-[0.8fr_1.4fr] md:gap-12">
           <div>
@@ -327,7 +329,8 @@ export default async function HomePage() {
           </div>
           <ul className="reveal-list divide-y divide-line border-y border-line">
             {[
-              ["/plan-your-visit", "Plan your visit", "Venues, directions and what to know before you arrive."],
+              ["/map", "Venue map", "Every venue in Bulawayo, with directions in Google Maps."],
+              ["/plan-your-visit", "Plan your visit", "Tickets, parking and what to know before you arrive."],
               ["/register", "Register as a visitor", "Get alerts for the events you care about."],
               ["/feedback", "Tell us how it went", "Suggestions, compliments, questions, lost and found."],
             ].map(([href, title, text]) => (
@@ -345,11 +348,13 @@ export default async function HomePage() {
         </div>
       </Section>
 
-      {/* Partners */}
       {partners.length > 0 && (
         <section className="border-t border-line bg-white">
           <Section>
-            <h2 className="mb-8 text-center font-heading text-lg font-bold text-green-900">Partners and hosts</h2>
+            <div className="mb-8 flex items-center justify-center gap-4">
+              <h2 className="font-heading text-lg font-bold text-green-900">Convenor, hosts and partners</h2>
+              <SectionLink href="/partners">All partners</SectionLink>
+            </div>
             <PartnerStrip partners={partners} />
           </Section>
         </section>
@@ -360,11 +365,10 @@ export default async function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <h2 className="text-3xl font-extrabold">
-              Stay <span className="text-gold-light">connected</span>
+              Stay <span className="text-orange-bright">connected</span>
             </h2>
             <p className="mt-3 text-white/85">
-              Be part of the movement driving Zimbabwe&apos;s creative and sporting future. Register your interest for future
-              KUZANA editions as a sponsor, exhibitor, speaker, artist, athlete, investor or partner.
+              Register your interest for future KUZANA editions as a sponsor, exhibitor, speaker, artist, athlete, investor or partner.
             </p>
             <Image src="/brand/lets-do-business.png" alt="Let's do business" width={220} height={60} className="mt-6 h-auto w-48" />
           </div>

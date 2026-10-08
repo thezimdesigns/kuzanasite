@@ -25,11 +25,13 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
         db.document.findMany({ where: { publishStatus: "PUBLISHED", OR: [{ title: contains }, { description: contains }] }, take: 10 }),
         db.photoAlbum.findMany({ where: { publishStatus: "PUBLISHED", title: contains }, take: 10 }),
         db.video.findMany({ where: { publishStatus: "PUBLISHED", title: contains }, take: 10 }),
+        db.newsPost.findMany({ where: { publishStatus: "PUBLISHED", OR: [{ title: contains }, { excerpt: contains }, { body: contains }] }, take: 10 }),
       ])
     : null;
 
   const groups = results
     ? [
+        { title: "News", items: results[7].map((n) => ({ href: `/news/${n.slug}`, title: n.title, meta: "" })) },
         { title: "Events", items: results[0].map((e) => ({ href: `/events/${e.slug}`, title: e.title, meta: formatRange(e.startsAt, e.endsAt, e.timeTbc) })) },
         { title: "Sessions", items: results[1].map((s) => ({ href: `/events/${s.event.slug}#session-${s.id}`, title: s.title, meta: s.event.title })) },
         { title: "Exhibitors", items: results[2].map((x) => ({ href: `/exhibitors/${x.slug}`, title: x.name, meta: [x.hall && `Hall ${x.hall}`, x.stand && `Stand ${x.stand}`].filter(Boolean).join(" · ") })) },

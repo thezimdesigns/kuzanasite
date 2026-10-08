@@ -57,6 +57,8 @@ export async function internalLinkOptions() {
         ["/events", "Events"],
         ["/conferences", "Conferences"],
         ["/exhibitors", "Exhibitors"],
+        ["/news", "News"],
+        ["/map", "Venue map"],
         ["/speakers", "Speakers"],
         ["/venues", "Venues"],
         ["/gallery", "Photo gallery"],

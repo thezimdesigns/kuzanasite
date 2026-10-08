@@ -1,17 +1,11 @@
 import Link from "next/link";
-import { Globe, Mail, MapPin, Phone } from "lucide-react";
+import { ChevronRight, Mail, MapPin, Phone } from "lucide-react";
 import { getFooter } from "@/lib/site-settings";
+import { SocialLinks } from "@/components/public/social-links";
 
 /** Footer content is managed in Admin → Footer. */
 export async function SiteFooter() {
   const { settings: s, columns } = await getFooter();
-  const socials = [
-    ["Facebook", s["footer.facebook"]],
-    ["Instagram", s["footer.instagram"]],
-    ["LinkedIn", s["footer.linkedin"]],
-    ["YouTube", s["footer.youtube"]],
-    ["X", s["footer.x"]],
-  ].filter(([, url]) => url) as [string, string][];
 
   return (
     <footer className="bg-green-950 pb-20 text-white/85 lg:pb-0">
@@ -42,22 +36,17 @@ export async function SiteFooter() {
               </li>
             )}
           </ul>
-          {socials.length > 0 && (
-            <ul className="mt-4 flex flex-wrap gap-2">
-              {socials.map(([label, url]) => (
-                <li key={label}>
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener"
-                    className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-white/15 px-2.5 py-1 text-xs font-semibold transition-colors hover:border-white/40 hover:text-white"
-                  >
-                    <Globe className="size-3.5" aria-hidden /> {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
+          <SocialLinks
+            name="KUZANA SCEEZ"
+            className="mt-5"
+            urls={{
+              facebook: s["footer.facebook"],
+              instagram: s["footer.instagram"],
+              youtube: s["footer.youtube"],
+              linkedin: s["footer.linkedin"],
+              x: s["footer.x"],
+            }}
+          />
         </div>
         <FooterLinks title={s["footer.col1Title"]} links={columns[0]} />
         <FooterLinks title={s["footer.col2Title"]} links={columns[1]} />
@@ -85,16 +74,19 @@ function FooterLinks({ title, links }: { title: string; links: { id: string; lab
       <div className="font-heading font-bold text-white">{title}</div>
       <ul className="mt-3 space-y-2 text-sm">
         {links.map((l) => {
+          const bullet = <ChevronRight className="size-3.5 shrink-0 text-gold-light transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden />;
           const external = /^https?:\/\//.test(l.href) || l.href.startsWith("mailto:") || l.href.startsWith("tel:");
           const props = l.newTab ? { target: "_blank", rel: "noopener" } : {};
           return (
             <li key={l.id}>
               {external ? (
-                <a href={l.href} className="transition-colors hover:text-white" {...props}>
+                <a href={l.href} className="group inline-flex items-center gap-1.5 transition-colors hover:text-white" {...props}>
+                  {bullet}
                   {l.label}
                 </a>
               ) : (
-                <Link href={l.href} className="transition-colors hover:text-white" {...props}>
+                <Link href={l.href} className="group inline-flex items-center gap-1.5 transition-colors hover:text-white" {...props}>
+                  {bullet}
                   {l.label}
                 </Link>
               )}

@@ -241,9 +241,19 @@ async function main() {
   if ((await db.partner.count()) === 0) {
     await db.partner.createMany({
       data: [
-        { name: "MOSRAC Zimbabwe", logoUrl: "/brand/mosrac-zimbabwe.png", tier: "PARTNER", prominent: true, sortOrder: 1, editionId: edition.id },
-        { name: "Nhimbe Trust", logoUrl: "/brand/nhimbe-trust.png", tier: "PARTNER", sortOrder: 2, editionId: edition.id },
+        { name: "MOSRAC Zimbabwe", logoUrl: "/brand/mosrac-zimbabwe.png", tier: "CONVENOR", caption: "Convenor", prominent: true, sortOrder: 1, editionId: edition.id },
+        { name: "Nhimbe Trust", logoUrl: "/brand/nhimbe-trust.png", tier: "TECHNICAL_PARTNER", caption: "Technical partner", url: "https://www.nhimbe.org", sortOrder: 2, editionId: edition.id },
         { name: "ZITF", logoUrl: "/brand/zitf.png", tier: "HOST", caption: "Host", sortOrder: 3, editionId: edition.id },
+      ],
+    });
+  }
+
+  // Homepage hero background slides (then managed in Admin → Homepage & branding)
+  if ((await db.heroSlide.count()) === 0) {
+    await db.heroSlide.createMany({
+      data: [
+        { imageUrl: "/brand/hero-slide-1.webp", alt: "Football at a packed stadium", sortOrder: 0 },
+        { imageUrl: "/brand/hero-slide-2.webp", alt: "A singer performing on stage", sortOrder: 1 },
       ],
     });
   }

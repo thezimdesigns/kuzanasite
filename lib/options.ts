@@ -162,7 +162,9 @@ export const FEEDBACK_STATUS_LABELS: Record<FeedbackStatus, string> = {
 };
 
 export const PARTNER_TIER_LABELS: Record<PartnerTier, string> = {
+  CONVENOR: "Convenor",
   HOST: "Host",
+  TECHNICAL_PARTNER: "Technical partner",
   PARTNER: "Partner",
   SPONSOR: "Sponsor",
   MEDIA: "Media partner",

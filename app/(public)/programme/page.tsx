@@ -1,16 +1,31 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { db } from "@/lib/db";
-import { getEditionEvents, type ProgrammeItem } from "@/lib/programme";
-import { computeStatus, dateKey, effectiveEnd, formatLongDay, startOfDay } from "@/lib/time";
+import { eventBanner, getEditionEvents, venueMapUrl, type ProgrammeItem } from "@/lib/programme";
+import { computeStatus, dateKey, effectiveEnd, startOfDay, TIME_ZONE } from "@/lib/time";
+import { AutoSubmitSelect } from "@/components/public/auto-submit-select";
 import { ProgrammeList } from "@/components/public/programme-list";
 import { ShareButtons } from "@/components/public/share-buttons";
-import { cn, EmptyState, PageHeader, Section } from "@/components/ui";
+import { WeekStrip } from "@/components/public/week-strip";
+import { Button, cn, EmptyState, PageHeader, Section } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Programme",
   description: "The full KUZANA SCEEZ programme: exhibitions, conferences, sport and music across Bulawayo.",
 };
+
+const WHEN = [
+  ["", "All"],
+  ["live", "Live now"],
+  ["upcoming", "Still to come"],
+  ["completed", "Finished"],
+] as const;
+
+const fmt = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, ...o });
+const weekdayFmt = fmt({ weekday: "long" });
+const dayFmt = fmt({ day: "2-digit" });
+const monthFmt = fmt({ month: "long" });
 
 export default async function ProgrammePage({ searchParams }: PageProps<"/programme">) {
   const sp = await searchParams;
@@ -55,102 +70,130 @@ export default async function ProgrammePage({ searchParams }: PageProps<"/progra
         room: e.room,
         posterKey: e.posterKey ?? e.imageKey,
         pdf: e.programmePdfKey ? { key: e.programmePdfKey, name: e.programmePdfName } : null,
+        // The banner shows once, on the event's first day.
+        banner: key === first ? eventBanner(e) : null,
+        venueMapUrl: venueMapUrl(e.venue),
       });
     }
   }
   const sortedDays = [...days.entries()].sort(([a], [b]) => a.localeCompare(b));
   const today = dateKey(now);
-
-  const filterLink = (key: string, value: string) => {
-    const params = new URLSearchParams({ ...(category && { category }), ...(venue && { venue }), ...(when && { when }) });
-    if (value) params.set(key, value);
-    else params.delete(key);
-    const qs = params.toString();
-    return qs ? `/programme?${qs}` : "/programme";
+  const qs = (patch: Record<string, string>) => {
+    const p = new URLSearchParams({ ...(category && { category }), ...(venue && { venue }), ...(when && { when }), ...patch });
+    for (const [k, v] of [...p.entries()]) if (!v) p.delete(k);
+    const s = p.toString();
+    return s ? `/programme?${s}` : "/programme";
   };
 
   return (
     <>
       <PageHeader title="Programme" intro="Every KUZANA SCEEZ event, day by day. Tap an event for times, venue and details.">
-        <ShareButtons title="KUZANA SCEEZ 2026 programme" path="/programme" />
+        <WeekStrip />
       </PageHeader>
-      <Section>
-        <div className="mb-6 space-y-3">
-          <FilterRow
-            label="Show"
-            options={[
-              ["", "All"],
-              ["live", "Live now"],
-              ["upcoming", "Upcoming"],
-              ["completed", "Completed"],
-            ]}
-            current={when}
-            href={(v) => filterLink("when", v)}
-          />
-          <FilterRow
-            label="Category"
-            options={[["", "All"], ...categories.map((c) => [c.slug, c.name] as [string, string])]}
-            current={category}
-            href={(v) => filterLink("category", v)}
-          />
-          <FilterRow
-            label="Venue"
-            options={[["", "All"], ...venues.map((v) => [v.slug, v.name] as [string, string])]}
-            current={venue}
-            href={(v) => filterLink("venue", v)}
-          />
-        </div>
 
-        {sortedDays.length === 0 ? (
-          <EmptyState>No events match these filters.</EmptyState>
-        ) : (
-          <div className="space-y-10">
-            {sortedDays.map(([key, items]) => (
-              <section key={key} aria-labelledby={`day-${key}`}>
-                <h2 id={`day-${key}`} className="mb-3 flex items-center gap-3 text-xl font-extrabold text-green-900">
-                  {formatLongDay(startOfDay(key))}
-                  {key === today && <span className="rounded-[var(--radius-badge)] bg-orange-dark px-2 py-0.5 text-xs text-white">Today</span>}
-                </h2>
-                <ProgrammeList items={items} />
-                <Link href={`/programme/${key}`} className="mt-2 inline-block text-sm font-semibold text-green-800 underline">
-                  Full day including sessions
+      {/* Filters: one compact bar instead of three rows of chips. */}
+      <div className="border-b border-line bg-white">
+        <form className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:px-6 md:flex-row md:items-center md:justify-between" action="/programme">
+          {when && <input type="hidden" name="when" value={when} />}
+          <div role="group" aria-label="Show" className="rail -mx-4 flex overflow-x-auto px-4 md:mx-0 md:px-0">
+            <div className="inline-flex rounded-[var(--radius-control)] border border-line bg-cream p-0.5">
+              {WHEN.map(([value, label]) => (
+                <Link
+                  key={value || "all"}
+                  href={qs({ when: value })}
+                  scroll={false}
+                  aria-current={when === value ? "true" : undefined}
+                  className={cn(
+                    "rounded-[calc(var(--radius-control)-2px)] px-3 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors",
+                    when === value ? "bg-green-900 text-white" : "text-ink hover:bg-white",
+                  )}
+                >
+                  {label}
                 </Link>
-              </section>
-            ))}
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 md:flex">
+            <label className="sr-only" htmlFor="f-category">
+              Category
+            </label>
+            <AutoSubmitSelect id="f-category" name="category" defaultValue={category} className="py-2 text-sm md:w-44">
+              <option value="">All categories</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.slug}>
+                  {c.name}
+                </option>
+              ))}
+            </AutoSubmitSelect>
+            <label className="sr-only" htmlFor="f-venue">
+              Venue
+            </label>
+            <AutoSubmitSelect id="f-venue" name="venue" defaultValue={venue} className="py-2 text-sm md:w-56">
+              <option value="">All venues</option>
+              {venues.map((v) => (
+                <option key={v.id} value={v.slug}>
+                  {v.name}
+                </option>
+              ))}
+            </AutoSubmitSelect>
+            <noscript>
+              <Button type="submit" size="sm" variant="secondary">
+                Apply
+              </Button>
+            </noscript>
+          </div>
+        </form>
+      </div>
+
+      <Section>
+        {sortedDays.length === 0 ? (
+          <EmptyState>
+            No events match these filters.{" "}
+            <Link href="/programme" className="font-semibold text-green-800 underline">
+              Show everything
+            </Link>
+          </EmptyState>
+        ) : (
+          <div className="space-y-12">
+            {sortedDays.map(([key, items]) => {
+              const date = startOfDay(key);
+              const isToday = key === today;
+              const dayHref = isToday ? "/programme/today" : `/programme/${key}`;
+              return (
+                <section key={key} aria-labelledby={`day-${key}`} className="grid gap-4 lg:grid-cols-[11rem_1fr] lg:gap-8">
+                  <header className="lg:sticky lg:top-24 lg:self-start">
+                    <h2 id={`day-${key}`} className="flex items-center gap-3 font-heading text-green-900 lg:block">
+                      <span className="text-5xl leading-none font-extrabold tracking-[-0.04em] tabular-nums lg:text-6xl">{dayFmt.format(date)}</span>
+                      <span className="lg:mt-2 lg:block">
+                        <span className="block text-lg leading-tight font-bold">{weekdayFmt.format(date)}</span>
+                        <span className="block text-sm font-medium text-muted">{monthFmt.format(date)}</span>
+                      </span>
+                    </h2>
+                    {isToday && (
+                      <span className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-orange-dark">
+                        <span className="live-dot inline-block size-2 rounded-full bg-orange" aria-hidden /> Today
+                      </span>
+                    )}
+                    <Link href={dayHref} className="group mt-3 hidden items-center gap-1 text-sm font-semibold text-green-800 lg:flex">
+                      Sessions and times <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                    </Link>
+                  </header>
+                  <div>
+                    <ProgrammeList items={items} />
+                    <Link href={dayHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-green-800 lg:hidden">
+                      Sessions and times <ArrowRight className="size-3.5" />
+                    </Link>
+                  </div>
+                </section>
+              );
+            })}
           </div>
         )}
+        <div className="mt-14 border-t border-line pt-6">
+          <p className="mb-3 text-sm font-semibold text-muted">Share the programme</p>
+          <ShareButtons title="KUZANA SCEEZ 2026 programme" path="/programme" />
+        </div>
       </Section>
     </>
-  );
-}
-
-function FilterRow({
-  label,
-  options,
-  current,
-  href,
-}: {
-  label: string;
-  options: [string, string][];
-  current: string;
-  href: (value: string) => string;
-}) {
-  return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1">
-      <span className="shrink-0 text-sm font-semibold text-muted">{label}:</span>
-      {options.map(([value, text]) => (
-        <Link
-          key={value || "all"}
-          href={href(value)}
-          scroll={false}
-          className={cn(
-            "shrink-0 rounded-[var(--radius-control)] border px-3 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors",
-            current === value ? "border-green-900 bg-green-900 text-white" : "border-line bg-white hover:border-green-800",
-          )}
-        >
-          {text}
-        </Link>
-      ))}
-    </div>
   );
 }

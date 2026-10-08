@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { getCurrentEdition } from "@/lib/edition";
 import type { ProgrammeStatus } from "@/lib/generated/prisma/enums";
+import { googleMapsUrl } from "@/lib/geo";
 import { computeStatus, dateKey, endOfDay, occursOn, startOfDay } from "@/lib/time";
 
 export type ProgrammeItem = {
@@ -20,7 +21,20 @@ export type ProgrammeItem = {
   category?: string | null;
   posterKey?: string | null;
   pdf?: { key: string; name: string | null } | null;
+  banner?: { wide: string; mobile: string | null } | null;
+  venueMapUrl?: string | null;
 };
+
+/** Google Maps link for a venue: its pin if set, else its saved map link. */
+export function venueMapUrl(v: { latitude: number | null; longitude: number | null; mapUrl: string | null } | null) {
+  if (!v) return null;
+  if (v.latitude != null && v.longitude != null) return googleMapsUrl(v.latitude, v.longitude);
+  return v.mapUrl;
+}
+
+export function eventBanner(e: { bannerKey: string | null; bannerMobileKey: string | null }) {
+  return e.bannerKey ? { wide: e.bannerKey, mobile: e.bannerMobileKey } : null;
+}
 
 /** Published events of the current edition, ordered by start. */
 export async function getEditionEvents() {
@@ -79,6 +93,8 @@ export async function getDayProgramme(key = dateKey(new Date()), now = new Date(
       category: e.category?.name,
       posterKey: e.posterKey ?? e.imageKey,
       pdf: e.programmePdfKey ? { key: e.programmePdfKey, name: e.programmePdfName } : null,
+      banner: eventBanner(e),
+      venueMapUrl: venueMapUrl(e.venue),
     });
     for (const s of e.sessions) {
       items.push({
@@ -94,6 +110,7 @@ export async function getDayProgramme(key = dateKey(new Date()), now = new Date(
         room: s.room ?? e.room,
         parentTitle: e.title,
         posterKey: s.posterKey,
+        venueMapUrl: venueMapUrl(e.venue),
       });
     }
   }

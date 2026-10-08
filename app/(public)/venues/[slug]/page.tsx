@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { Accessibility, Car, Clock, MapPin, Navigation, Phone } from "lucide-react";
 import { db } from "@/lib/db";
 import { fileUrl } from "@/lib/files";
+import { googleDirectionsUrl } from "@/lib/geo";
+import { MapView } from "@/components/map/map-view";
 import { computeStatus } from "@/lib/time";
 import { EventCard } from "@/components/public/cards";
 import { ShareButtons } from "@/components/public/share-buttons";
@@ -34,10 +36,9 @@ export default async function VenuePage({ params }: PageProps<"/venues/[slug]">)
   if (!venue) notFound();
   const image = fileUrl(venue.imageKey);
   const mapsUrl =
-    venue.mapUrl ??
-    (venue.latitude && venue.longitude
-      ? `https://www.google.com/maps/search/?api=1&query=${venue.latitude},${venue.longitude}`
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${venue.name} ${venue.address ?? "Bulawayo"}`)}`);
+    venue.latitude != null && venue.longitude != null
+      ? googleDirectionsUrl(venue.latitude, venue.longitude)
+      : (venue.mapUrl ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${venue.name} ${venue.address ?? "Bulawayo"}`)}`);
   const now = new Date();
 
   const facts = [
@@ -73,6 +74,23 @@ export default async function VenuePage({ params }: PageProps<"/venues/[slug]">)
           {image && (
             <div className="relative aspect-video overflow-hidden rounded-[var(--radius-card)]">
               <Image src={image} alt={venue.name} fill sizes="(min-width: 1024px) 60vw, 100vw" className="object-cover" />
+            </div>
+          )}
+          {venue.latitude != null && venue.longitude != null && (
+            <div className="h-72 overflow-hidden rounded-[var(--radius-card)] border border-line">
+              <MapView
+                className="size-full"
+                markers={[
+                  {
+                    id: venue.id,
+                    lat: venue.latitude,
+                    lng: venue.longitude,
+                    title: venue.name,
+                    subtitle: venue.address ?? undefined,
+                    link: { href: mapsUrl, label: "Directions in Google Maps" },
+                  },
+                ]}
+              />
             </div>
           )}
           {venue.description && <Markdown>{venue.description}</Markdown>}

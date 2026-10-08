@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { IconBrandFacebook, IconBrandLinkedin, IconBrandWhatsapp, IconBrandX } from "@tabler/icons-react";
 import { Check, Link2 } from "lucide-react";
 
 /**
@@ -11,13 +12,12 @@ export function ShareButtons({ title, path }: { title: string; path: string }) {
   const [copied, setCopied] = useState(false);
   const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
   const url = `${base || (typeof window !== "undefined" ? window.location.origin : "")}${path}`;
-  const text = `${title}\n${url}`;
   const enc = encodeURIComponent;
 
-  const links = [
-    { label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}` },
-    { label: "X", href: `https://x.com/intent/post?text=${enc(title)}&url=${enc(url)}` },
-    { label: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${enc(url)}` },
+  const others = [
+    { label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`, Icon: IconBrandFacebook },
+    { label: "X", href: `https://x.com/intent/post?text=${enc(title)}&url=${enc(url)}`, Icon: IconBrandX },
+    { label: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${enc(url)}`, Icon: IconBrandLinkedin },
   ];
 
   async function copy() {
@@ -30,43 +30,28 @@ export function ShareButtons({ title, path }: { title: string; path: string }) {
     }
   }
 
+  const iconBtn =
+    "inline-flex size-10 items-center justify-center rounded-[var(--radius-control)] border border-line bg-white text-green-900 transition-[border-color,transform] duration-200 hover:border-green-800 active:scale-95";
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       <a
-        href={`https://wa.me/?text=${enc(text)}`}
+        href={`https://wa.me/?text=${enc(`${title}\n${url}`)}`}
         target="_blank"
         rel="noopener"
-        className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[#25D366] px-4 py-2 font-heading text-sm font-bold text-[#06371d] transition-[filter,transform] hover:brightness-95 active:scale-[0.98]"
+        className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-control)] bg-[#25D366] px-4 font-heading text-sm font-bold text-[#06371d] transition-[filter,transform] hover:brightness-95 active:scale-[0.98]"
       >
-        <WhatsAppIcon /> Share on WhatsApp
+        <IconBrandWhatsapp size={18} stroke={2} aria-hidden /> Share on WhatsApp
       </a>
-      {links.map((l) => (
-        <a
-          key={l.label}
-          href={l.href}
-          target="_blank"
-          rel="noopener"
-          className="rounded-[var(--radius-control)] border border-line bg-white px-3 py-2 text-sm font-semibold hover:border-green-800"
-        >
-          {l.label}
+      {others.map(({ label, href, Icon }) => (
+        <a key={label} href={href} target="_blank" rel="noopener" className={iconBtn} aria-label={`Share on ${label}`} title={`Share on ${label}`}>
+          <Icon size={18} stroke={1.75} aria-hidden />
         </a>
       ))}
-      <button
-        type="button"
-        onClick={copy}
-        className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-line bg-white px-3 py-2 text-sm font-semibold hover:border-green-800"
-      >
+      <button type="button" onClick={copy} className={`${iconBtn} w-auto gap-1.5 px-3 text-sm font-semibold`}>
         {copied ? <Check className="size-4 text-green-800" /> : <Link2 className="size-4" />}
         {copied ? "Copied" : "Copy link"}
       </button>
     </div>
-  );
-}
-
-function WhatsAppIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden>
-      <path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35M12.05 21.5h-.01a9.4 9.4 0 0 1-4.8-1.32l-.34-.2-3.57.94.95-3.48-.22-.36a9.4 9.4 0 0 1-1.44-5.02c0-5.2 4.24-9.43 9.44-9.43 2.52 0 4.89.98 6.67 2.77a9.37 9.37 0 0 1 2.76 6.67c0 5.2-4.23 9.43-9.44 9.43m8.03-17.47A11.3 11.3 0 0 0 12.05.7C5.79.7.7 5.79.7 12.05c0 2 .52 3.95 1.52 5.67L.6 23.3l5.72-1.5a11.3 11.3 0 0 0 5.72 1.46h.01c6.26 0 11.35-5.09 11.35-11.35 0-3.03-1.18-5.88-3.32-8.03" />
-    </svg>
   );
 }
