@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
-import { computeStatus } from "@/lib/time";
+import { computeStatus, dateKey, occursOn } from "@/lib/time";
 
 const AUTO_APPROVE_KEY = "qa.autoApprove";
 const VOTER_COOKIE = "kz_voter";
@@ -55,4 +55,22 @@ export async function getQaConference(slug: string, now = new Date()) {
     withStatus.find((s) => s.status === "STARTING_SOON" || s.status === "UPCOMING") ??
     lastDone;
   return { event, sessions: withStatus, currentSessionId: current?.id ?? null };
+}
+
+/**
+ * The conference delegates most likely want to ask about: one on today,
+ * otherwise the next one coming up, otherwise the most recent. Null if none.
+ */
+export async function currentQaConference(now = new Date()) {
+  const conferences = await db.event.findMany({
+    where: { isConference: true, publishStatus: "PUBLISHED" },
+    orderBy: { startsAt: "asc" },
+    select: { slug: true, title: true, startsAt: true, endsAt: true, timeTbc: true, dailyHours: true, statusOverride: true },
+  });
+  const today = dateKey(now);
+  const onToday = conferences.find((c) => occursOn(c, today));
+  const upcoming = conferences.find((c) => c.startsAt > now);
+  const recent = [...conferences].reverse().find((c) => c.startsAt <= now);
+  const pick = onToday ?? upcoming ?? recent;
+  return pick ? { slug: pick.slug, title: pick.title, isSoon: !!(onToday ?? upcoming) } : null;
 }

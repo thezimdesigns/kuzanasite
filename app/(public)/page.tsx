@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Megaphone, Search } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Megaphone, MessageCircleQuestion, MessageSquare, Search } from "lucide-react";
 import { getBranding } from "@/lib/branding";
 import { db } from "@/lib/db";
 import { getCurrentEdition } from "@/lib/edition";
@@ -15,6 +15,7 @@ import { HeroSlides } from "@/components/public/hero-slides";
 import { InterestPanel } from "@/components/public/interest-panel";
 import { StatsBoard } from "@/components/public/stats-board";
 import { getPublishedReports } from "@/lib/stats-server";
+import { currentQaConference } from "@/lib/qa";
 import { LeadStory, NewsRow } from "@/components/public/news-blocks";
 import { PartnerStrip } from "@/components/public/partner-strip";
 import { ProgrammeList } from "@/components/public/programme-list";
@@ -30,7 +31,7 @@ const SectionLink = ({ href, children }: { href: string; children: string }) => 
 
 export default async function HomePage() {
   const edition = await getCurrentEdition();
-  const [board, events, announcements, news, albums, videos, exhibitors, exhibitorCount, partners, branding, mentions, [stats]] = await Promise.all([
+  const [board, events, announcements, news, albums, videos, exhibitors, exhibitorCount, partners, branding, mentions, [stats], qaConference] = await Promise.all([
     getLiveBoard(),
     getEditionEvents(),
     getActiveAnnouncements(3),
@@ -73,6 +74,7 @@ export default async function HomePage() {
       take: 3,
     }),
     getPublishedReports(1),
+    currentQaConference(),
   ]);
 
   const now = new Date();
@@ -144,6 +146,25 @@ export default async function HomePage() {
               className="inline-flex items-center justify-center rounded-[var(--radius-control)] border border-white/50 px-6 py-3.5 font-heading font-semibold text-white backdrop-blur-sm transition-[background-color,border-color,transform] duration-200 hover:border-white hover:bg-white/10 active:scale-[0.98]"
             >
               Today&apos;s programme
+            </Link>
+          </div>
+          {/* Quick actions for people in the halls: short links they can also say out loud (kuzana.org.zw/qa). */}
+          <div className="hero-fade mt-4 flex flex-wrap gap-2" style={{ "--i": 3 } as CSSProperties}>
+            {qaConference?.isSoon && (
+              <Link
+                href="/qa"
+                className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-white/12 px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-white/25 backdrop-blur-sm transition-[background-color,transform] duration-200 hover:bg-white/20 active:scale-[0.98]"
+              >
+                <MessageCircleQuestion className="size-4 text-orange-bright" aria-hidden />
+                Ask the panel a question
+              </Link>
+            )}
+            <Link
+              href="/feedback"
+              className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-white/12 px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-white/25 backdrop-blur-sm transition-[background-color,transform] duration-200 hover:bg-white/20 active:scale-[0.98]"
+            >
+              <MessageSquare className="size-4 text-orange-bright" aria-hidden />
+              Send feedback
             </Link>
           </div>
         </div>
