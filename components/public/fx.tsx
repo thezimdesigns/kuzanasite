@@ -8,9 +8,11 @@ import { IconBallFootball } from "@tabler/icons-react";
  * shockwaves ripple out like a struck skin) and a ball kick (a football flies
  * off the button in an arc). Purely visual, never on reduced motion.
  *
- * Use: data-fx="drum" | "kick" on any clickable element, or fireFx() from code.
+ * Applied automatically: buttons that do something get the drum, button-style
+ * links that take you somewhere get the kick, small icon buttons get a light
+ * tap. Override with data-fx="drum" | "kick" | "tap" | "none", or call fireFx().
  */
-export type FxKind = "drum" | "kick";
+export type FxKind = "drum" | "kick" | "tap";
 type Fx = { id: number; kind: FxKind; x: number; y: number; dir: 1 | -1 };
 
 const EVENT = "kuzana-fx";
@@ -24,15 +26,43 @@ function origin(el: Element, e?: MouseEvent) {
   return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
 }
 
-/** The element itself reacts: a thump for the drum, a jolt for the kick. */
+/** The element itself reacts: a thump for the drum, a jolt for the kick, a press for a tap. */
 function nudge(el: Element, kind: FxKind) {
   if (!(el instanceof HTMLElement)) return;
   el.animate(
     kind === "drum"
       ? [{ transform: "scale(1)" }, { transform: "scale(0.93)", offset: 0.25 }, { transform: "scale(1.035)", offset: 0.6 }, { transform: "scale(1)" }]
-      : [{ transform: "none" }, { transform: "translateY(2px) scale(0.97)", offset: 0.3 }, { transform: "none" }],
+      : kind === "kick"
+        ? [{ transform: "none" }, { transform: "translateY(2px) scale(0.97)", offset: 0.3 }, { transform: "none" }]
+        : [{ transform: "scale(1)" }, { transform: "scale(0.9)", offset: 0.35 }, { transform: "scale(1)" }],
     { duration: kind === "drum" ? 420 : 240, easing: "ease-out" },
   );
+}
+
+const CLICKABLE = "[data-fx], button, a[href], [role=button]";
+
+/** A link counts as a button when it is drawn as one: compact, with a fill or an outline. */
+function drawnAsButton(el: HTMLElement, r: DOMRect) {
+  if (r.height > 64 || r.width > 440) return false;
+  const cs = getComputedStyle(el);
+  const fill = cs.backgroundColor !== "transparent" && !/(,\s*0|\/\s*0)\)$/.test(cs.backgroundColor);
+  const outline = parseFloat(cs.borderTopWidth) > 0 && cs.borderTopStyle !== "none" && parseFloat(cs.borderBottomWidth) > 0;
+  return fill || outline;
+}
+
+/** Which effect a click on this element should get, if any. */
+function effectFor(el: HTMLElement): FxKind | null {
+  const set = el.dataset.fx;
+  if (set === "none") return null;
+  if (set === "drum" || set === "kick" || set === "tap") return set;
+  if (el.closest(".leaflet-container")) return null;
+  if (el.matches(":disabled, [aria-disabled=true]")) return null;
+  // Submit buttons beat the drum when the form succeeds instead (see ActionForm).
+  if (el instanceof HTMLButtonElement && el.type === "submit") return null;
+  const r = el.getBoundingClientRect();
+  const small = r.width < 48 && r.height < 48;
+  if (el.tagName === "A") return drawnAsButton(el, r) ? (small ? "tap" : "kick") : null;
+  return small ? "tap" : "drum";
 }
 
 export function fireFx(kind: FxKind, el: Element, e?: MouseEvent) {
@@ -54,9 +84,9 @@ export function FxLayer() {
       setEffects((list) => [...list.slice(-5), { id: next.current++, kind, x, y, dir }]);
     };
     const onClick = (e: MouseEvent) => {
-      const el = (e.target as Element | null)?.closest<HTMLElement>("[data-fx]");
-      const kind = el?.dataset.fx;
-      if (el && (kind === "drum" || kind === "kick")) fireFx(kind, el, e);
+      const el = (e.target as Element | null)?.closest<HTMLElement>(CLICKABLE);
+      const kind = el && effectFor(el);
+      if (el && kind) fireFx(kind, el, e);
     };
     window.addEventListener(EVENT, onFx);
     document.addEventListener("click", onClick);
@@ -70,7 +100,15 @@ export function FxLayer() {
 
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[70] overflow-hidden">
-      {effects.map((f) => (f.kind === "drum" ? <DrumBeat key={f.id} fx={f} onDone={done} /> : <BallKick key={f.id} fx={f} onDone={done} />))}
+      {effects.map((f) =>
+        f.kind === "drum" ? (
+          <DrumBeat key={f.id} fx={f} onDone={done} />
+        ) : f.kind === "kick" ? (
+          <BallKick key={f.id} fx={f} onDone={done} />
+        ) : (
+          <Tap key={f.id} fx={f} onDone={done} />
+        ),
+      )}
     </div>
   );
 }
@@ -153,4 +191,21 @@ function BallKick({ fx, onDone }: { fx: Fx; onDone: (id: number) => void }) {
       </span>
     </>
   );
+}
+
+/** A light ripple for small icon buttons. */
+function Tap({ fx, onDone }: { fx: Fx; onDone: (id: number) => void }) {
+  const ring = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const anim = ring.current?.animate(
+      [
+        { transform: "translate(-50%, -50%) scale(0.3)", opacity: 0.8 },
+        { transform: "translate(-50%, -50%) scale(1)", opacity: 0 },
+      ],
+      { duration: 420, easing: EASE, fill: "both" },
+    );
+    if (anim) anim.onfinish = () => onDone(fx.id);
+    else onDone(fx.id);
+  }, [fx.id, onDone]);
+  return <span ref={ring} className="absolute size-14 rounded-full border-2 border-orange-bright" style={{ left: fx.x, top: fx.y }} />;
 }
