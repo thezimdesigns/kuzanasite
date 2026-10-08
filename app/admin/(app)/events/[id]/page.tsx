@@ -11,6 +11,7 @@ import { EventForm } from "@/components/admin/event-form";
 import { ParticipantForm } from "@/components/admin/participant-form";
 import { SessionForm } from "@/components/admin/session-form";
 import { StreamsPanel } from "@/components/admin/streams-panel";
+import { TicketsPanel } from "@/components/admin/tickets-panel";
 import { AdminPage, Panel, PublishBadge, ReadOnlyNotice, RowLink, Table } from "@/components/admin/ui";
 import { Badge, ButtonLink } from "@/components/ui";
 
@@ -83,7 +84,6 @@ export default async function AdminEvent({ params }: PageProps<"/admin/events/[i
             isConference: e.isConference,
             featured: e.featured,
             ticketRequired: e.ticketRequired,
-            ticketPrice: e.ticketPrice ?? "",
             ticketUrl: e.ticketUrl ?? "",
             registrationRequired: e.registrationRequired,
             registrationUrl: e.registrationUrl ?? "",
@@ -159,6 +159,8 @@ export default async function AdminEvent({ params }: PageProps<"/admin/events/[i
               </details>
             )}
           </Panel>
+
+          <TicketsPanel eventId={e.id} editable={editable} />
 
           <StreamsPanel eventId={e.id} editable={editable} />
 

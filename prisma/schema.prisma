@@ -336,6 +336,7 @@ model Event {
   @@index([publishStatus, startsAt])
   @@index([editionId])
   questions            ConferenceQuestion[]
+  tickets              EventTicket[]
 }
 
 model Session {
@@ -1103,4 +1104,23 @@ model QuestionVote {
   createdAt  DateTime           @default(now())
 
   @@id([questionId, voter])
+}
+
+/// One ticket type for an event, e.g. "General" US$5, "VIP" US$20, "Ringside" US$50.
+model EventTicket {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name      String
+  /// Free text so admins can write "US$10", "US$10 / ZiG 260" or "Free".
+  price     String
+  note      String?
+  /// Where to buy this ticket; falls back to the event's ticket link.
+  url       String?
+  soldOut   Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId])
 }

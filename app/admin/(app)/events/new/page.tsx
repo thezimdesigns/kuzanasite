@@ -32,7 +32,6 @@ export default async function NewEvent() {
           isConference: false,
           featured: false,
           ticketRequired: false,
-          ticketPrice: "",
           ticketUrl: "",
           registrationRequired: false,
           registrationUrl: "",

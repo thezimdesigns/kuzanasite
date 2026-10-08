@@ -68,6 +68,7 @@ async function getEvent(slug: string) {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
         select: { id: true, label: true, url: true },
       },
+      tickets: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
       _count: { select: { routes: true } },
       announcements: {
         where: {
@@ -162,18 +163,22 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
               )}
             </dl>
             <div className="mt-5 flex flex-wrap gap-3">
-              {event.ticketRequired && (
-                <TicketBox
-                  icon={<Ticket className="size-5" />}
-                  title={`Ticket required${event.ticketPrice ? ` · ${event.ticketPrice}` : ""}`}
-                  url={event.ticketUrl}
-                  cta="Get tickets"
-                />
+              {event.tickets.length > 0 ? (
+                <TicketList tickets={event.tickets} defaultUrl={event.ticketUrl} />
+              ) : (
+                event.ticketRequired && (
+                  <TicketBox
+                    icon={<Ticket className="size-5" />}
+                    title={`Ticket required${event.ticketPrice ? ` · ${event.ticketPrice}` : ""}`}
+                    url={event.ticketUrl}
+                    cta="Get tickets"
+                  />
+                )
               )}
               {event.registrationRequired && (
                 <TicketBox icon={<UserCheck className="size-5" />} title="Registration required" url={event.registrationUrl} cta="Register" />
               )}
-              {!event.ticketRequired && !event.registrationRequired && <Badge tone="green">No ticket or registration needed</Badge>}
+              {!event.ticketRequired && !event.tickets.length && !event.registrationRequired && <Badge tone="green">No ticket or registration needed</Badge>}
             </div>
             {event.programmePdfKey && (
               <ButtonLink
@@ -513,6 +518,49 @@ function TicketBox({ icon, title, url, cta }: { icon: ReactNode; title: string; 
           {cta}
         </a>
       )}
+    </div>
+  );
+}
+
+/** Ticket types with prices; each links to its own shop page or the event's ticket link. */
+function TicketList({
+  tickets,
+  defaultUrl,
+}: {
+  tickets: { id: string; name: string; price: string; note: string | null; url: string | null; soldOut: boolean }[];
+  defaultUrl: string | null;
+}) {
+  return (
+    <div className="w-full overflow-hidden rounded-[var(--radius-card)] border border-line bg-white sm:max-w-md">
+      <p className="flex items-center gap-2 border-b border-line bg-cream px-3.5 py-2 text-sm font-semibold text-green-900">
+        <Ticket className="size-4 text-orange-dark" aria-hidden /> Tickets
+      </p>
+      <ul className="divide-y divide-line">
+        {tickets.map((t) => {
+          const href = t.url ?? defaultUrl;
+          return (
+            <li key={t.id} className="flex items-center gap-3 px-3.5 py-2.5">
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold text-ink">{t.name}</span>
+                {t.note && <span className="block text-xs text-muted">{t.note}</span>}
+              </span>
+              <span className={cn("font-heading font-bold whitespace-nowrap tabular-nums", t.soldOut ? "text-muted line-through" : "text-green-900")}>{t.price}</span>
+              {t.soldOut ? (
+                <Badge tone="orange">Sold out</Badge>
+              ) : href ? (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener"
+                  className="rounded-[var(--radius-control)] bg-orange-dark px-3 py-1.5 text-sm font-bold whitespace-nowrap text-white transition-colors hover:bg-orange-deeper"
+                >
+                  Buy
+                </a>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

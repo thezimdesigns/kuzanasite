@@ -23,7 +23,6 @@ export type EventValues = {
   isConference: boolean;
   featured: boolean;
   ticketRequired: boolean;
-  ticketPrice: string;
   ticketUrl: string;
   registrationRequired: boolean;
   registrationUrl: string;
@@ -145,10 +144,11 @@ export function EventForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <Checkbox name="ticketRequired" defaultChecked={v.ticketRequired} label="Ticket required" />
               <Checkbox name="registrationRequired" defaultChecked={v.registrationRequired} label="Registration required" />
-              <Field label="Ticket price">
-                <Input name="ticketPrice" defaultValue={v.ticketPrice} placeholder="e.g. US$10" />
-              </Field>
-              <Field label="Ticket link" error={state.errors?.ticketUrl}>
+              <p className="text-sm text-muted sm:col-span-2">
+                Prices are set per ticket type (General, VIP, Ringside…) in the <strong>Tickets</strong> panel
+                {v.id ? " on this page" : ", which appears once the event is saved"}.
+              </p>
+              <Field label="Ticket link" hint="Where to buy, used for any ticket type without its own link." error={state.errors?.ticketUrl}>
                 <Input name="ticketUrl" defaultValue={v.ticketUrl} />
               </Field>
               <Field label="Registration link" error={state.errors?.registrationUrl}>

@@ -83,7 +83,6 @@ const eventSchema = z
     isConference: checkbox,
     featured: checkbox,
     ticketRequired: checkbox,
-    ticketPrice: optionalText(120),
     ticketUrl: optionalUrl,
     registrationRequired: checkbox,
     registrationUrl: optionalUrl,
@@ -132,7 +131,6 @@ function eventData(d: z.infer<typeof eventSchema>) {
     summary: d.summary ?? null,
     description: d.description ?? null,
     room: d.room ?? null,
-    ticketPrice: d.ticketPrice ?? null,
     ticketUrl: d.ticketUrl ?? null,
     registrationUrl: d.registrationUrl ?? null,
     contact: d.contact ?? null,
@@ -679,4 +677,55 @@ export async function deleteStream(id: string) {
   return runAdmin("programme", async () => {
     await db.eventStream.delete({ where: { id } });
   });
+}
+
+// ---------------------------------------------------------------------------
+// Ticket types (several prices per event)
+// ---------------------------------------------------------------------------
+
+const ticketSchema = z.object({
+  eventId: z.string().min(1).max(40),
+  name: requiredText("Ticket name", 60),
+  price: requiredText("Price", 60),
+  note: optionalText(200),
+  url: optionalUrl,
+  soldOut: checkbox,
+});
+
+export const createTicket = adminFormAction("programme", ticketSchema, async (d) => {
+  const count = await db.eventTicket.count({ where: { eventId: d.eventId } });
+  await db.$transaction([
+    db.eventTicket.create({ data: { ...d, note: d.note ?? null, url: d.url ?? null, sortOrder: count } }),
+    // Listing a ticket means the event needs one.
+    db.event.update({ where: { id: d.eventId }, data: { ticketRequired: true } }),
+  ]);
+  return { ok: true, message: `${d.name} added.` };
+});
+
+export const updateTicket = adminFormAction("programme", ticketSchema.and(z.object({ id: z.string() })), async (d) => {
+  await db.eventTicket.update({ where: { id: d.id }, data: { name: d.name, price: d.price, note: d.note ?? null, url: d.url ?? null, soldOut: d.soldOut } });
+  return { ok: true, message: "Ticket saved." };
+});
+
+export async function toggleTicketSoldOut(id: string) {
+  return runAdmin("programme", async () => {
+    const t = await db.eventTicket.findUniqueOrThrow({ where: { id } });
+    await db.eventTicket.update({ where: { id }, data: { soldOut: !t.soldOut } });
+  });
+}
+
+export async function moveTicket(id: string, direction: -1 | 1) {
+  return runAdmin("programme", async () => {
+    const t = await db.eventTicket.findUniqueOrThrow({ where: { id } });
+    const list = await db.eventTicket.findMany({ where: { eventId: t.eventId }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] });
+    const i = list.findIndex((x) => x.id === id);
+    const j = i + direction;
+    if (j < 0 || j >= list.length) return;
+    [list[i], list[j]] = [list[j], list[i]];
+    await db.$transaction(list.map((x, n) => db.eventTicket.update({ where: { id: x.id }, data: { sortOrder: n } })));
+  });
+}
+
+export async function deleteTicket(id: string) {
+  return runAdmin("programme", () => db.eventTicket.delete({ where: { id } }));
 }
