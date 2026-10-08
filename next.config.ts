@@ -17,6 +17,17 @@ const nextConfig: NextConfig = {
     // Allows staff to submit large forms (e.g. long press releases).
     serverActions: { bodySizeLimit: "2mb" },
   },
+  // One canonical address: kuzana.org.zw → www.kuzana.org.zw (admin sign-in trusts the www origin).
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "kuzana.org.zw" }],
+        destination: "https://www.kuzana.org.zw/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
