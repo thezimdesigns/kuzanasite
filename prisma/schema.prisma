@@ -930,7 +930,10 @@ model MediaMention {
   outlet        String?
   platform      MentionPlatform @default(WEBSITE)
   excerpt       String?
+  /// Picture found on the linked page (external).
   imageUrl      String?
+  /// Picture uploaded by an admin; shown instead of imageUrl.
+  imageKey      String?
   publishedAt   DateTime?
   featured      Boolean         @default(false)
   publishStatus PublishStatus   @default(PUBLISHED)

@@ -36,6 +36,7 @@ export default async function AdminCoverage() {
                 publishedAt: "",
                 featured: false,
                 publishStatus: "PUBLISHED",
+                imageKey: "",
               }}
             />
           </Panel>
@@ -71,6 +72,8 @@ export default async function AdminCoverage() {
                           publishedAt: toDateInput(m.publishedAt),
                           featured: m.featured,
                           publishStatus: m.publishStatus,
+                          imageKey: m.imageKey ?? "",
+                          imageUrl: m.imageUrl,
                         }}
                       />
                       <div className="mt-2">

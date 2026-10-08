@@ -3,6 +3,7 @@ import { IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandTikt
 import { ArrowUpRight, Globe, Newspaper, Radio, Tv } from "lucide-react";
 import type { MentionPlatform } from "@/lib/generated/prisma/enums";
 import { balanceColumns, PLATFORM_LABELS } from "@/lib/coverage";
+import { fileUrl } from "@/lib/files";
 import { formatDate } from "@/lib/time";
 
 type Mention = {
@@ -13,8 +14,12 @@ type Mention = {
   platform: MentionPlatform;
   excerpt: string | null;
   imageUrl: string | null;
+  imageKey?: string | null;
   publishedAt: Date | null;
 };
+
+/** The admin's uploaded picture wins over the one found on the linked page. */
+const pictureOf = (m: Mention) => fileUrl(m.imageKey) ?? m.imageUrl;
 
 const ICONS: Record<MentionPlatform, (p: { className?: string }) => ReactNode> = {
   FACEBOOK: ({ className }) => <IconBrandFacebook className={className} stroke={1.75} />,
@@ -31,7 +36,7 @@ const ICONS: Record<MentionPlatform, (p: { className?: string }) => ReactNode> =
 };
 
 /** Rough visual height, used to keep the three columns level. */
-const weight = (m: Mention) => 3 + m.title.length / 38 + (m.excerpt ? Math.min(m.excerpt.length, 180) / 55 : 0) + (m.imageUrl ? 5 : 0);
+const weight = (m: Mention) => 3 + m.title.length / 38 + (m.excerpt ? Math.min(m.excerpt.length, 180) / 55 : 0) + (pictureOf(m) ? 5 : 0);
 
 /**
  * Links to coverage of KUZANA elsewhere. On wider screens items flow into three
@@ -73,10 +78,10 @@ function MentionCard({ mention: m }: { mention: Mention }) {
       rel="noopener nofollow"
       className="group block overflow-hidden rounded-[var(--radius-card)] border border-line bg-white transition-[border-color,box-shadow,transform] duration-300 ease-[var(--ease-out-expo)] hover:-translate-y-0.5 hover:border-green-800/40 hover:shadow-[var(--shadow-lift)]"
     >
-      {m.imageUrl && (
-        // External preview image from the linked site.
+      {pictureOf(m) && (
+        // Uploaded picture, or the preview image from the linked site.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={m.imageUrl} alt="" loading="lazy" referrerPolicy="no-referrer" className="aspect-[16/9] w-full bg-cream-dark object-cover" />
+        <img src={pictureOf(m)!} alt="" loading="lazy" referrerPolicy="no-referrer" className="aspect-[16/9] w-full bg-cream-dark object-cover" />
       )}
       <div className="p-4">
         <p className="flex items-center gap-2 text-sm font-semibold text-green-900">

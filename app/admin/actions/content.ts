@@ -159,6 +159,7 @@ const mentionSchema = z.object({
     .string()
     .optional()
     .transform((v) => parseLocalInput(v) ?? null),
+  imageKey: optionalText(300),
   featured: checkbox,
   publishStatus: z.enum(PublishStatus),
 });
@@ -176,6 +177,7 @@ async function mentionData(d: z.infer<typeof mentionSchema>) {
     platform: d.platform ?? detectPlatform(d.url),
     excerpt: d.excerpt ?? p.excerpt ?? null,
     imageUrl: p.imageUrl ?? null,
+    imageKey: d.imageKey ?? null,
     publishedAt: d.publishedAt ?? p.publishedAt ?? null,
     featured: d.featured,
     publishStatus: d.publishStatus,
@@ -196,11 +198,15 @@ export const updateMention = adminFormAction("press", mentionSchema.and(z.object
     where: { id },
     data: { ...data, imageUrl: data.imageUrl ?? old.imageUrl },
   });
+  if (old.imageKey && old.imageKey !== data.imageKey) await deleteObject(old.imageKey);
   return { ok: true, message: "Saved." };
 });
 
 export async function deleteMention(id: string) {
-  return runAdmin("press", () => db.mediaMention.delete({ where: { id } }));
+  return runAdmin("press", async () => {
+    const m = await db.mediaMention.delete({ where: { id } });
+    if (m.imageKey) await deleteObject(m.imageKey);
+  });
 }
 
 // ---------------------------------------------------------------------------
