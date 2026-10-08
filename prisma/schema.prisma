@@ -1034,3 +1034,20 @@ model ServiceProvider {
 
   @@index([categoryId])
 }
+
+// ---------------------------------------------------------------------------
+// Daily figures ("KUZANA in numbers"), one report per day
+// ---------------------------------------------------------------------------
+
+model DailyReport {
+  id            String        @id @default(cuid())
+  /// The day the figures describe (calendar date, Bulawayo time).
+  day           DateTime      @unique @db.Date
+  headline      String?
+  note          String?
+  /// [{ title, showTotal, items: [{ label, value }] }]
+  groups        Json
+  publishStatus PublishStatus @default(DRAFT)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}

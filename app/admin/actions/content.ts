@@ -12,6 +12,7 @@ import { fetchLinkPreview } from "@/lib/link-preview";
 import { slugify, uniqueSlug } from "@/lib/slug";
 import { deleteObject } from "@/lib/storage";
 import { parseLocalInput } from "@/lib/time";
+import { keyToReportDay, readGroups, statGroupsSchema } from "@/lib/stats";
 
 // ---------------------------------------------------------------------------
 // News
@@ -200,4 +201,50 @@ export const updateMention = adminFormAction("press", mentionSchema.and(z.object
 
 export async function deleteMention(id: string) {
   return runAdmin("press", () => db.mediaMention.delete({ where: { id } }));
+}
+
+// ---------------------------------------------------------------------------
+// Daily figures ("KUZANA in numbers")
+// ---------------------------------------------------------------------------
+
+const dayKey = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a date.");
+
+/** Starts a day's report, copying the groups and labels of the latest one so only the numbers change. */
+export async function createDailyReport(day: string) {
+  const key = dayKey.parse(day);
+  const report = await runAdmin("press", async () => {
+    const existing = await db.dailyReport.findUnique({ where: { day: keyToReportDay(key) } });
+    if (existing) return existing;
+    const latest = await db.dailyReport.findFirst({ orderBy: { day: "desc" } });
+    const groups = latest
+      ? readGroups(latest.groups).map((g) => ({ ...g, items: g.items.map((i) => ({ ...i, value: 0 })) }))
+      : [{ title: "Exhibitors", showTotal: true, items: [{ label: "", value: 0 }] }];
+    return db.dailyReport.create({ data: { day: keyToReportDay(key), groups } });
+  });
+  redirect(`/admin/stats/${report.id}`);
+}
+
+const reportInput = z.object({
+  headline: z.string().trim().max(160),
+  note: z.string().trim().max(1000),
+  publishStatus: z.enum(PublishStatus),
+  groups: statGroupsSchema,
+});
+
+export async function saveDailyReport(id: string, input: z.input<typeof reportInput>) {
+  const parsed = reportInput.safeParse(input);
+  if (!parsed.success) return { ok: false as const, message: parsed.error.issues[0]?.message ?? "Check the figures." };
+  const d = parsed.data;
+  await runAdmin("press", () =>
+    db.dailyReport.update({
+      where: { id },
+      data: { headline: d.headline || null, note: d.note || null, publishStatus: d.publishStatus, groups: d.groups },
+    }),
+  );
+  return { ok: true as const, message: d.publishStatus === "PUBLISHED" ? "Saved and published." : "Saved as a draft." };
+}
+
+export async function deleteDailyReport(id: string) {
+  await runAdmin("press", () => db.dailyReport.delete({ where: { id } }));
+  redirect("/admin/stats");
 }

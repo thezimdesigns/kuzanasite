@@ -30,6 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/media/coverage",
     "/floor-plan",
     "/credits",
+    "/stats",
     ...Object.keys(MEDIA_SECTIONS).map((s) => `/media/${s}`),
   ];
   const [events, exhibitors, people, venues, albums, docs, editions, news, routed, plans] = await Promise.all([

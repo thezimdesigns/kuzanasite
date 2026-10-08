@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   Award,
+  BarChart3,
   Building2,
   CalendarRange,
   Camera,
@@ -56,6 +57,7 @@ const ICONS = {
   pages: FileText,
   news: Rss,
   coverage: Globe,
+  stats: BarChart3,
   floorplans: MapIcon,
   credits: Award,
   branding: Palette,

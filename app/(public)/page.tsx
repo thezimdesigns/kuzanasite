@@ -13,6 +13,8 @@ import { AlbumCard, EventCard, ExhibitorCard, VideoCard } from "@/components/pub
 import { CoverageColumns } from "@/components/public/coverage-columns";
 import { HeroSlides } from "@/components/public/hero-slides";
 import { InterestPanel } from "@/components/public/interest-panel";
+import { StatsBoard } from "@/components/public/stats-board";
+import { getPublishedReports } from "@/lib/stats-server";
 import { LeadStory, NewsRow } from "@/components/public/news-blocks";
 import { PartnerStrip } from "@/components/public/partner-strip";
 import { ProgrammeList } from "@/components/public/programme-list";
@@ -28,7 +30,7 @@ const SectionLink = ({ href, children }: { href: string; children: string }) => 
 
 export default async function HomePage() {
   const edition = await getCurrentEdition();
-  const [board, events, announcements, news, albums, videos, exhibitors, exhibitorCount, partners, branding, mentions] = await Promise.all([
+  const [board, events, announcements, news, albums, videos, exhibitors, exhibitorCount, partners, branding, mentions, [stats]] = await Promise.all([
     getLiveBoard(),
     getEditionEvents(),
     getActiveAnnouncements(3),
@@ -69,6 +71,7 @@ export default async function HomePage() {
       orderBy: [{ featured: "desc" }, { publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
       take: 6,
     }),
+    getPublishedReports(1),
   ]);
 
   const now = new Date();
@@ -218,7 +221,32 @@ export default async function HomePage() {
         </div>
       </Section>
 
-      {/* News: one lead story and a column of headlines */}
+      {/* The day in numbers */}
+      {stats && (
+        <section className="bg-green-950 text-white" aria-labelledby="stats-title">
+          <Section>
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-bold text-orange-bright">
+                  {stats.dayNumber ? `Day ${stats.dayNumber} · ` : ""}
+                  {stats.date}
+                </p>
+                <h2 id="stats-title" className="mt-1 text-3xl font-extrabold tracking-[-0.02em]">
+                  KUZANA in numbers
+                </h2>
+                {stats.headline && <p className="mt-2 max-w-[60ch] text-white/85">{stats.headline}</p>}
+              </div>
+              <Link href="/stats" className="text-sm font-semibold text-orange-bright hover:underline">
+                Every day&apos;s figures
+              </Link>
+            </div>
+            <StatsBoard groups={stats.groups} tone="dark" />
+            {stats.note && <p className="mt-6 max-w-[65ch] text-sm text-white/65">{stats.note}</p>}
+          </Section>
+        </section>
+      )}
+
+            {/* News: one lead story and a column of headlines */}
       {leadStory && (
         <Section>
           <SectionTitle action={<SectionLink href="/news">All news</SectionLink>}>News</SectionTitle>

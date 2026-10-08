@@ -71,6 +71,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Media",
     links: [
       { href: "/news", label: "News", hint: "Stories and updates" },
+      { href: "/stats", label: "In numbers", hint: "Daily figures" },
       {
         href: "/gallery",
         label: "Photo gallery",
