@@ -232,6 +232,7 @@ export async function createDailyReport(day: string) {
 }
 
 const reportInput = z.object({
+  day: dayKey,
   headline: z.string().trim().max(160),
   note: z.string().trim().max(1000),
   publishStatus: z.enum(PublishStatus),
@@ -242,10 +243,12 @@ export async function saveDailyReport(id: string, input: z.input<typeof reportIn
   const parsed = reportInput.safeParse(input);
   if (!parsed.success) return { ok: false as const, message: parsed.error.issues[0]?.message ?? "Check the figures." };
   const d = parsed.data;
+  const clash = await db.dailyReport.findFirst({ where: { day: keyToReportDay(d.day), NOT: { id } }, select: { id: true } });
+  if (clash) return { ok: false as const, message: "Another day's figures already use that date. Open that day instead, or delete it first." };
   await runAdmin("press", () =>
     db.dailyReport.update({
       where: { id },
-      data: { headline: d.headline || null, note: d.note || null, publishStatus: d.publishStatus, groups: d.groups },
+      data: { day: keyToReportDay(d.day), headline: d.headline || null, note: d.note || null, publishStatus: d.publishStatus, groups: d.groups },
     }),
   );
   return { ok: true as const, message: d.publishStatus === "PUBLISHED" ? "Saved and published." : "Saved as a draft." };

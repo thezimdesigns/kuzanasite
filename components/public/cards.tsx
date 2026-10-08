@@ -3,9 +3,9 @@ import Link from "next/link";
 import { CalendarDays, FileDown, MapPin, Play } from "lucide-react";
 import type { ProgrammeStatus } from "@/lib/generated/prisma/enums";
 import { fileUrl } from "@/lib/files";
-import { dateKey, formatDate, formatRange, TIME_ZONE } from "@/lib/time";
+import { dateKey, formatDate, formatRange, friendlyStatus, TIME_ZONE } from "@/lib/time";
 import { youtubeThumb } from "@/lib/youtube";
-import { StatusBadge } from "@/components/public/status-badge";
+import { FriendlyBadge } from "@/components/public/status-badge";
 import { cn } from "@/components/ui";
 
 type EventCardData = {
@@ -78,9 +78,9 @@ export function EventCard({ event, status }: { event: EventCardData; status?: Pr
         )}
       </div>
       <div className="flex flex-1 flex-col p-4">
-        {status && status !== "UPCOMING" && (
+        {status && (
           <div className="mb-2">
-            <StatusBadge status={status} />
+            <FriendlyBadge status={friendlyStatus({ ...event, statusOverride: null }, status)} />
           </div>
         )}
         <h3 className="font-heading text-lg leading-snug font-bold text-balance text-ink">

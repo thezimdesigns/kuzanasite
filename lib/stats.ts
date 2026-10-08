@@ -5,6 +5,8 @@ export const statGroupSchema = z.object({
   title: z.string().trim().min(1, "Give each group a title.").max(60),
   /** Context for the figures, e.g. "Creative Economy Conference, Hall 2". */
   note: z.string().trim().max(120).optional(),
+  /** The programme activity these figures belong to (event slug). */
+  eventSlug: z.string().trim().max(120).optional(),
   showTotal: z.boolean(),
   items: z
     .array(
@@ -59,6 +61,8 @@ export function findValue(groups: StatGroup[] | undefined, title: string, label?
  */
 export function groupInsight(g: StatGroup) {
   if (g.showTotal || g.items.length < 2) return null;
+  // Only meaningful for repeated counts of the same people, e.g. morning vs afternoon sessions.
+  if (!g.items.every((i) => /session|morning|afternoon|evening|day/i.test(i.label))) return null;
   const first = g.items[0];
   const last = g.items[g.items.length - 1];
   if (!first.value) return null;

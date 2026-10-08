@@ -110,7 +110,9 @@ function WeekView({ days }: { days: ExplorerDay[] }) {
 
 type Bar = { day: ExplorerDay; dayIndex: number; label: string; value: number; colour: string };
 
-function GroupChart({ title, days }: { title: string; days: ExplorerDay[] }) {
+function GroupChart({ title, days: allDays }: { title: string; days: ExplorerDay[] }) {
+  // Only the days that have these figures (the marathon is one day, the exhibition four).
+  const days = allDays.filter((d) => d.groups.some((g) => g.title.toLowerCase() === title.toLowerCase()));
   const perDay = days.map((d) => d.groups.find((g) => g.title.toLowerCase() === title.toLowerCase()) ?? null);
   const sample = perDay.find(Boolean)!;
   const totals = sample.showTotal;
@@ -131,7 +133,15 @@ function GroupChart({ title, days }: { title: string; days: ExplorerDay[] }) {
 
   return (
     <section aria-label={`${title} by day`}>
-      <h3 className="text-sm font-bold tracking-[0.08em] text-muted uppercase">{title}</h3>
+      <h3 className="text-sm font-bold tracking-[0.08em] text-muted uppercase">
+        {sample.eventSlug ? (
+          <a href={`/events/${sample.eventSlug}`} className="hover:text-green-800 hover:underline">
+            {title}
+          </a>
+        ) : (
+          title
+        )}
+      </h3>
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
         {(totals ? ["Total"] : labels).map((l) => (
           <span key={l} className="inline-flex items-center gap-1.5">

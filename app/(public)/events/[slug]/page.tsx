@@ -9,13 +9,15 @@ import { db } from "@/lib/db";
 import { fileUrl, formatBytes } from "@/lib/files";
 import { DOCUMENT_TYPE_LABELS, PARTICIPANT_ROLE_LABELS, SESSION_TYPE_LABELS } from "@/lib/options";
 import { venueMapUrl } from "@/lib/programme";
-import { computeStatus, dateKey, formatRange, formatTimes, formatLongDay } from "@/lib/time";
+import { computeStatus, dateKey, formatRange, formatTimes, formatLongDay, friendlyStatus } from "@/lib/time";
 import { AlbumCard, VideoCard } from "@/components/public/cards";
 import { ProgrammeBanner } from "@/components/public/programme-list";
 import { PushOptIn } from "@/components/public/push-opt-in";
 import { RatingForm } from "@/components/public/rating-form";
 import { ShareButtons } from "@/components/public/share-buttons";
-import { StatusBadge } from "@/components/public/status-badge";
+import { FriendlyBadge, StatusBadge } from "@/components/public/status-badge";
+import { StatsBoard } from "@/components/public/stats-board";
+import { getPublishedReports } from "@/lib/stats-server";
 import { StreamPlayer } from "@/components/public/stream-player";
 import { Markdown } from "@/components/markdown";
 import { Avatar } from "@/components/public/avatar";
@@ -102,6 +104,11 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 
   const now = new Date();
   const status = computeStatus(event, now);
+  // Daily figures linked to this activity (oldest day first).
+  const figures = (await getPublishedReports())
+    .reverse()
+    .map((r) => ({ ...r, groups: r.groups.filter((g) => g.eventSlug === event.slug) }))
+    .filter((r) => r.groups.length);
   const image = fileUrl(event.posterKey ?? event.imageKey);
   const when = formatRange(event.startsAt, event.endsAt, event.timeTbc, event.dailyHours);
   const shareTitle = `KUZANA ${event.title}: ${when}${event.venue ? ` at ${event.venue.name}` : ""}`;
@@ -122,7 +129,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
             <BackLink href="/programme" label="Programme" />
             <div className="mb-3 flex flex-wrap items-center gap-2">
               {event.category && <Badge tone="green">{event.category.name}</Badge>}
-              <StatusBadge status={status} />
+              <FriendlyBadge status={friendlyStatus(event, status, now)} />
             </div>
             <h1 className="text-[2rem] leading-[1.05] font-extrabold tracking-[-0.025em] text-balance text-green-900 sm:text-5xl">{event.title}</h1>
             {event.statusNote && <p className="mt-3 font-semibold text-danger">{event.statusNote}</p>}
@@ -259,6 +266,31 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
               <SectionTitle>{status === "LIVE" ? "Watch live" : "Live stream"}</SectionTitle>
               {now < event.startsAt && <p className="-mt-2 mb-3 text-sm text-muted">The stream starts with the event: {when}.</p>}
               <StreamPlayer streams={event.streams} title={event.title} live={status === "LIVE"} />
+            </div>
+          )}
+
+          {figures.length > 0 && (
+            <div id="numbers" className="scroll-mt-24">
+              <SectionTitle action={<Link href="/stats?view=week" className="text-sm font-semibold text-green-800">All figures</Link>}>
+                In numbers
+              </SectionTitle>
+              <div className="space-y-8">
+                {figures.map((r, i) => (
+                  <div key={r.key}>
+                    {figures.length > 1 && (
+                      <p className="mb-3 text-sm font-bold text-orange-dark">
+                        {r.dayNumber ? `Day ${r.dayNumber} · ` : ""}
+                        {r.date}
+                      </p>
+                    )}
+                    <StatsBoard
+                      groups={r.groups.map((g) => ({ ...g, eventSlug: undefined, note: figures.length > 1 ? undefined : g.note }))}
+                      previous={figures[i - 1]?.groups}
+                      previousLabel={figures[i - 1] ? (figures[i - 1].dayNumber ? `Day ${figures[i - 1].dayNumber}` : figures[i - 1].short) : undefined}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

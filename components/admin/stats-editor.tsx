@@ -1,14 +1,18 @@
 "use client";
 
 import { useState, useTransition, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { saveDailyReport } from "@/app/admin/actions/content";
 import { Panel } from "@/components/admin/ui";
 import { Alert, Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { formatNumber, groupTotal, type StatGroup } from "@/lib/stats";
+import { templatesFor } from "@/lib/stats-templates";
+
+export type ActivityOption = { slug: string; title: string; category: string | null; isConference: boolean; onDay: boolean };
 
 type Row = { key: number; label: string; value: string };
-type Group = { key: number; title: string; note: string; showTotal: boolean; items: Row[] };
+type Group = { key: number; title: string; note: string; eventSlug: string; showTotal: boolean; items: Row[] };
 
 let nextKey = 1;
 const key = () => nextKey++;
@@ -17,11 +21,16 @@ export function StatsEditor({
   id,
   dayLabel,
   initial,
+  activities,
 }: {
   id: string;
   dayLabel: string;
-  initial: { headline: string; note: string; publishStatus: string; groups: StatGroup[] };
+  initial: { day: string; headline: string; note: string; publishStatus: string; groups: StatGroup[] };
+  /** Programme activities; those on this day are offered first. */
+  activities: ActivityOption[];
 }) {
+  const router = useRouter();
+  const [day, setDay] = useState(initial.day);
   const [headline, setHeadline] = useState(initial.headline);
   const [note, setNote] = useState(initial.note);
   const [status, setStatus] = useState(initial.publishStatus);
@@ -30,6 +39,7 @@ export function StatsEditor({
       key: key(),
       title: g.title,
       note: g.note ?? "",
+      eventSlug: g.eventSlug ?? "",
       showTotal: g.showTotal,
       items: g.items.map((i) => ({ key: key(), label: i.label, value: i.value ? String(i.value) : "" })),
     })),
@@ -56,17 +66,39 @@ export function StatsEditor({
       try {
         setResult(
           await saveDailyReport(id, {
+            day,
             headline,
             note,
             publishStatus: publishStatus as "PUBLISHED" | "DRAFT",
-            groups: groups.map((g) => ({ title: g.title, note: g.note.trim() || undefined, showTotal: g.showTotal, items: g.items.map((r) => ({ label: r.label, value: toNumber(r.value) })) })),
+            groups: groups.map((g) => ({ title: g.title, note: g.note.trim() || undefined, eventSlug: g.eventSlug || undefined, showTotal: g.showTotal, items: g.items.map((r) => ({ label: r.label, value: toNumber(r.value) })) })),
           }),
         );
+        if (day !== initial.day) router.refresh();
       } catch (e) {
         setResult({ ok: false, message: e instanceof Error ? e.message : "Could not save." });
       }
     });
   }
+
+  /** Adds the ready-made figure groups for a programme activity (skipping ones already here). */
+  function addActivity(slug: string) {
+    const a = activities.find((x) => x.slug === slug);
+    if (!a) return;
+    const fresh = templatesFor(a).filter((t) => !groups.some((g) => g.title === t.title && g.eventSlug === slug));
+    setGroups((gs) => [
+      ...gs,
+      ...fresh.map((t) => ({
+        key: key(),
+        title: t.title,
+        note: t.note ?? "",
+        eventSlug: slug,
+        showTotal: t.showTotal,
+        items: t.items.map((i) => ({ key: key(), label: i.label, value: "" })),
+      })),
+    ]);
+  }
+  const today = activities.filter((a) => a.onDay);
+  const others = activities.filter((a) => !a.onDay);
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
@@ -109,8 +141,21 @@ export function StatsEditor({
                 placeholder="Note, e.g. Creative Economy Conference, Hall 2 (optional)"
                 aria-label="Group note"
                 maxLength={120}
-                className="-mt-2 mb-3 w-full rounded-[var(--radius-control)] border border-line bg-cream/60 px-3 py-1.5 text-sm placeholder:text-[#767676] focus:border-green-800 focus:outline-none"
+                className="-mt-2 mb-2 w-full rounded-[var(--radius-control)] border border-line bg-cream/60 px-3 py-1.5 text-sm placeholder:text-[#767676] focus:border-green-800 focus:outline-none"
               />
+              <select
+                value={g.eventSlug}
+                onChange={(e) => patchGroup(g.key, { eventSlug: e.target.value })}
+                aria-label="Programme activity these figures belong to"
+                className="mb-3 w-full rounded-[var(--radius-control)] border border-line bg-white px-3 py-1.5 text-sm focus:border-green-800 focus:outline-none"
+              >
+                <option value="">Not linked to an activity</option>
+                {activities.map((a) => (
+                  <option key={a.slug} value={a.slug}>
+                    Activity: {a.title}
+                  </option>
+                ))}
+              </select>
               <ul className="space-y-2">
                 {g.items.map((r) => (
                   <li key={r.key} className="grid grid-cols-[1fr_8.5rem_auto] items-center gap-2">
@@ -160,15 +205,41 @@ export function StatsEditor({
         <Button
           type="button"
           variant="outline"
-          onClick={() => setGroups((gs) => [...gs, { key: key(), title: "", note: "", showTotal: false, items: [{ key: key(), label: "", value: "" }] }])}
+          onClick={() => setGroups((gs) => [...gs, { key: key(), title: "", note: "", eventSlug: "", showTotal: false, items: [{ key: key(), label: "", value: "" }] }])}
         >
-          <Plus className="size-4" /> Add group
+          <Plus className="size-4" /> Add empty group
         </Button>
       </div>
 
       <div className="space-y-4">
         <Panel title={dayLabel}>
           <div className="space-y-3">
+            <Field label="Date of these figures" hint="Change it if the figures were entered under the wrong day.">
+              <Input type="date" value={day} onChange={(e) => setDay(e.target.value)} />
+            </Field>
+            <Field label="Add figures for an activity" hint="Adds the usual figures for it, e.g. runners per distance for the marathon.">
+              <Select value="" onChange={(e) => e.target.value && addActivity(e.target.value)}>
+                <option value="">Choose an activity…</option>
+                {today.length > 0 && (
+                  <optgroup label="On this day">
+                    {today.map((a) => (
+                      <option key={a.slug} value={a.slug}>
+                        {a.title}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {others.length > 0 && (
+                  <optgroup label="Other days">
+                    {others.map((a) => (
+                      <option key={a.slug} value={a.slug}>
+                        {a.title}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </Select>
+            </Field>
             <Field label="Headline (optional)" hint="e.g. Over 600 delegates on day one">
               <Input value={headline} onChange={(e) => setHeadline(e.target.value)} maxLength={160} />
             </Field>

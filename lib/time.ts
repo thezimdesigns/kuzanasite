@@ -134,3 +134,32 @@ export const STATUS_LABELS: Record<ProgrammeStatus, string> = {
   CANCELLED: "Cancelled",
   VENUE_CHANGED: "Venue changed",
 };
+
+export type FriendlyStatus = { label: string; tone: "neutral" | "gold" | "orange" | "green" | "red"; live: boolean };
+
+/**
+ * The status in visitor words, for cards and event headers: "Live now",
+ * "Ongoing" for a multi-day event between its opening hours, and "Later
+ * today" / "Tomorrow" / "Coming up" instead of a bare "Upcoming".
+ */
+export function friendlyStatus(item: Timed, status: ProgrammeStatus, now = new Date()): FriendlyStatus {
+  switch (status) {
+    case "LIVE":
+      return { label: "Live now", tone: "orange", live: true };
+    case "STARTING_SOON":
+      return { label: "Starting soon", tone: "gold", live: false };
+    case "COMPLETED":
+      return { label: "Completed", tone: "neutral", live: false };
+    case "POSTPONED":
+    case "CANCELLED":
+    case "VENUE_CHANGED":
+      return { label: STATUS_LABELS[status], tone: "red", live: false };
+  }
+  // Upcoming: already under way (between daily hours of a multi-day event)?
+  if (item.startsAt <= now && now < effectiveEnd(item)) return { label: "Ongoing", tone: "green", live: false };
+  const today = dateKey(now);
+  const start = dateKey(item.startsAt);
+  if (start === today) return { label: "Later today", tone: "gold", live: false };
+  if (start === dateKey(new Date(now.getTime() + 86_400_000))) return { label: "Tomorrow", tone: "gold", live: false };
+  return { label: "Coming up", tone: "neutral", live: false };
+}

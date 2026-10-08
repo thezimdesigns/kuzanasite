@@ -4,7 +4,7 @@ import { ExternalLink } from "lucide-react";
 import { db } from "@/lib/db";
 import { can, requireStaff } from "@/lib/permissions";
 import { readGroups, reportKey } from "@/lib/stats";
-import { formatLongDay, startOfDay } from "@/lib/time";
+import { formatLongDay, occursOn, startOfDay } from "@/lib/time";
 import { deleteDailyReport } from "@/app/admin/actions/content";
 import { ActionButton } from "@/components/admin/admin-form";
 import { StatsEditor } from "@/components/admin/stats-editor";
@@ -18,7 +18,14 @@ export default async function AdminStatsDay({ params }: PageProps<"/admin/stats/
   const editable = can(user, "press");
   const report = await db.dailyReport.findUnique({ where: { id: (await params).id } });
   if (!report) notFound();
-  const dayLabel = formatLongDay(startOfDay(reportKey(report.day)));
+  const key = reportKey(report.day);
+  const dayLabel = formatLongDay(startOfDay(key));
+  const events = await db.event.findMany({
+    where: { publishStatus: "PUBLISHED" },
+    orderBy: { startsAt: "asc" },
+    select: { slug: true, title: true, isConference: true, startsAt: true, endsAt: true, timeTbc: true, dailyHours: true, statusOverride: true, category: { select: { name: true } } },
+  });
+  const activities = events.map((e) => ({ slug: e.slug, title: e.title, category: e.category?.name ?? null, isConference: e.isConference, onDay: occursOn(e, key) }));
   const groups = readGroups(report.groups);
   return (
     <AdminPage
@@ -35,7 +42,8 @@ export default async function AdminStatsDay({ params }: PageProps<"/admin/stats/
           <StatsEditor
             id={report.id}
             dayLabel={dayLabel}
-            initial={{ headline: report.headline ?? "", note: report.note ?? "", publishStatus: report.publishStatus, groups }}
+            activities={activities}
+            initial={{ day: key, headline: report.headline ?? "", note: report.note ?? "", publishStatus: report.publishStatus, groups }}
           />
           <div className="mt-8">
             <ActionButton action={deleteDailyReport.bind(null, report.id)} variant="danger" confirm="Delete this day's figures?">

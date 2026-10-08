@@ -27,7 +27,15 @@ export function StatsBoard({
         const total = groupTotal(g);
         return (
           <section key={gi} aria-label={g.title} className={cn("border-t-2 pt-4", dark ? "border-orange-bright" : "border-orange")}>
-            <h3 className={cn("text-sm font-bold tracking-[0.08em] uppercase", dark ? "text-white/70" : "text-muted")}>{g.title}</h3>
+            <h3 className={cn("text-sm font-bold tracking-[0.08em] uppercase", dark ? "text-white/70" : "text-muted")}>
+              {g.eventSlug ? (
+                <a href={`/events/${g.eventSlug}`} className="hover:underline">
+                  {g.title}
+                </a>
+              ) : (
+                g.title
+              )}
+            </h3>
             {g.note && <p className={cn("mt-0.5 text-sm", dark ? "text-white/60" : "text-muted")}>{g.note}</p>}
             {g.showTotal ? (
               <>
