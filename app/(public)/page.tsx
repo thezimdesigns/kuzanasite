@@ -69,7 +69,8 @@ export default async function HomePage() {
     db.mediaMention.findMany({
       where: { publishStatus: "PUBLISHED" },
       orderBy: [{ featured: "desc" }, { publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-      take: 6,
+      // Three on the homepage (one per column); the rest are at /media/coverage.
+      take: 3,
     }),
     getPublishedReports(1),
   ]);
