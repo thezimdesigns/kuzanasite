@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import { getStaff } from "@/lib/permissions";
 import { LoginForm } from "@/components/admin/login-form";
 
-export const metadata: Metadata = { title: "Staff sign in", robots: { index: false } };
+export const metadata: Metadata = {
+  title: "Staff sign in",
+  robots: { index: false },
+};
 
 export default async function LoginPage() {
   if (await getStaff()) redirect("/admin");

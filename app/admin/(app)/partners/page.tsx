@@ -14,14 +14,31 @@ export const metadata = { title: "Partners" };
 export default async function AdminPartners() {
   const user = await requireStaff();
   const editable = can(user, "site");
-  const partners = await db.partner.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
+  const partners = await db.partner.findMany({
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+  });
   return (
     <AdminPage title="Partners & sponsors">
       {!editable && <ReadOnlyNotice />}
       <div className="grid gap-6 lg:grid-cols-[1fr_1.3fr]">
         {editable && (
           <Panel title="Add partner">
-            <PartnerForm values={{ name: "", url: "", tier: "SPONSOR", caption: "", logoKey: "", description: "", facebook: "", instagram: "", linkedin: "", youtube: "", prominent: false, sortOrder: partners.length + 1 }} />
+            <PartnerForm
+              values={{
+                name: "",
+                url: "",
+                tier: "SPONSOR",
+                caption: "",
+                logoKey: "",
+                description: "",
+                facebook: "",
+                instagram: "",
+                linkedin: "",
+                youtube: "",
+                prominent: false,
+                sortOrder: partners.length + 1,
+              }}
+            />
           </Panel>
         )}
         <ul className="space-y-3">
@@ -39,7 +56,23 @@ export default async function AdminPartners() {
                     <details className="mt-3">
                       <summary className="cursor-pointer text-sm font-semibold text-green-800">Edit</summary>
                       <div className="mt-3">
-                        <PartnerForm values={{ id: p.id, name: p.name, url: p.url ?? "", tier: p.tier, caption: p.caption ?? "", logoKey: p.logoKey ?? "", description: p.description ?? "", facebook: p.facebook ?? "", instagram: p.instagram ?? "", linkedin: p.linkedin ?? "", youtube: p.youtube ?? "", prominent: p.prominent, sortOrder: p.sortOrder }} />
+                        <PartnerForm
+                          values={{
+                            id: p.id,
+                            name: p.name,
+                            url: p.url ?? "",
+                            tier: p.tier,
+                            caption: p.caption ?? "",
+                            logoKey: p.logoKey ?? "",
+                            description: p.description ?? "",
+                            facebook: p.facebook ?? "",
+                            instagram: p.instagram ?? "",
+                            linkedin: p.linkedin ?? "",
+                            youtube: p.youtube ?? "",
+                            prominent: p.prominent,
+                            sortOrder: p.sortOrder,
+                          }}
+                        />
                         <div className="mt-2">
                           <ActionButton action={deletePartner.bind(null, p.id)} variant="ghost" confirm={`Remove ${p.name}?`}>
                             Remove

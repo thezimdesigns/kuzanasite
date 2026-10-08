@@ -13,7 +13,10 @@ const PAGE_SIZE = 60;
 async function getAlbum(slug: string) {
   return db.photoAlbum.findFirst({
     where: { slug, publishStatus: { in: ["PUBLISHED", "ARCHIVED"] } },
-    include: { event: { select: { title: true, slug: true } }, _count: { select: { photos: true } } },
+    include: {
+      event: { select: { title: true, slug: true } },
+      _count: { select: { photos: true } },
+    },
   });
 }
 
@@ -21,7 +24,11 @@ export async function generateMetadata({ params }: PageProps<"/gallery/[slug]">)
   const album = await getAlbum((await params).slug);
   if (!album) return {};
   const cover = fileUrl(album.coverKey);
-  return { title: album.title, description: album.description ?? undefined, openGraph: cover ? { images: [cover] } : undefined };
+  return {
+    title: album.title,
+    description: album.description ?? undefined,
+    openGraph: cover ? { images: [cover] } : undefined,
+  };
 }
 
 export default async function AlbumPage({ params, searchParams }: PageProps<"/gallery/[slug]">) {
@@ -59,10 +66,22 @@ export default async function AlbumPage({ params, searchParams }: PageProps<"/ga
       <Section>
         {photos.length ? (
           <>
-            <PhotoGrid photos={photos.map((p) => ({ id: p.id, src: fileUrl(p.key)!, caption: p.caption, width: p.width, height: p.height }))} />
+            <PhotoGrid
+              photos={photos.map((p) => ({
+                id: p.id,
+                src: fileUrl(p.key)!,
+                caption: p.caption,
+                width: p.width,
+                height: p.height,
+              }))}
+            />
             {hasMore && (
               <div className="mt-8 text-center">
-                <Link href={`/gallery/${album.slug}?page=${page + 1}`} scroll={false} className="rounded-[var(--radius-control)] border border-green-900/40 px-5 py-2.5 font-heading font-bold text-green-900">
+                <Link
+                  href={`/gallery/${album.slug}?page=${page + 1}`}
+                  scroll={false}
+                  className="rounded-[var(--radius-control)] border border-green-900/40 px-5 py-2.5 font-heading font-bold text-green-900"
+                >
                   Load more photos
                 </Link>
               </div>

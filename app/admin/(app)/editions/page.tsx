@@ -14,7 +14,9 @@ export default async function AdminEditions() {
   const editable = can(user, "site");
   const editions = await db.edition.findMany({
     orderBy: { year: "desc" },
-    include: { _count: { select: { events: true, exhibitors: true, albums: true } } },
+    include: {
+      _count: { select: { events: true, exhibitors: true, albums: true } },
+    },
   });
   return (
     <AdminPage

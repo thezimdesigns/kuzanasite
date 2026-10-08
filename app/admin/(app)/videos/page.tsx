@@ -16,10 +16,20 @@ export default async function AdminVideos() {
   const editable = can(user, "media");
   const [videos, events, sessions] = await Promise.all([
     db.video.findMany({ orderBy: [{ date: "desc" }, { createdAt: "desc" }] }),
-    db.event.findMany({ orderBy: { startsAt: "asc" }, select: { id: true, title: true } }),
-    db.session.findMany({ orderBy: { startsAt: "asc" }, select: { id: true, title: true, event: { select: { title: true } } } }),
+    db.event.findMany({
+      orderBy: { startsAt: "asc" },
+      select: { id: true, title: true },
+    }),
+    db.session.findMany({
+      orderBy: { startsAt: "asc" },
+      select: { id: true, title: true, event: { select: { title: true } } },
+    }),
   ]);
-  const sessionOptions = sessions.map((s) => ({ id: s.id, title: s.title, event: s.event.title }));
+  const sessionOptions = sessions.map((s) => ({
+    id: s.id,
+    title: s.title,
+    event: s.event.title,
+  }));
   return (
     <AdminPage title="Videos" description="Videos are hosted on YouTube; paste the link to publish.">
       {!editable && <ReadOnlyNotice />}
@@ -29,7 +39,17 @@ export default async function AdminVideos() {
             <VideoForm
               events={events}
               sessions={sessionOptions}
-              values={{ title: "", url: "", description: "", date: "", eventId: "", sessionId: "", category: "HIGHLIGHTS", featured: false, publishStatus: "PUBLISHED" }}
+              values={{
+                title: "",
+                url: "",
+                description: "",
+                date: "",
+                eventId: "",
+                sessionId: "",
+                category: "HIGHLIGHTS",
+                featured: false,
+                publishStatus: "PUBLISHED",
+              }}
             />
           </Panel>
         )}

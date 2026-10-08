@@ -101,12 +101,7 @@ export default async function AdminMessage({ params }: PageProps<"/admin/message
               {m.channels.includes("WEB_PUSH") && !available.WEB_PUSH && <Alert tone="orange">Web Push is not configured; push will not be delivered.</Alert>}
               {m.channels.includes("EMAIL") && !available.EMAIL && <Alert tone="orange">Email is not configured; email will not be delivered.</Alert>}
               <div className="flex flex-wrap gap-2">
-                <ActionButton
-                  action={sendMessage.bind(null, m.id)}
-                  variant="primary"
-                  size="md"
-                  confirm={`Send "${m.title}" to ${total} recipients now?`}
-                >
+                <ActionButton action={sendMessage.bind(null, m.id)} variant="primary" size="md" confirm={`Send "${m.title}" to ${total} recipients now?`}>
                   Send now to {total}
                 </ActionButton>
                 <ActionButton action={cancelMessage.bind(null, m.id)} variant="ghost" size="md">

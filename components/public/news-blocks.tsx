@@ -41,9 +41,7 @@ export function LeadStory({ post, headingLevel = "h2" }: { post: Post; headingLe
           </Link>
         </H>
         {post.excerpt && <p className="line-clamp-4 text-pretty text-white/80">{post.excerpt}</p>}
-        <span className="mt-1 text-sm font-semibold text-orange-bright transition-transform duration-300 group-hover:translate-x-0.5">
-          Read the story
-        </span>
+        <span className="mt-1 text-sm font-semibold text-orange-bright transition-transform duration-300 group-hover:translate-x-0.5">Read the story</span>
       </div>
     </article>
   );

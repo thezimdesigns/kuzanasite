@@ -45,7 +45,13 @@ export default async function ProgrammePage({ searchParams }: PageProps<"/progra
     .filter(({ e }) => !category || e.category?.slug === category)
     .filter(({ e }) => !venue || e.venue?.slug === venue)
     .filter(({ status }) =>
-      when === "live" ? status === "LIVE" : when === "upcoming" ? !["COMPLETED", "CANCELLED"].includes(status) : when === "completed" ? status === "COMPLETED" : true,
+      when === "live"
+        ? status === "LIVE"
+        : when === "upcoming"
+          ? !["COMPLETED", "CANCELLED"].includes(status)
+          : when === "completed"
+            ? status === "COMPLETED"
+            : true,
     );
 
   // Group by each day the event touches, so multi-day events appear every day.
@@ -73,13 +79,19 @@ export default async function ProgrammePage({ searchParams }: PageProps<"/progra
         // The banner shows once, on the event's first day.
         banner: key === first ? eventBanner(e) : null,
         venueMapUrl: venueMapUrl(e.venue),
+        watchHref: e._count.streams ? `/events/${e.slug}#watch` : null,
       });
     }
   }
   const sortedDays = [...days.entries()].sort(([a], [b]) => a.localeCompare(b));
   const today = dateKey(now);
   const qs = (patch: Record<string, string>) => {
-    const p = new URLSearchParams({ ...(category && { category }), ...(venue && { venue }), ...(when && { when }), ...patch });
+    const p = new URLSearchParams({
+      ...(category && { category }),
+      ...(venue && { venue }),
+      ...(when && { when }),
+      ...patch,
+    });
     for (const [k, v] of [...p.entries()]) if (!v) p.delete(k);
     const s = p.toString();
     return s ? `/programme?${s}` : "/programme";

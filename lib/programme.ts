@@ -23,10 +23,22 @@ export type ProgrammeItem = {
   pdf?: { key: string; name: string | null } | null;
   banner?: { wide: string; mobile: string | null } | null;
   venueMapUrl?: string | null;
+  /** Link to the stream players when live streams are set. */
+  watchHref?: string | null;
 };
 
+const activeStreams = {
+  _count: { select: { streams: { where: { active: true } } } },
+} as const;
+
 /** Google Maps link for a venue: its pin if set, else its saved map link. */
-export function venueMapUrl(v: { latitude: number | null; longitude: number | null; mapUrl: string | null } | null) {
+export function venueMapUrl(
+  v: {
+    latitude: number | null;
+    longitude: number | null;
+    mapUrl: string | null;
+  } | null,
+) {
   if (!v) return null;
   if (v.latitude != null && v.longitude != null) return googleMapsUrl(v.latitude, v.longitude);
   return v.mapUrl;
@@ -42,7 +54,7 @@ export async function getEditionEvents() {
   if (!edition) return [];
   return db.event.findMany({
     where: { editionId: edition.id, publishStatus: "PUBLISHED" },
-    include: { venue: true, category: true },
+    include: { venue: true, category: true, ...activeStreams },
     orderBy: [{ startsAt: "asc" }, { sortOrder: "asc" }],
   });
 }
@@ -68,9 +80,14 @@ export async function getDayProgramme(key = dateKey(new Date()), now = new Date(
     include: {
       venue: true,
       category: true,
+      ...activeStreams,
       sessions: {
-        where: { publishStatus: "PUBLISHED", startsAt: { gte: dayStart, lte: dayEnd } },
+        where: {
+          publishStatus: "PUBLISHED",
+          startsAt: { gte: dayStart, lte: dayEnd },
+        },
         orderBy: [{ startsAt: "asc" }, { sortOrder: "asc" }],
+        include: activeStreams,
       },
     },
   });
@@ -95,6 +112,7 @@ export async function getDayProgramme(key = dateKey(new Date()), now = new Date(
       pdf: e.programmePdfKey ? { key: e.programmePdfKey, name: e.programmePdfName } : null,
       banner: eventBanner(e),
       venueMapUrl: venueMapUrl(e.venue),
+      watchHref: e._count.streams ? `/events/${e.slug}#watch` : null,
     });
     for (const s of e.sessions) {
       items.push({
@@ -111,6 +129,7 @@ export async function getDayProgramme(key = dateKey(new Date()), now = new Date(
         parentTitle: e.title,
         posterKey: s.posterKey,
         venueMapUrl: venueMapUrl(e.venue),
+        watchHref: s._count.streams ? `/events/${e.slug}#watch-${s.id}` : null,
       });
     }
   }

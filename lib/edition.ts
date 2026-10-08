@@ -3,10 +3,7 @@ import { cache } from "react";
 import { db } from "@/lib/db";
 
 export const getCurrentEdition = cache(async () => {
-  return (
-    (await db.edition.findFirst({ where: { isCurrent: true } })) ??
-    (await db.edition.findFirst({ orderBy: { year: "desc" } }))
-  );
+  return (await db.edition.findFirst({ where: { isCurrent: true } })) ?? (await db.edition.findFirst({ orderBy: { year: "desc" } }));
 });
 
 export async function requireCurrentEdition() {

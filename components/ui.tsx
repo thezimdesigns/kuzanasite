@@ -33,7 +33,10 @@ export function Button({
   size = "md",
   className,
   ...props
-}: ComponentProps<"button"> & { variant?: Variant; size?: "sm" | "md" | "lg" }) {
+}: ComponentProps<"button"> & {
+  variant?: Variant;
+  size?: "sm" | "md" | "lg";
+}) {
   return <button className={cn(buttonClass(variant, size), className)} {...props} />;
 }
 
@@ -42,7 +45,10 @@ export function ButtonLink({
   size = "md",
   className,
   ...props
-}: ComponentProps<typeof Link> & { variant?: Variant; size?: "sm" | "md" | "lg" }) {
+}: ComponentProps<typeof Link> & {
+  variant?: Variant;
+  size?: "sm" | "md" | "lg";
+}) {
   return <Link className={cn(buttonClass(variant, size), className)} {...props} />;
 }
 
@@ -75,10 +81,7 @@ export function Badge({ tone = "neutral", className, children }: { tone?: Tone; 
 
 export function BackLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link
-      href={href}
-      className="group/back mb-3 inline-flex items-center gap-1 text-sm font-semibold text-green-800 hover:text-green-900"
-    >
+    <Link href={href} className="group/back mb-3 inline-flex items-center gap-1 text-sm font-semibold text-green-800 hover:text-green-900">
       <ChevronLeft className="size-4 transition-transform duration-200 group-hover/back:-translate-x-0.5" aria-hidden />
       {label}
     </Link>
@@ -122,11 +125,7 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
 }
 
 export function EmptyState({ children }: { children: ReactNode }) {
-  return (
-    <div className="rounded-[var(--radius-card)] border border-dashed border-line bg-white/60 px-5 py-10 text-center text-muted">
-      {children}
-    </div>
-  );
+  return <div className="rounded-[var(--radius-card)] border border-dashed border-line bg-white/60 px-5 py-10 text-center text-muted">{children}</div>;
 }
 
 // ---------------------------------------------------------------------------

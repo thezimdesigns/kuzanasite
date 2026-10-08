@@ -20,7 +20,10 @@ export function adminFormAction<S extends z.ZodType>(
       const user = await requireArea(area);
       const parsed = schema.safeParse(formToObject(fd, opts.arrays));
       if (!parsed.success) return invalid(parsed.error, fd);
-      const result = (await handler(parsed.data, user, fd)) ?? { ok: true, message: "Saved." };
+      const result = (await handler(parsed.data, user, fd)) ?? {
+        ok: true,
+        message: "Saved.",
+      };
       if (result.ok !== false) refresh();
       return result;
     } catch (error) {

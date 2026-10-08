@@ -18,7 +18,10 @@ export async function resolveMapLink(input: string | null | undefined): Promise<
     for (let hop = 0; hop < 4; hop++) {
       // Only ever request Google's own hosts.
       if (!/(^|\.)(google\.[a-z.]+|goo\.gl|g\.co)$/i.test(new URL(url).hostname)) break;
-      const res = await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(5000) });
+      const res = await fetch(url, {
+        redirect: "manual",
+        signal: AbortSignal.timeout(5000),
+      });
       const next = res.headers.get("location");
       if (!next) break;
       url = new URL(next, url).toString();

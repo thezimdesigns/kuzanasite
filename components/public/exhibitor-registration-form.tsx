@@ -181,7 +181,14 @@ export function ExhibitorRegistrationForm({ sectors, code }: { sectors: { id: st
               <p className="text-sm text-muted">Snap or upload your flyer, brochure, business card or price list. PDFs are welcome.</p>
               <Uploader label="Logo (optional)" code={code} onChange={setGroup("logo", "LOGO")} />
               <Uploader label="Flyer, poster or business card" capture multiple max={4} code={code} onChange={setGroup("flyer", "FLYER")} />
-              <Uploader label="Brochure, catalogue or company profile (PDF)" accept="any" multiple max={3} code={code} onChange={setGroup("brochure", "BROCHURE")} />
+              <Uploader
+                label="Brochure, catalogue or company profile (PDF)"
+                accept="any"
+                multiple
+                max={3}
+                code={code}
+                onChange={setGroup("brochure", "BROCHURE")}
+              />
             </div>
 
             <div className={cn("space-y-4", step !== 4 && "hidden")}>
@@ -264,10 +271,19 @@ export function ExhibitorRegistrationForm({ sectors, code }: { sectors: { id: st
 }
 
 const FIELD_STEP: Record<string, number> = {
-  name: 0, contactName: 0, phone: 0, categoryId: 0, email: 0,
-  description: 1, showcasing: 1,
+  name: 0,
+  contactName: 0,
+  phone: 0,
+  categoryId: 0,
+  email: 0,
+  description: 1,
+  showcasing: 1,
   media: 2,
-  website: 4, facebook: 4, instagram: 4, linkedin: 4, tiktok: 4,
+  website: 4,
+  facebook: 4,
+  instagram: 4,
+  linkedin: 4,
+  tiktok: 4,
   consent: 6,
 };
 
@@ -275,7 +291,9 @@ const FIELD_STEP: Record<string, number> = {
 function JumpToError({ errors, onJump }: { errors?: Record<string, string>; onJump: (step: number) => void }) {
   useEffect(() => {
     if (!errors) return;
-    const steps = Object.keys(errors).map((k) => FIELD_STEP[k]).filter((n) => n !== undefined);
+    const steps = Object.keys(errors)
+      .map((k) => FIELD_STEP[k])
+      .filter((n) => n !== undefined);
     if (steps.length) onJump(Math.min(...steps));
   }, [errors, onJump]);
   return null;

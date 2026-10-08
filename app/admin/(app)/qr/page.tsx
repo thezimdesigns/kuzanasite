@@ -10,25 +10,61 @@ export const metadata = { title: "QR codes" };
 export default async function QrPage() {
   const user = await requireStaff();
   const signs = [
-    { heading: "WHAT'S HAPPENING TODAY?", path: "/programme/today", note: "Today's programme" },
-    { heading: "KUZANA LIVE", path: "/live", note: "What's on now and announcements" },
-    { heading: "EXPLORE KUZANA EXHIBITORS", path: "/exhibitors", note: "Exhibitor directory" },
-    { heading: "TELL US ABOUT YOUR KUZANA EXPERIENCE", path: "/feedback", note: "Visitor feedback" },
-    { heading: "REGISTER AS A KUZANA VISITOR", path: "/register", note: "Visitor registration" },
+    {
+      heading: "WHAT'S HAPPENING TODAY?",
+      path: "/programme/today",
+      note: "Today's programme",
+    },
+    {
+      heading: "KUZANA LIVE",
+      path: "/live",
+      note: "What's on now and announcements",
+    },
+    {
+      heading: "EXPLORE KUZANA EXHIBITORS",
+      path: "/exhibitors",
+      note: "Exhibitor directory",
+    },
+    {
+      heading: "TELL US ABOUT YOUR KUZANA EXPERIENCE",
+      path: "/feedback",
+      note: "Visitor feedback",
+    },
+    {
+      heading: "REGISTER AS A KUZANA VISITOR",
+      path: "/register",
+      note: "Visitor registration",
+    },
     ...(can(user, "exhibitors")
-      ? [{ heading: "REGISTER YOUR KUZANA STAND", path: exhibitorRegistrationPath(), note: "Exhibitors only: do not post publicly", private: true }]
+      ? [
+          {
+            heading: "REGISTER YOUR KUZANA STAND",
+            path: exhibitorRegistrationPath(),
+            note: "Exhibitors only: do not post publicly",
+            private: true,
+          },
+        ]
       : []),
   ];
   const codes = await Promise.all(
     signs.map(async (s) => ({
       ...s,
       url: siteUrl(s.path),
-      svg: await QRCode.toString(siteUrl(s.path), { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#00512d", light: "#ffffff" } }),
+      svg: await QRCode.toString(siteUrl(s.path), {
+        type: "svg",
+        margin: 1,
+        errorCorrectionLevel: "M",
+        color: { dark: "#00512d", light: "#ffffff" },
+      }),
     })),
   );
 
   return (
-    <AdminPage title="QR codes for signage" description="Print these for signs, banners and the exhibitor desk. Each page prints on its own sheet." actions={<PrintButton />}>
+    <AdminPage
+      title="QR codes for signage"
+      description="Print these for signs, banners and the exhibitor desk. Each page prints on its own sheet."
+      actions={<PrintButton />}
+    >
       <div className="grid gap-6 sm:grid-cols-2 print:block">
         {codes.map((c) => (
           <section

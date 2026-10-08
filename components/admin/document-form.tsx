@@ -88,7 +88,15 @@ export function DocumentForm({
               </Field>
             </div>
             <div className="mt-4 space-y-4">
-              <UploadField name="file" mode="json" accept="any" label="File (PDF, Word, PowerPoint or image)" current={v.key} currentName={v.fileName} folder="documents" />
+              <UploadField
+                name="file"
+                mode="json"
+                accept="any"
+                label="File (PDF, Word, PowerPoint or image)"
+                current={v.key}
+                currentName={v.fileName}
+                folder="documents"
+              />
               <Field label="Short description">
                 <Textarea name="description" rows={2} defaultValue={v.description} />
               </Field>

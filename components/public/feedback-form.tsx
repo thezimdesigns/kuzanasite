@@ -58,7 +58,14 @@ export function FeedbackForm({
             <legend className="mb-1 text-sm font-semibold">Overall rating (optional)</legend>
             <div className="flex">
               {[1, 2, 3, 4, 5].map((n) => (
-                <button key={n} type="button" onClick={() => setRating(n === rating ? 0 : n)} aria-label={`${n} stars`} aria-pressed={rating === n} className="p-1">
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setRating(n === rating ? 0 : n)}
+                  aria-label={`${n} stars`}
+                  aria-pressed={rating === n}
+                  className="p-1"
+                >
                   <Star className={cn("size-7", n <= rating ? "fill-gold text-gold" : "text-line")} />
                 </button>
               ))}

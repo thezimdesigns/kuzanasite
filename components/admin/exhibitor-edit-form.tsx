@@ -10,15 +10,36 @@ import { OPPORTUNITIES } from "@/lib/options";
 import type { ExhibitorMediaKind } from "@/lib/generated/prisma/enums";
 
 type X = Record<
-  | "id" | "name" | "contactName" | "phone" | "email" | "categoryId" | "hall" | "stand" | "description" | "showcasing" | "products"
-  | "website" | "facebook" | "instagram" | "linkedin" | "tiktok" | "whatsapp" | "address" | "seeking" | "offering" | "reviewNotes",
+  | "id"
+  | "name"
+  | "contactName"
+  | "phone"
+  | "email"
+  | "categoryId"
+  | "hall"
+  | "stand"
+  | "description"
+  | "showcasing"
+  | "products"
+  | "website"
+  | "facebook"
+  | "instagram"
+  | "linkedin"
+  | "tiktok"
+  | "whatsapp"
+  | "address"
+  | "seeking"
+  | "offering"
+  | "reviewNotes",
   string
 > & { opportunities: string[]; consent: boolean };
 
 export function ExhibitorEditForm({ x, sectors, readOnly }: { x: X; sectors: { id: string; name: string }[]; readOnly: boolean }) {
   const [media, setMedia] = useState<Record<string, (UploadedFile & { kind: ExhibitorMediaKind })[]>>({});
   const [round, setRound] = useState(0);
-  const all = Object.values(media).flat().map(({ preview: _p, ...m }) => m);
+  const all = Object.values(media)
+    .flat()
+    .map(({ preview: _p, ...m }) => m);
   const setGroup = (g: string, kind: ExhibitorMediaKind) => (files: UploadedFile[]) => setMedia((m) => ({ ...m, [g]: files.map((f) => ({ ...f, kind })) }));
 
   return (

@@ -1,19 +1,26 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+import { getBranding } from "@/lib/branding";
+import { NotFoundContent } from "@/components/public/not-found-content";
+import { SiteFooter } from "@/components/public/site-footer";
+import { SiteHeader } from "@/components/public/site-header";
+import { MobileTabBar } from "@/components/public/mobile-tab-bar";
 
-export default function NotFound() {
+export const metadata: Metadata = {
+  title: "Page not found",
+  robots: { index: false },
+};
+
+/** For URLs that match no route at all; brings its own header and footer. */
+export default async function NotFound() {
+  const { logoUrl } = await getBranding();
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center px-4 text-center">
-      <p className="font-heading text-6xl font-extrabold text-orange">404</p>
-      <h1 className="mt-3 text-2xl font-extrabold text-green-900">We couldn&apos;t find that page</h1>
-      <p className="mt-2 text-muted">It may have moved, or it hasn&apos;t been published yet.</p>
-      <div className="mt-6 flex flex-wrap justify-center gap-3">
-        <Link href="/live" className="rounded-full bg-orange px-5 py-2.5 font-heading font-bold text-white">
-          KUZANA Live
-        </Link>
-        <Link href="/" className="rounded-full border-2 border-green-900 px-5 py-2.5 font-heading font-bold text-green-900">
-          Home
-        </Link>
-      </div>
-    </main>
+    <>
+      <SiteHeader logoUrl={logoUrl} />
+      <main id="main" className="min-h-[60vh]">
+        <NotFoundContent />
+      </main>
+      <SiteFooter />
+      <MobileTabBar />
+    </>
   );
 }

@@ -10,13 +10,7 @@ export function LogoForm({ current }: { current: string }) {
     <AdminForm action={saveLogo}>
       {(_, pending) => (
         <div className="space-y-3">
-          <UploadField
-            name="logoKey"
-            label="Upload a new logo (PNG or WebP with a transparent background)"
-            current={current}
-            folder="branding"
-            maxDim={1200}
-          />
+          <UploadField name="logoKey" label="Upload a new logo (PNG or WebP with a transparent background)" current={current} folder="branding" maxDim={1200} />
           <p className="text-xs text-muted">Remove the current file and save to go back to the original KUZANA SCEEZ logo.</p>
           <Button type="submit" size="sm" disabled={pending}>
             Save logo

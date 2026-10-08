@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { MEDIA_SECTIONS } from "@/lib/options";
+import { CoverageColumns } from "@/components/public/coverage-columns";
 import { DocumentList } from "@/components/public/document-list";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { Card, EmptyState, PageHeader, Section, SectionTitle } from "@/components/ui";
@@ -12,14 +13,23 @@ export const metadata: Metadata = {
 };
 
 export default async function MediaPage() {
-  const [latest, counts] = await Promise.all([
+  const [latest, counts, mentions] = await Promise.all([
     db.document.findMany({
       where: { publishStatus: "PUBLISHED" },
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       take: 10,
       include: { event: { select: { title: true } } },
     }),
-    db.document.groupBy({ by: ["type"], where: { publishStatus: "PUBLISHED" }, _count: true }),
+    db.document.groupBy({
+      by: ["type"],
+      where: { publishStatus: "PUBLISHED" },
+      _count: true,
+    }),
+    db.mediaMention.findMany({
+      where: { publishStatus: "PUBLISHED" },
+      orderBy: [{ featured: "desc" }, { publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+      take: 9,
+    }),
   ]);
   const countFor = (types: string[]) => counts.filter((c) => types.includes(c.type)).reduce((n, c) => n + c._count, 0);
 
@@ -63,6 +73,22 @@ export default async function MediaPage() {
           </Card>
         </div>
       </Section>
+      {mentions.length > 0 && (
+        <section className="border-t border-line bg-white">
+          <Section>
+            <SectionTitle
+              action={
+                <Link href="/media/coverage" className="text-sm font-semibold text-green-800">
+                  All coverage
+                </Link>
+              }
+            >
+              In the media
+            </SectionTitle>
+            <CoverageColumns mentions={mentions} />
+          </Section>
+        </section>
+      )}
     </>
   );
 }

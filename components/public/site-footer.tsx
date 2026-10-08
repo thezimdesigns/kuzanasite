@@ -74,7 +74,9 @@ function FooterLinks({ title, links }: { title: string; links: { id: string; lab
       <div className="font-heading font-bold text-white">{title}</div>
       <ul className="mt-3 space-y-2 text-sm">
         {links.map((l) => {
-          const bullet = <ChevronRight className="size-3.5 shrink-0 text-gold-light transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden />;
+          const bullet = (
+            <ChevronRight className="size-3.5 shrink-0 text-gold-light transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden />
+          );
           const external = /^https?:\/\//.test(l.href) || l.href.startsWith("mailto:") || l.href.startsWith("tel:");
           const props = l.newTab ? { target: "_blank", rel: "noopener" } : {};
           return (

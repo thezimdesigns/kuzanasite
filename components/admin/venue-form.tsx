@@ -8,7 +8,19 @@ import { UploadField } from "@/components/admin/upload-field";
 import { Button, Field, Input, Textarea } from "@/components/ui";
 
 export type VenueValues = Record<
-  "name" | "slug" | "description" | "address" | "latitude" | "longitude" | "mapUrl" | "directions" | "parking" | "accessibility" | "openingTimes" | "contact" | "imageKey",
+  | "name"
+  | "slug"
+  | "description"
+  | "address"
+  | "latitude"
+  | "longitude"
+  | "mapUrl"
+  | "directions"
+  | "parking"
+  | "accessibility"
+  | "openingTimes"
+  | "contact"
+  | "imageKey",
   string
 > & { id?: string; sortOrder: number };
 

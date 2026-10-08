@@ -3,17 +3,26 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { Button, Card, PageHeader, Section } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Unsubscribe", robots: { index: false } };
+export const metadata: Metadata = {
+  title: "Unsubscribe",
+  robots: { index: false },
+};
 
 // Unsubscribing needs a button press: email scanners open links automatically.
 export default async function UnsubscribePage({ params, searchParams }: PageProps<"/unsubscribe/[token]">) {
   const { token } = await params;
   const done = (await searchParams).done === "1";
-  const visitor = await db.visitor.findUnique({ where: { unsubscribeToken: token }, select: { id: true } });
+  const visitor = await db.visitor.findUnique({
+    where: { unsubscribeToken: token },
+    select: { id: true },
+  });
 
   async function unsubscribe() {
     "use server";
-    await db.visitor.updateMany({ where: { unsubscribeToken: token }, data: { emailConsent: false } });
+    await db.visitor.updateMany({
+      where: { unsubscribeToken: token },
+      data: { emailConsent: false },
+    });
     redirect(`/unsubscribe/${token}?done=1`);
   }
 

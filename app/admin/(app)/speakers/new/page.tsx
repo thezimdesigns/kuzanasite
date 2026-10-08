@@ -10,7 +10,17 @@ export default async function NewSpeaker() {
     <AdminPage title="New speaker / participant" back={{ href: "/admin/speakers", label: "Speakers" }}>
       <PersonForm
         values={{
-          name: "", slug: "", jobTitle: "", organisation: "", bio: "", country: "", website: "", linkedin: "", twitter: "", instagram: "", photoKey: "",
+          name: "",
+          slug: "",
+          jobTitle: "",
+          organisation: "",
+          bio: "",
+          country: "",
+          website: "",
+          linkedin: "",
+          twitter: "",
+          instagram: "",
+          photoKey: "",
           publishStatus: "PUBLISHED",
         }}
       />

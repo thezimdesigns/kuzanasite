@@ -15,16 +15,16 @@ export default async function MediaSectionPage({ params }: PageProps<"/media/[se
   const s = MEDIA_SECTIONS[section];
   if (!s) notFound();
   const docs = await db.document.findMany({
-    where: { publishStatus: { in: ["PUBLISHED", "ARCHIVED"] }, type: { in: s.types } },
+    where: {
+      publishStatus: { in: ["PUBLISHED", "ARCHIVED"] },
+      type: { in: s.types },
+    },
     orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     include: { event: { select: { title: true } } },
   });
   return (
     <>
-      <PageHeader
-        back={{ href: "/media", label: "Media centre" }}
-        title={s.title}
-      />
+      <PageHeader back={{ href: "/media", label: "Media centre" }} title={s.title} />
       <Section>{docs.length ? <DocumentList docs={docs} /> : <EmptyState>Nothing published here yet.</EmptyState>}</Section>
     </>
   );

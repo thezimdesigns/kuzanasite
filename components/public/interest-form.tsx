@@ -39,10 +39,7 @@ export function InterestForm() {
             <Textarea name="message" rows={3} />
           </Field>
           <div className="sm:col-span-2">
-            <Checkbox
-              name="consent"
-              label="I agree that KUZANA SCEEZ may contact me about future editions and opportunities."
-            />
+            <Checkbox name="consent" label="I agree that KUZANA SCEEZ may contact me about future editions and opportunities." />
             {state.errors?.consent && <p className="mt-1 text-xs font-semibold text-danger">{state.errors.consent}</p>}
           </div>
           <div className="sm:col-span-2">

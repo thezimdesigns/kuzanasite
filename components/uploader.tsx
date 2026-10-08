@@ -32,7 +32,9 @@ const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export async function compressImage(file: File, maxDim = 1800, quality = 0.82): Promise<{ file: File; width?: number; height?: number }> {
   if (!file.type.startsWith("image/")) return { file };
   try {
-    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" } as ImageBitmapOptions);
+    const bitmap = await createImageBitmap(file, {
+      imageOrientation: "from-image",
+    } as ImageBitmapOptions);
     const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
     const width = Math.round(bitmap.width * scale);
     const height = Math.round(bitmap.height * scale);
@@ -48,7 +50,11 @@ export async function compressImage(file: File, maxDim = 1800, quality = 0.82): 
     const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", quality));
     if (!blob) return { file };
     const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
-    return { file: new File([blob], name, { type: "image/jpeg" }), width, height };
+    return {
+      file: new File([blob], name, { type: "image/jpeg" }),
+      width,
+      height,
+    };
   } catch {
     // The browser could not decode it (e.g. HEIC on Android); send the original.
     return { file };
@@ -134,7 +140,11 @@ export function Uploader({
       if (claim) form.set("claim", claim);
       if (folder) form.set("folder", folder);
       const result = await uploadWithProgress(form, (p) => patch(item.id, { progress: p }));
-      patch(item.id, { status: "done", progress: 1, result: { ...result, width, height, preview: item.preview } });
+      patch(item.id, {
+        status: "done",
+        progress: 1,
+        result: { ...result, width, height, preview: item.preview },
+      });
     } catch (error) {
       patch(item.id, { status: "error", error: (error as Error).message });
     }

@@ -28,11 +28,20 @@ export type FooterSettings = Record<FooterSettingKey, string>;
 export const getFooter = cache(async () => {
   const [rows, links] = await Promise.all([
     db.siteSetting.findMany({ where: { key: { startsWith: "footer." } } }),
-    db.footerLink.findMany({ orderBy: [{ column: "asc" }, { sortOrder: "asc" }, { createdAt: "asc" }] }),
+    db.footerLink.findMany({
+      orderBy: [{ column: "asc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
+    }),
   ]);
   const settings = { ...FOOTER_SETTING_DEFAULTS } as FooterSettings;
   for (const r of rows) if (r.key in settings) settings[r.key as FooterSettingKey] = r.value;
-  const list = links.length ? links : DEFAULT_FOOTER_LINKS.map((l, i) => ({ ...l, id: `default-${i}`, newTab: false, sortOrder: i }));
+  const list = links.length
+    ? links
+    : DEFAULT_FOOTER_LINKS.map((l, i) => ({
+        ...l,
+        id: `default-${i}`,
+        newTab: false,
+        sortOrder: i,
+      }));
   return {
     settings,
     columns: [1, 2].map((c) => list.filter((l) => l.column === c)),
@@ -42,9 +51,19 @@ export const getFooter = cache(async () => {
 /** Pages on the site that a footer link can point to, grouped for a picker. */
 export async function internalLinkOptions() {
   const [pages, events, venues] = await Promise.all([
-    db.page.findMany({ orderBy: { title: "asc" }, select: { slug: true, title: true } }),
-    db.event.findMany({ where: { publishStatus: "PUBLISHED" }, orderBy: { startsAt: "asc" }, select: { slug: true, title: true } }),
-    db.venue.findMany({ orderBy: { sortOrder: "asc" }, select: { slug: true, name: true } }),
+    db.page.findMany({
+      orderBy: { title: "asc" },
+      select: { slug: true, title: true },
+    }),
+    db.event.findMany({
+      where: { publishStatus: "PUBLISHED" },
+      orderBy: { startsAt: "asc" },
+      select: { slug: true, title: true },
+    }),
+    db.venue.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { slug: true, name: true },
+    }),
   ]);
   return [
     {
@@ -71,12 +90,30 @@ export async function internalLinkOptions() {
         ["/search", "Search"],
       ].map(([href, label]) => ({ href, label })),
     },
-    { group: "Content pages", options: pages.map((p) => ({ href: `/${p.slug}`, label: p.title })) },
+    {
+      group: "Content pages",
+      options: pages.map((p) => ({ href: `/${p.slug}`, label: p.title })),
+    },
     {
       group: "Media centre sections",
-      options: Object.entries(MEDIA_SECTIONS).map(([slug, s]) => ({ href: `/media/${slug}`, label: s.title })),
+      options: Object.entries(MEDIA_SECTIONS).map(([slug, s]) => ({
+        href: `/media/${slug}`,
+        label: s.title,
+      })),
     },
-    { group: "Events", options: events.map((e) => ({ href: `/events/${e.slug}`, label: e.title })) },
-    { group: "Venues", options: venues.map((v) => ({ href: `/venues/${v.slug}`, label: v.name })) },
+    {
+      group: "Events",
+      options: events.map((e) => ({
+        href: `/events/${e.slug}`,
+        label: e.title,
+      })),
+    },
+    {
+      group: "Venues",
+      options: venues.map((v) => ({
+        href: `/venues/${v.slug}`,
+        label: v.name,
+      })),
+    },
   ].filter((g) => g.options.length);
 }

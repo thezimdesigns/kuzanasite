@@ -9,17 +9,36 @@ import { OPPORTUNITIES } from "@/lib/options";
 import type { ExhibitorMediaKind } from "@/lib/generated/prisma/enums";
 
 type Values = Record<
-  "name" | "contactName" | "phone" | "email" | "categoryId" | "hall" | "stand" | "description" | "showcasing" | "website" | "facebook" | "instagram" | "linkedin" | "tiktok" | "whatsapp" | "address" | "seeking" | "offering",
+  | "name"
+  | "contactName"
+  | "phone"
+  | "email"
+  | "categoryId"
+  | "hall"
+  | "stand"
+  | "description"
+  | "showcasing"
+  | "website"
+  | "facebook"
+  | "instagram"
+  | "linkedin"
+  | "tiktok"
+  | "whatsapp"
+  | "address"
+  | "seeking"
+  | "offering",
   string
 > & { opportunities: string[]; mediaCount: number };
 
 export function ExhibitorClaimForm({ token, sectors, exhibitor: x }: { token: string; sectors: { id: string; name: string }[]; exhibitor: Values }) {
   const [media, setMedia] = useState<Record<string, (UploadedFile & { kind: ExhibitorMediaKind })[]>>({});
-  const all = Object.values(media).flat().map(({ preview: _p, ...m }) => m);
+  const all = Object.values(media)
+    .flat()
+    .map(({ preview: _p, ...m }) => m);
   const setGroup = (g: string, kind: ExhibitorMediaKind) => (files: UploadedFile[]) => setMedia((m) => ({ ...m, [g]: files.map((f) => ({ ...f, kind })) }));
 
   return (
-    <ActionForm action={completeExhibitorProfile} className="space-y-6">
+    <ActionForm action={completeExhibitorProfile} recaptchaAction="claim" className="space-y-6">
       {(state, pending) => (
         <>
           <input type="hidden" name="claim" value={token} />
@@ -105,10 +124,7 @@ export function ExhibitorClaimForm({ token, sectors, exhibitor: x }: { token: st
             </Field>
           </Card>
 
-          <Checkbox
-            name="consent"
-            label="I confirm I am authorised to submit this information and give KUZANA SCEEZ permission to publish it."
-          />
+          <Checkbox name="consent" label="I confirm I am authorised to submit this information and give KUZANA SCEEZ permission to publish it." />
           {state.errors?.consent && <p className="text-xs font-semibold text-danger">{state.errors.consent}</p>}
           <Button type="submit" size="lg" disabled={pending}>
             {pending ? "Saving…" : "Save profile"}

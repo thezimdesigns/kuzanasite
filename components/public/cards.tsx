@@ -23,8 +23,16 @@ type EventCardData = {
   category?: { name: string } | null;
 };
 
-const dayNum = (d: Date) => new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, day: "2-digit" }).format(d);
-const monthShort = (d: Date) => new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, month: "short" }).format(d);
+const dayNum = (d: Date) =>
+  new Intl.DateTimeFormat("en-GB", {
+    timeZone: TIME_ZONE,
+    day: "2-digit",
+  }).format(d);
+const monthShort = (d: Date) =>
+  new Intl.DateTimeFormat("en-GB", {
+    timeZone: TIME_ZONE,
+    month: "short",
+  }).format(d);
 
 /**
  * Poster-led event card. Without a poster it shows a branded date tile so the
@@ -107,7 +115,14 @@ export function EventCard({ event, status }: { event: EventCardData; status?: Pr
 export function AlbumCard({
   album,
 }: {
-  album: { slug: string; title: string; date: Date | null; coverKey: string | null; _count?: { photos: number }; photos?: { key: string }[] };
+  album: {
+    slug: string;
+    title: string;
+    date: Date | null;
+    coverKey: string | null;
+    _count?: { photos: number };
+    photos?: { key: string }[];
+  };
 }) {
   const cover = fileUrl(album.coverKey ?? album.photos?.[0]?.key);
   return (
@@ -147,7 +162,12 @@ export function VideoCard({ video }: { video: { youtubeId: string; title: string
     >
       <div className="relative aspect-video overflow-hidden bg-ink">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={youtubeThumb(video.youtubeId)} alt="" loading="lazy" className="size-full object-cover opacity-90 transition-[transform,opacity] duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.04] group-hover:opacity-100" />
+        <img
+          src={youtubeThumb(video.youtubeId)}
+          alt=""
+          loading="lazy"
+          className="size-full object-cover opacity-90 transition-[transform,opacity] duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.04] group-hover:opacity-100"
+        />
         <span className="absolute inset-0 flex items-center justify-center">
           <span className="rounded-full bg-orange-dark p-3 text-white shadow-[0_8px_24px_-6px_rgb(0_0_0/0.5)] transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover:scale-110">
             <Play className="size-6 fill-current" />
@@ -186,19 +206,15 @@ export function ExhibitorCard({
         {image ? (
           <Image src={image} alt="" fill sizes="64px" className={exhibitor.logoKey ? "object-contain p-1" : "object-cover"} />
         ) : (
-          <span className="flex size-full items-center justify-center font-heading text-xl font-extrabold text-green-900">
-            {exhibitor.name.slice(0, 1)}
-          </span>
+          <span className="flex size-full items-center justify-center font-heading text-xl font-extrabold text-green-900">{exhibitor.name.slice(0, 1)}</span>
         )}
       </div>
       <div className="min-w-0">
         <h3 className="font-heading font-bold leading-snug group-hover:text-green-800">{exhibitor.name}</h3>
         <p className="mt-0.5 flex flex-wrap gap-x-2.5 text-xs text-muted">
-          {[exhibitor.category?.name, exhibitor.hall && `Hall ${exhibitor.hall}`, exhibitor.stand && `Stand ${exhibitor.stand}`]
-            .filter(Boolean)
-            .map((t) => (
-              <span key={t as string}>{t}</span>
-            ))}
+          {[exhibitor.category?.name, exhibitor.hall && `Hall ${exhibitor.hall}`, exhibitor.stand && `Stand ${exhibitor.stand}`].filter(Boolean).map((t) => (
+            <span key={t as string}>{t}</span>
+          ))}
         </p>
         {exhibitor.description && <p className="mt-1 line-clamp-2 text-sm text-muted">{exhibitor.description}</p>}
       </div>

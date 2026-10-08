@@ -89,9 +89,5 @@ export function Tabs({ tabs, current }: { tabs: { href: string; label: string; c
 }
 
 export function ReadOnlyNotice() {
-  return (
-    <p className="mb-4 rounded-lg bg-cream-dark px-3 py-2 text-sm text-muted">
-      You have read-only access to this section.
-    </p>
-  );
+  return <p className="mb-4 rounded-lg bg-cream-dark px-3 py-2 text-sm text-muted">You have read-only access to this section.</p>;
 }

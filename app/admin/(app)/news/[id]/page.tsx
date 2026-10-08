@@ -14,7 +14,10 @@ export default async function EditNews({ params }: PageProps<"/admin/news/[id]">
   const editable = can(user, "press");
   const [p, events] = await Promise.all([
     db.newsPost.findUnique({ where: { id: (await params).id } }),
-    db.event.findMany({ orderBy: { startsAt: "asc" }, select: { id: true, title: true } }),
+    db.event.findMany({
+      orderBy: { startsAt: "asc" },
+      select: { id: true, title: true },
+    }),
   ]);
   if (!p) notFound();
   return (

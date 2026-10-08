@@ -15,8 +15,16 @@ export default async function AdminAlbum({ params }: PageProps<"/admin/galleries
   const editable = can(user, "media");
   const { id } = await params;
   const [album, events] = await Promise.all([
-    db.photoAlbum.findUnique({ where: { id }, include: { photos: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] } } }),
-    db.event.findMany({ orderBy: { startsAt: "asc" }, select: { id: true, title: true } }),
+    db.photoAlbum.findUnique({
+      where: { id },
+      include: {
+        photos: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+      },
+    }),
+    db.event.findMany({
+      orderBy: { startsAt: "asc" },
+      select: { id: true, title: true },
+    }),
   ]);
   if (!album) notFound();
   return (

@@ -4,12 +4,7 @@ import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 let client: SESv2Client | null = null;
 
 export function emailConfigured() {
-  return !!(
-    process.env.AWS_REGION &&
-    process.env.AWS_ACCESS_KEY_ID &&
-    process.env.AWS_SECRET_ACCESS_KEY &&
-    process.env.SES_FROM_EMAIL
-  );
+  return !!(process.env.AWS_REGION && process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.SES_FROM_EMAIL);
 }
 
 function ses() {
@@ -38,11 +33,17 @@ export async function sendEmail({ to, subject, text, html, unsubscribeUrl }: Ema
         Content: {
           Simple: {
             Subject: { Data: subject, Charset: "UTF-8" },
-            Body: { Text: { Data: text, Charset: "UTF-8" }, Html: { Data: html, Charset: "UTF-8" } },
+            Body: {
+              Text: { Data: text, Charset: "UTF-8" },
+              Html: { Data: html, Charset: "UTF-8" },
+            },
             Headers: unsubscribeUrl
               ? [
                   { Name: "List-Unsubscribe", Value: `<${unsubscribeUrl}>` },
-                  { Name: "List-Unsubscribe-Post", Value: "List-Unsubscribe=One-Click" },
+                  {
+                    Name: "List-Unsubscribe-Post",
+                    Value: "List-Unsubscribe=One-Click",
+                  },
                 ]
               : undefined,
           },

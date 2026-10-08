@@ -8,13 +8,48 @@ export const metadata = { title: "Capture" };
 export default async function CapturePage() {
   const user = await requireStaff();
   const actions = [
-    { href: "/admin/capture/exhibitor", label: "Capture exhibitor", icon: Camera, ok: can(user, "exhibitors") },
-    { href: "/admin/announcements", label: "Post announcement", icon: Megaphone, ok: can(user, "announcements") },
-    { href: "/admin/events/new", label: "Capture programme item", icon: Plus, ok: can(user, "programme") },
-    { href: "/admin/speakers/new", label: "Capture speaker", icon: Mic2, ok: can(user, "programme") },
-    { href: "/admin/galleries", label: "Upload photographs", icon: ImagePlus, ok: can(user, "media") },
-    { href: "/admin/videos", label: "Add video link", icon: Video, ok: can(user, "media") },
-    { href: "/admin/documents/new", label: "Upload document", icon: FileUp, ok: can(user, "press") },
+    {
+      href: "/admin/capture/exhibitor",
+      label: "Capture exhibitor",
+      icon: Camera,
+      ok: can(user, "exhibitors"),
+    },
+    {
+      href: "/admin/announcements",
+      label: "Post announcement",
+      icon: Megaphone,
+      ok: can(user, "announcements"),
+    },
+    {
+      href: "/admin/events/new",
+      label: "Capture programme item",
+      icon: Plus,
+      ok: can(user, "programme"),
+    },
+    {
+      href: "/admin/speakers/new",
+      label: "Capture speaker",
+      icon: Mic2,
+      ok: can(user, "programme"),
+    },
+    {
+      href: "/admin/galleries",
+      label: "Upload photographs",
+      icon: ImagePlus,
+      ok: can(user, "media"),
+    },
+    {
+      href: "/admin/videos",
+      label: "Add video link",
+      icon: Video,
+      ok: can(user, "media"),
+    },
+    {
+      href: "/admin/documents/new",
+      label: "Upload document",
+      icon: FileUp,
+      ok: can(user, "press"),
+    },
   ].filter((a) => a.ok);
 
   return (

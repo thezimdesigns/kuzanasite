@@ -1,5 +1,9 @@
 /** Default footer links, seeded once and then managed in Admin → Footer. */
-export const DEFAULT_FOOTER_LINKS: { column: number; label: string; href: string }[] = [
+export const DEFAULT_FOOTER_LINKS: {
+  column: number;
+  label: string;
+  href: string;
+}[] = [
   { column: 1, label: "KUZANA Live", href: "/live" },
   { column: 1, label: "Today's programme", href: "/programme/today" },
   { column: 1, label: "Exhibitors", href: "/exhibitors" },

@@ -10,10 +10,7 @@ export const metadata = { title: "Messaging" };
 
 export default async function AdminMessages() {
   const user = await requireStaff();
-  const [messages, audiences] = await Promise.all([
-    db.message.findMany({ orderBy: { createdAt: "desc" }, take: 50 }),
-    audienceOptions(),
-  ]);
+  const [messages, audiences] = await Promise.all([db.message.findMany({ orderBy: { createdAt: "desc" }, take: 50 }), audienceOptions()]);
   const channels = channelAvailability();
   return (
     <AdminPage title="Messaging centre" description="Send programme changes and reminders to people who opted in. Nothing is sent until you confirm.">

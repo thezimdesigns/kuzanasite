@@ -6,14 +6,7 @@ import { adminFormAction, runAdmin } from "@/lib/admin-action";
 import { db } from "@/lib/db";
 import { requireCurrentEdition } from "@/lib/edition";
 import { checkbox, optionalText, optionalUrl, requiredText } from "@/lib/forms";
-import {
-  AnnouncementPriority,
-  ParticipantRole,
-  RoutePointKind,
-  ProgrammeStatus,
-  PublishStatus,
-  SessionType,
-} from "@/lib/generated/prisma/enums";
+import { AnnouncementPriority, ParticipantRole, RoutePointKind, ProgrammeStatus, PublishStatus, SessionType } from "@/lib/generated/prisma/enums";
 import { slugify, uniqueSlug } from "@/lib/slug";
 import { parseLocalInput } from "@/lib/time";
 import { resolveMapLink } from "@/lib/geo-server";
@@ -51,7 +44,12 @@ const uploadedFile = z
     if (!s) return null;
     try {
       return z
-        .object({ key: z.string().startsWith("staff/"), mimeType: z.string(), size: z.number(), fileName: z.string().optional() })
+        .object({
+          key: z.string().startsWith("staff/"),
+          mimeType: z.string(),
+          size: z.number(),
+          fileName: z.string().optional(),
+        })
         .parse(JSON.parse(s));
     } catch {
       return null;
@@ -100,16 +98,27 @@ const eventSchema = z
     publishStatus: z.enum(PublishStatus),
     sortOrder: z.coerce.number().int().default(0),
   })
-  .refine((v) => !v.endsAt || v.endsAt >= v.startsAt, { message: "End must be after the start.", path: ["endsAt"] });
+  .refine((v) => !v.endsAt || v.endsAt >= v.startsAt, {
+    message: "End must be after the start.",
+    path: ["endsAt"],
+  });
 
 function eventData(d: z.infer<typeof eventSchema>) {
   const { slug: _slug, programmePdf, removeProgrammePdf, ...rest } = d;
   return {
     ...rest,
     ...(programmePdf
-      ? { programmePdfKey: programmePdf.key, programmePdfName: programmePdf.fileName ?? "programme.pdf", programmePdfSize: programmePdf.size }
+      ? {
+          programmePdfKey: programmePdf.key,
+          programmePdfName: programmePdf.fileName ?? "programme.pdf",
+          programmePdfSize: programmePdf.size,
+        }
       : removeProgrammePdf
-        ? { programmePdfKey: null, programmePdfName: null, programmePdfSize: null }
+        ? {
+            programmePdfKey: null,
+            programmePdfName: null,
+            programmePdfSize: null,
+          }
         : {}),
     summary: d.summary ?? null,
     description: d.description ?? null,
@@ -130,7 +139,13 @@ export const createEvent = adminFormAction("programme", eventSchema, async (d, u
   const edition = await requireCurrentEdition();
   const slug = await uniqueSlug(d.slug ?? d.title, async (s) => !!(await db.event.findUnique({ where: { slug: s } })));
   const event = await db.event.create({
-    data: { ...eventData(d), slug, editionId: edition.id, createdById: user.id, updatedById: user.id },
+    data: {
+      ...eventData(d),
+      slug,
+      editionId: edition.id,
+      createdById: user.id,
+      updatedById: user.id,
+    },
   });
   redirect(`/admin/events/${event.id}?saved=1`);
 });
@@ -146,7 +161,14 @@ export const updateEvent = adminFormAction("programme", eventSchema.and(z.object
 
 export async function setEventStatus(id: string, status: ProgrammeStatus | null, note?: string) {
   return runAdmin("programme", (user) =>
-    db.event.update({ where: { id }, data: { statusOverride: status, statusNote: note ?? null, updatedById: user.id } }),
+    db.event.update({
+      where: { id },
+      data: {
+        statusOverride: status,
+        statusNote: note ?? null,
+        updatedById: user.id,
+      },
+    }),
   );
 }
 
@@ -173,10 +195,20 @@ const sessionSchema = z
     publishStatus: z.enum(PublishStatus),
     sortOrder: z.coerce.number().int().default(0),
   })
-  .refine((v) => !v.endsAt || v.endsAt >= v.startsAt, { message: "End must be after the start.", path: ["endsAt"] });
+  .refine((v) => !v.endsAt || v.endsAt >= v.startsAt, {
+    message: "End must be after the start.",
+    path: ["endsAt"],
+  });
 
 export const createSession = adminFormAction("programme", sessionSchema, async (d) => {
-  await db.session.create({ data: { ...d, description: d.description ?? null, room: d.room ?? null, posterKey: d.posterKey ?? null } });
+  await db.session.create({
+    data: {
+      ...d,
+      description: d.description ?? null,
+      room: d.room ?? null,
+      posterKey: d.posterKey ?? null,
+    },
+  });
   return { ok: true, message: `Session "${d.title}" added.` };
 });
 
@@ -185,7 +217,12 @@ export const updateSession = adminFormAction("programme", sessionSchema.and(z.ob
   void _e;
   await db.session.update({
     where: { id },
-    data: { ...data, description: data.description ?? null, room: data.room ?? null, posterKey: data.posterKey ?? null },
+    data: {
+      ...data,
+      description: data.description ?? null,
+      room: data.room ?? null,
+      posterKey: data.posterKey ?? null,
+    },
   });
   return { ok: true, message: "Session saved." };
 });
@@ -196,7 +233,12 @@ export async function deleteSession(id: string) {
 }
 
 export async function publishAllSessions(eventId: string) {
-  return runAdmin("programme", () => db.session.updateMany({ where: { eventId, publishStatus: "DRAFT" }, data: { publishStatus: "PUBLISHED" } }));
+  return runAdmin("programme", () =>
+    db.session.updateMany({
+      where: { eventId, publishStatus: "DRAFT" },
+      data: { publishStatus: "PUBLISHED" },
+    }),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -220,13 +262,21 @@ export const addParticipant = adminFormAction("programme", participantSchema, as
   if (!personId) return { ok: false, message: "Choose a person or type a new name." };
   if (d.sessionId) {
     await db.sessionParticipant.upsert({
-      where: { sessionId_personId_role: { sessionId: d.sessionId, personId, role: d.role } },
+      where: {
+        sessionId_personId_role: {
+          sessionId: d.sessionId,
+          personId,
+          role: d.role,
+        },
+      },
       update: {},
       create: { sessionId: d.sessionId, personId, role: d.role },
     });
   } else if (d.eventId) {
     await db.eventParticipant.upsert({
-      where: { eventId_personId_role: { eventId: d.eventId, personId, role: d.role } },
+      where: {
+        eventId_personId_role: { eventId: d.eventId, personId, role: d.role },
+      },
       update: {},
       create: { eventId: d.eventId, personId, role: d.role },
     });
@@ -273,7 +323,10 @@ export const createPerson = adminFormAction("programme", personSchema, async (d)
 });
 
 export const updatePerson = adminFormAction("programme", personSchema.and(z.object({ id: z.string() })), async (d) => {
-  await db.person.update({ where: { id: d.id }, data: { ...personData(d), ...(d.slug && { slug: d.slug }) } });
+  await db.person.update({
+    where: { id: d.id },
+    data: { ...personData(d), ...(d.slug && { slug: d.slug }) },
+  });
   return { ok: true, message: "Profile saved." };
 });
 
@@ -322,12 +375,26 @@ async function venueData(d: z.infer<typeof venueSchema>) {
 
 export const createVenue = adminFormAction("programme", venueSchema, async (d) => {
   const slug = await uniqueSlug(d.slug ?? d.name, async (s) => !!(await db.venue.findUnique({ where: { slug: s } })));
-  const v = await db.venue.create({ data: { ...(await venueData(d)), name: d.name, slug, sortOrder: d.sortOrder } });
+  const v = await db.venue.create({
+    data: {
+      ...(await venueData(d)),
+      name: d.name,
+      slug,
+      sortOrder: d.sortOrder,
+    },
+  });
   redirect(`/admin/venues/${v.id}?saved=1`);
 });
 
 export const updateVenue = adminFormAction("programme", venueSchema.and(z.object({ id: z.string() })), async (d) => {
-  await db.venue.update({ where: { id: d.id }, data: { ...(await venueData(d)), sortOrder: d.sortOrder, ...(d.slug && { slug: d.slug }) } });
+  await db.venue.update({
+    where: { id: d.id },
+    data: {
+      ...(await venueData(d)),
+      sortOrder: d.sortOrder,
+      ...(d.slug && { slug: d.slug }),
+    },
+  });
   return { ok: true, message: "Venue saved." };
 });
 
@@ -353,19 +420,36 @@ const announcementSchema = z.object({
 export const createAnnouncement = adminFormAction("announcements", announcementSchema, async (d, user) => {
   const edition = await requireCurrentEdition();
   await db.announcement.create({
-    data: { ...d, body: d.body ?? null, linkUrl: d.linkUrl ?? null, editionId: edition.id, createdById: user.id },
+    data: {
+      ...d,
+      body: d.body ?? null,
+      linkUrl: d.linkUrl ?? null,
+      editionId: edition.id,
+      createdById: user.id,
+    },
   });
-  return { ok: true, message: d.publishStatus === "PUBLISHED" ? "Announcement published." : "Draft saved." };
+  return {
+    ok: true,
+    message: d.publishStatus === "PUBLISHED" ? "Announcement published." : "Draft saved.",
+  };
 });
 
 export const updateAnnouncement = adminFormAction("announcements", announcementSchema.and(z.object({ id: z.string() })), async (d) => {
   const { id, ...data } = d;
-  await db.announcement.update({ where: { id }, data: { ...data, body: data.body ?? null, linkUrl: data.linkUrl ?? null } });
+  await db.announcement.update({
+    where: { id },
+    data: { ...data, body: data.body ?? null, linkUrl: data.linkUrl ?? null },
+  });
   return { ok: true, message: "Announcement saved." };
 });
 
 export async function archiveAnnouncement(id: string) {
-  return runAdmin("announcements", () => db.announcement.update({ where: { id }, data: { publishStatus: "ARCHIVED" } }));
+  return runAdmin("announcements", () =>
+    db.announcement.update({
+      where: { id },
+      data: { publishStatus: "ARCHIVED" },
+    }),
+  );
 }
 
 export async function deleteAnnouncement(id: string) {
@@ -388,13 +472,21 @@ const routeSchema = z.object({
 });
 
 export const createRoute = adminFormAction("programme", routeSchema, async (d) => {
-  await db.eventRoute.create({ data: { ...d, distanceKm: d.distanceKm ?? null } });
-  return { ok: true, message: `${d.name} route added. Click the map to place its start, turning points and finish.` };
+  await db.eventRoute.create({
+    data: { ...d, distanceKm: d.distanceKm ?? null },
+  });
+  return {
+    ok: true,
+    message: `${d.name} route added. Click the map to place its start, turning points and finish.`,
+  };
 });
 
 export const updateRoute = adminFormAction("programme", routeSchema.and(z.object({ id: z.string() })), async (d) => {
   const { id, eventId: _e, ...data } = d;
-  await db.eventRoute.update({ where: { id }, data: { ...data, distanceKm: data.distanceKm ?? null } });
+  await db.eventRoute.update({
+    where: { id },
+    data: { ...data, distanceKm: data.distanceKm ?? null },
+  });
   return { ok: true, message: "Route saved." };
 });
 
@@ -414,7 +506,10 @@ const pointInput = z.object({
 export async function addRoutePoint(input: z.input<typeof pointInput>) {
   const p = pointInput.parse(input);
   return runAdmin("programme", async () => {
-    const points = await db.routePoint.findMany({ where: { routeId: p.routeId }, orderBy: { sortOrder: "asc" } });
+    const points = await db.routePoint.findMany({
+      where: { routeId: p.routeId },
+      orderBy: { sortOrder: "asc" },
+    });
     const finishIndex = points.findIndex((x) => x.kind === "FINISH");
     let sortOrder = points.length ? points[points.length - 1].sortOrder + 1 : 0;
     if (p.kind === "START") sortOrder = (points[0]?.sortOrder ?? 1) - 1;
@@ -422,11 +517,23 @@ export async function addRoutePoint(input: z.input<typeof pointInput>) {
       // Insert before the finish: shift the finish (and anything after) down.
       sortOrder = points[finishIndex].sortOrder;
       await db.$transaction(
-        points.slice(finishIndex).map((x) => db.routePoint.update({ where: { id: x.id }, data: { sortOrder: x.sortOrder + 1 } })),
+        points.slice(finishIndex).map((x) =>
+          db.routePoint.update({
+            where: { id: x.id },
+            data: { sortOrder: x.sortOrder + 1 },
+          }),
+        ),
       );
     }
     return db.routePoint.create({
-      data: { routeId: p.routeId, kind: p.kind, label: p.label || null, latitude: p.lat, longitude: p.lng, sortOrder },
+      data: {
+        routeId: p.routeId,
+        kind: p.kind,
+        label: p.label || null,
+        latitude: p.lat,
+        longitude: p.lng,
+        sortOrder,
+      },
     });
   });
 }
@@ -435,29 +542,56 @@ export async function addRoutePoint(input: z.input<typeof pointInput>) {
 export async function addRoutePointFromLink(routeId: string, kind: RoutePointKind, label: string, link: string) {
   const { point } = await resolveMapLink(link);
   if (!point) throw new Error("Could not read a location from that link.");
-  return addRoutePoint({ routeId, kind, label, lat: point.lat, lng: point.lng });
+  return addRoutePoint({
+    routeId,
+    kind,
+    label,
+    lat: point.lat,
+    lng: point.lng,
+  });
 }
 
 export async function moveRoutePoint(id: string, lat: number, lng: number) {
-  const c = z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).parse({ lat, lng });
-  return runAdmin("programme", () => db.routePoint.update({ where: { id }, data: { latitude: c.lat, longitude: c.lng } }));
+  const c = z
+    .object({
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+    })
+    .parse({ lat, lng });
+  return runAdmin("programme", () =>
+    db.routePoint.update({
+      where: { id },
+      data: { latitude: c.lat, longitude: c.lng },
+    }),
+  );
 }
 
 export async function updateRoutePoint(id: string, kind: RoutePointKind, label: string) {
   const k = z.enum(RoutePointKind).parse(kind);
-  return runAdmin("programme", () => db.routePoint.update({ where: { id }, data: { kind: k, label: label.trim().slice(0, 80) || null } }));
+  return runAdmin("programme", () =>
+    db.routePoint.update({
+      where: { id },
+      data: { kind: k, label: label.trim().slice(0, 80) || null },
+    }),
+  );
 }
 
 export async function reorderRoutePoint(id: string, direction: -1 | 1) {
   return runAdmin("programme", async () => {
     const point = await db.routePoint.findUniqueOrThrow({ where: { id } });
-    const points = await db.routePoint.findMany({ where: { routeId: point.routeId }, orderBy: { sortOrder: "asc" } });
+    const points = await db.routePoint.findMany({
+      where: { routeId: point.routeId },
+      orderBy: { sortOrder: "asc" },
+    });
     const i = points.findIndex((x) => x.id === id);
     const other = points[i + direction];
     if (!other) return;
     await db.$transaction(points.map((x, n) => db.routePoint.update({ where: { id: x.id }, data: { sortOrder: n } })));
     await db.$transaction([
-      db.routePoint.update({ where: { id }, data: { sortOrder: i + direction } }),
+      db.routePoint.update({
+        where: { id },
+        data: { sortOrder: i + direction },
+      }),
       db.routePoint.update({ where: { id: other.id }, data: { sortOrder: i } }),
     ]);
   });
@@ -465,4 +599,75 @@ export async function reorderRoutePoint(id: string, direction: -1 | 1) {
 
 export async function deleteRoutePoint(id: string) {
   return runAdmin("programme", () => db.routePoint.delete({ where: { id } }));
+}
+
+// ---------------------------------------------------------------------------
+// Live streams (several per event or session)
+// ---------------------------------------------------------------------------
+
+const streamSchema = z.object({
+  eventId: optionalText(40),
+  sessionId: optionalText(40),
+  label: requiredText("Label", 80),
+  url: z
+    .string()
+    .trim()
+    .max(500)
+    .regex(/^https?:\/\/\S+$/i, "Enter a full link starting with https://"),
+  active: checkbox,
+});
+
+export const createStream = adminFormAction("programme", streamSchema, async (d) => {
+  if (!d.eventId && !d.sessionId) return { ok: false, message: "Missing event." };
+  const count = await db.eventStream.count({
+    where: d.sessionId ? { sessionId: d.sessionId } : { eventId: d.eventId },
+  });
+  await db.eventStream.create({
+    data: {
+      eventId: d.sessionId ? null : d.eventId,
+      sessionId: d.sessionId ?? null,
+      label: d.label,
+      url: d.url,
+      active: d.active,
+      sortOrder: count,
+    },
+  });
+  return { ok: true, message: "Stream added." };
+});
+
+export const updateStream = adminFormAction("programme", streamSchema.and(z.object({ id: z.string() })), async (d) => {
+  await db.eventStream.update({
+    where: { id: d.id },
+    data: { label: d.label, url: d.url, active: d.active },
+  });
+  return { ok: true, message: "Stream saved." };
+});
+
+export async function toggleStream(id: string) {
+  return runAdmin("programme", async () => {
+    const s = await db.eventStream.findUniqueOrThrow({ where: { id } });
+    await db.eventStream.update({ where: { id }, data: { active: !s.active } });
+  });
+}
+
+export async function moveStream(id: string, direction: -1 | 1) {
+  return runAdmin("programme", async () => {
+    const s = await db.eventStream.findUniqueOrThrow({ where: { id } });
+    const siblings = await db.eventStream.findMany({
+      where: s.sessionId ? { sessionId: s.sessionId } : { eventId: s.eventId },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    });
+    const i = siblings.findIndex((x) => x.id === id);
+    const other = siblings[i + direction];
+    if (!other) return;
+    siblings[i] = other;
+    siblings[i + direction] = s;
+    await db.$transaction(siblings.map((x, n) => db.eventStream.update({ where: { id: x.id }, data: { sortOrder: n } })));
+  });
+}
+
+export async function deleteStream(id: string) {
+  return runAdmin("programme", async () => {
+    await db.eventStream.delete({ where: { id } });
+  });
 }

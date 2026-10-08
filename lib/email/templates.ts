@@ -1,5 +1,4 @@
-const escape = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /** Plain branded layout shared by every KUZANA email. */
 export function layout(opts: { title: string; body: string; ctaUrl?: string | null; ctaLabel?: string; unsubscribeUrl?: string }) {

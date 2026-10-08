@@ -22,7 +22,11 @@ export const optionalText = (max = 500) =>
     .transform((v) => (v ? v : undefined));
 
 export const requiredText = (label: string, max = 200) =>
-  z.string({ error: `${label} is required.` }).trim().min(1, `${label} is required.`).max(max);
+  z
+    .string({ error: `${label} is required.` })
+    .trim()
+    .min(1, `${label} is required.`)
+    .max(max);
 
 export const optionalUrl = z
   .string()

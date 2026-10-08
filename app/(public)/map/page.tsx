@@ -15,7 +15,13 @@ export const metadata: Metadata = {
 export default async function VenueMapPage() {
   const venues = await db.venue.findMany({
     orderBy: { sortOrder: "asc" },
-    include: { events: { where: { publishStatus: "PUBLISHED" }, select: { title: true }, orderBy: { startsAt: "asc" } } },
+    include: {
+      events: {
+        where: { publishStatus: "PUBLISHED" },
+        select: { title: true },
+        orderBy: { startsAt: "asc" },
+      },
+    },
   });
   const pinned = venues.filter((v) => v.latitude != null && v.longitude != null);
 
@@ -34,7 +40,10 @@ export default async function VenueMapPage() {
               color: "#00512d",
               title: v.name,
               subtitle: v.events.map((e) => e.title).join(", ") || v.address || undefined,
-              link: { href: googleDirectionsUrl(v.latitude!, v.longitude!), label: "Directions in Google Maps" },
+              link: {
+                href: googleDirectionsUrl(v.latitude!, v.longitude!),
+                label: "Directions in Google Maps",
+              },
             }))}
           />
         </div>

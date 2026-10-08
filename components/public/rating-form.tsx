@@ -22,13 +22,18 @@ function alreadyRated(t: Target) {
 /** 1–5 star rating with an optional comment. Remembers on this device that it was used. */
 export function RatingForm({ label = "Rate this event", compact = false, ...target }: Target & { label?: string; compact?: boolean }) {
   const [stars, setStars] = useState(0);
-  const rated = useSyncExternalStore(noopSubscribe, () => alreadyRated(target), () => false);
+  const rated = useSyncExternalStore(
+    noopSubscribe,
+    () => alreadyRated(target),
+    () => false,
+  );
 
   if (rated) return <p className="text-sm font-semibold text-green-900">Thanks, you&apos;ve rated this.</p>;
 
   return (
     <ActionForm
       action={submitRating}
+      recaptchaAction="rating"
       onSuccess={() => {
         try {
           localStorage.setItem(storageKey(target), "1");

@@ -3,8 +3,14 @@ import { getCurrentEdition } from "@/lib/edition";
 import { dateKey, startOfDay, TIME_ZONE } from "@/lib/time";
 import { cn } from "@/components/ui";
 
-const weekday = new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, weekday: "short" });
-const dayOfMonth = new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, day: "numeric" });
+const weekday = new Intl.DateTimeFormat("en-GB", {
+  timeZone: TIME_ZONE,
+  weekday: "short",
+});
+const dayOfMonth = new Intl.DateTimeFormat("en-GB", {
+  timeZone: TIME_ZONE,
+  day: "numeric",
+});
 
 /** The days of the current edition as a jump bar. `selected` is a YYYY-MM-DD key. */
 export async function WeekStrip({ selected, className }: { selected?: string; className?: string }) {
@@ -34,10 +40,7 @@ export async function WeekStrip({ selected, className }: { selected?: string; cl
           >
             <span className={cn("text-xs font-semibold", isSelected ? "text-white/75" : "text-muted")}>{isToday ? "Today" : weekday.format(date)}</span>
             <span className="text-2xl leading-none font-extrabold tabular-nums">{dayOfMonth.format(date)}</span>
-            <span
-              className={cn("mt-1 h-0.5 w-5 rounded-full transition-colors", isToday ? "bg-orange" : "bg-transparent group-hover:bg-line")}
-              aria-hidden
-            />
+            <span className={cn("mt-1 h-0.5 w-5 rounded-full transition-colors", isToday ? "bg-orange" : "bg-transparent group-hover:bg-line")} aria-hidden />
           </Link>
         );
       })}

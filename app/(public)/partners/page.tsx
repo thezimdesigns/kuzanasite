@@ -94,7 +94,17 @@ function PartnerCard({ partner: p, lead = false }: { partner: Partner; lead?: bo
         ) : (
           <span />
         )}
-        <SocialLinks name={p.name} tone="dark" size="sm" urls={{ facebook: p.facebook, instagram: p.instagram, youtube: p.youtube, linkedin: p.linkedin }} />
+        <SocialLinks
+          name={p.name}
+          tone="dark"
+          size="sm"
+          urls={{
+            facebook: p.facebook,
+            instagram: p.instagram,
+            youtube: p.youtube,
+            linkedin: p.linkedin,
+          }}
+        />
       </div>
     </article>
   );

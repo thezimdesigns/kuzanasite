@@ -14,10 +14,18 @@ async function getPerson(slug: string) {
   return db.person.findFirst({
     where: { slug, publishStatus: "PUBLISHED" },
     include: {
-      eventRoles: { include: { event: true }, where: { event: { publishStatus: "PUBLISHED" } } },
+      eventRoles: {
+        include: { event: true },
+        where: { event: { publishStatus: "PUBLISHED" } },
+      },
       sessionRoles: {
         include: { session: { include: { event: true } } },
-        where: { session: { publishStatus: "PUBLISHED", event: { publishStatus: "PUBLISHED" } } },
+        where: {
+          session: {
+            publishStatus: "PUBLISHED",
+            event: { publishStatus: "PUBLISHED" },
+          },
+        },
       },
     },
   });
@@ -26,7 +34,10 @@ async function getPerson(slug: string) {
 export async function generateMetadata({ params }: PageProps<"/speakers/[slug]">): Promise<Metadata> {
   const person = await getPerson((await params).slug);
   if (!person) return {};
-  return { title: person.name, description: [person.jobTitle, person.organisation].filter(Boolean).join(", ") || undefined };
+  return {
+    title: person.name,
+    description: [person.jobTitle, person.organisation].filter(Boolean).join(", ") || undefined,
+  };
 }
 
 export default async function SpeakerPage({ params }: PageProps<"/speakers/[slug]">) {

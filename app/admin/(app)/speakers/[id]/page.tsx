@@ -34,7 +34,11 @@ export default async function AdminSpeaker({ params }: PageProps<"/admin/speaker
       />
       {editable && (
         <div className="mt-8">
-          <ActionButton action={deletePerson.bind(null, p.id)} variant="danger" confirm={`Delete ${p.name}? They will be removed from all events and sessions.`}>
+          <ActionButton
+            action={deletePerson.bind(null, p.id)}
+            variant="danger"
+            confirm={`Delete ${p.name}? They will be removed from all events and sessions.`}
+          >
             Delete person
           </ActionButton>
         </div>

@@ -12,7 +12,12 @@ export default async function AdminEventRoutes({ params }: PageProps<"/admin/eve
   await requireAreaPage("programme");
   const event = await db.event.findUnique({
     where: { id: (await params).id },
-    include: { routes: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], include: { points: { orderBy: { sortOrder: "asc" } } } } },
+    include: {
+      routes: {
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        include: { points: { orderBy: { sortOrder: "asc" } } },
+      },
+    },
   });
   if (!event) notFound();
   return (
@@ -33,7 +38,13 @@ export default async function AdminEventRoutes({ params }: PageProps<"/admin/eve
           name: r.name,
           distanceKm: r.distanceKm,
           color: r.color,
-          points: r.points.map((p) => ({ id: p.id, kind: p.kind, label: p.label, lat: p.latitude, lng: p.longitude })),
+          points: r.points.map((p) => ({
+            id: p.id,
+            kind: p.kind,
+            label: p.label,
+            lat: p.latitude,
+            lng: p.longitude,
+          })),
         }))}
       />
     </AdminPage>

@@ -11,7 +11,9 @@ export function CaptureExhibitorForm({ sectors }: { sectors: { id: string; name:
   const [media, setMedia] = useState<Record<string, (UploadedFile & { kind: ExhibitorMediaKind })[]>>({});
   // Remounting the uploaders after each save clears them for the next stand.
   const [round, setRound] = useState(0);
-  const all = Object.values(media).flat().map(({ preview: _p, ...m }) => m);
+  const all = Object.values(media)
+    .flat()
+    .map(({ preview: _p, ...m }) => m);
   const setGroup = (g: string, kind: ExhibitorMediaKind) => (files: UploadedFile[]) => setMedia((m) => ({ ...m, [g]: files.map((f) => ({ ...f, kind })) }));
 
   return (

@@ -18,7 +18,12 @@ export type MapMarker = {
   draggable?: boolean;
 };
 
-export type MapLine = { id: string; color: string; points: LatLng[]; dashed?: boolean };
+export type MapLine = {
+  id: string;
+  color: string;
+  points: LatLng[];
+  dashed?: boolean;
+};
 
 /**
  * Leaflet map with branded pins (OpenStreetMap tiles, no API key).
@@ -54,7 +59,10 @@ export function MapView({
     import("leaflet").then((L) => {
       if (cancelled || !el.current || mapRef.current) return;
       LRef.current = L;
-      const map = L.map(el.current, { scrollWheelZoom: false, zoomControl: true }).setView([BULAWAYO.lat, BULAWAYO.lng], 13);
+      const map = L.map(el.current, {
+        scrollWheelZoom: false,
+        zoomControl: true,
+      }).setView([BULAWAYO.lat, BULAWAYO.lng], 13);
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -87,7 +95,13 @@ export function MapView({
       if (line.points.length < 2) continue;
       L.polyline(
         line.points.map((p) => [p.lat, p.lng] as [number, number]),
-        { color: line.color, weight: 5, opacity: 0.85, dashArray: line.dashed ? "8 8" : undefined, lineJoin: "round" },
+        {
+          color: line.color,
+          weight: 5,
+          opacity: 0.85,
+          dashArray: line.dashed ? "8 8" : undefined,
+          lineJoin: "round",
+        },
       ).addTo(layer);
     }
 
@@ -98,8 +112,20 @@ export function MapView({
       const label = document.createElement("span");
       label.textContent = m.pin ?? "";
       pin.appendChild(label);
-      const icon = L.divIcon({ html: pin.outerHTML, className: "", iconSize: [34, 34], iconAnchor: [17, 34], popupAnchor: [0, -30] });
-      const marker = L.marker([m.lat, m.lng], { icon, draggable: !!m.draggable, title: m.title, alt: m.title, keyboard: true });
+      const icon = L.divIcon({
+        html: pin.outerHTML,
+        className: "",
+        iconSize: [34, 34],
+        iconAnchor: [17, 34],
+        popupAnchor: [0, -30],
+      });
+      const marker = L.marker([m.lat, m.lng], {
+        icon,
+        draggable: !!m.draggable,
+        title: m.title,
+        alt: m.title,
+        keyboard: true,
+      });
 
       const popup = document.createElement("div");
       popup.className = "kuzana-popup";

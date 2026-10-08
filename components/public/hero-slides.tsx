@@ -32,19 +32,9 @@ export function HeroSlides({ slides }: { slides: Slide[] }) {
         {slides.map((s, i) => (
           <div
             key={s.id}
-            className={cn(
-              "absolute inset-0 transition-opacity duration-[1400ms] ease-[var(--ease-out-expo)]",
-              i === index ? "opacity-100" : "opacity-0",
-            )}
+            className={cn("absolute inset-0 transition-opacity duration-[1400ms] ease-[var(--ease-out-expo)]", i === index ? "opacity-100" : "opacity-0")}
           >
-            <Image
-              src={s.src}
-              alt=""
-              fill
-              priority={i === 0}
-              sizes="100vw"
-              className={cn("object-cover", i === index && "hero-push")}
-            />
+            <Image src={s.src} alt="" fill priority={i === 0} sizes="100vw" className={cn("object-cover", i === index && "hero-push")} />
           </div>
         ))}
         {/* Tint: strongest behind the text column, lighter towards the photo. */}

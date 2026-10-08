@@ -24,8 +24,7 @@ export default async function ExhibitorRegisterPage({ searchParams }: PageProps<
             <QrCode className="mx-auto mb-3 size-12 text-green-900" />
             <p className="font-heading text-lg font-bold">Scan the exhibitor QR code to register</p>
             <p className="mt-2 text-muted">
-              Stand registration is open to KUZANA exhibitors through the QR code at the exhibitor desk, or from a KUZANA team member
-              walking the halls.
+              Stand registration is open to KUZANA exhibitors through the QR code at the exhibitor desk, or from a KUZANA team member walking the halls.
             </p>
           </Card>
         </Section>
@@ -33,7 +32,10 @@ export default async function ExhibitorRegisterPage({ searchParams }: PageProps<
     );
   }
 
-  const sectors = await db.exhibitorCategory.findMany({ orderBy: { sortOrder: "asc" }, select: { id: true, name: true } });
+  const sectors = await db.exhibitorCategory.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, name: true },
+  });
 
   return (
     <>

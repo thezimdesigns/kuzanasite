@@ -16,7 +16,11 @@ export default async function AdminEvents() {
   const events = await db.event.findMany({
     where: edition ? { editionId: edition.id } : {},
     orderBy: [{ startsAt: "asc" }, { sortOrder: "asc" }],
-    include: { venue: true, category: true, _count: { select: { sessions: true } } },
+    include: {
+      venue: true,
+      category: true,
+      _count: { select: { sessions: true } },
+    },
   });
   const now = new Date();
 

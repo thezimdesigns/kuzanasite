@@ -8,6 +8,7 @@ import { deleteSession, removeParticipant } from "@/app/admin/actions/programme"
 import { ActionButton } from "@/components/admin/admin-form";
 import { ParticipantForm } from "@/components/admin/participant-form";
 import { SessionForm } from "@/components/admin/session-form";
+import { StreamsPanel } from "@/components/admin/streams-panel";
 import { AdminPage, Panel, ReadOnlyNotice } from "@/components/admin/ui";
 import { Badge } from "@/components/ui";
 
@@ -16,8 +17,20 @@ export default async function AdminSession({ params }: PageProps<"/admin/session
   const editable = can(user, "programme");
   const { id } = await params;
   const [s, people] = await Promise.all([
-    db.session.findUnique({ where: { id }, include: { event: true, participants: { include: { person: true }, orderBy: { sortOrder: "asc" } } } }),
-    db.person.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.session.findUnique({
+      where: { id },
+      include: {
+        event: true,
+        participants: {
+          include: { person: true },
+          orderBy: { sortOrder: "asc" },
+        },
+      },
+    }),
+    db.person.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
   if (!s) notFound();
   return (
@@ -66,6 +79,7 @@ export default async function AdminSession({ params }: PageProps<"/admin/session
             )}
             {editable && <ParticipantForm people={people} sessionId={s.id} />}
           </Panel>
+          <StreamsPanel sessionId={s.id} editable={editable} />
           <p className="text-sm text-muted">
             To attach slides or a recording, upload a document or add a video and link it to this session.{" "}
             <Link href={`/admin/documents/new?session=${s.id}&event=${s.eventId}`} className="font-semibold text-green-800 underline">

@@ -14,31 +14,127 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
 
   const results = q
     ? await Promise.all([
-        db.event.findMany({ where: { publishStatus: "PUBLISHED", OR: [{ title: contains }, { summary: contains }] }, take: 10 }),
+        db.event.findMany({
+          where: {
+            publishStatus: "PUBLISHED",
+            OR: [{ title: contains }, { summary: contains }],
+          },
+          take: 10,
+        }),
         db.session.findMany({
-          where: { publishStatus: "PUBLISHED", event: { publishStatus: "PUBLISHED" }, OR: [{ title: contains }, { description: contains }] },
+          where: {
+            publishStatus: "PUBLISHED",
+            event: { publishStatus: "PUBLISHED" },
+            OR: [{ title: contains }, { description: contains }],
+          },
           include: { event: true },
           take: 10,
         }),
-        db.exhibitor.findMany({ where: { status: "APPROVED", OR: [{ name: contains }, { description: contains }, { showcasing: contains }] }, take: 10 }),
-        db.person.findMany({ where: { publishStatus: "PUBLISHED", OR: [{ name: contains }, { organisation: contains }] }, take: 10 }),
-        db.document.findMany({ where: { publishStatus: "PUBLISHED", OR: [{ title: contains }, { description: contains }] }, take: 10 }),
-        db.photoAlbum.findMany({ where: { publishStatus: "PUBLISHED", title: contains }, take: 10 }),
-        db.video.findMany({ where: { publishStatus: "PUBLISHED", title: contains }, take: 10 }),
-        db.newsPost.findMany({ where: { publishStatus: "PUBLISHED", OR: [{ title: contains }, { excerpt: contains }, { body: contains }] }, take: 10 }),
+        db.exhibitor.findMany({
+          where: {
+            status: "APPROVED",
+            OR: [{ name: contains }, { description: contains }, { showcasing: contains }],
+          },
+          take: 10,
+        }),
+        db.person.findMany({
+          where: {
+            publishStatus: "PUBLISHED",
+            OR: [{ name: contains }, { organisation: contains }],
+          },
+          take: 10,
+        }),
+        db.document.findMany({
+          where: {
+            publishStatus: "PUBLISHED",
+            OR: [{ title: contains }, { description: contains }],
+          },
+          take: 10,
+        }),
+        db.photoAlbum.findMany({
+          where: { publishStatus: "PUBLISHED", title: contains },
+          take: 10,
+        }),
+        db.video.findMany({
+          where: { publishStatus: "PUBLISHED", title: contains },
+          take: 10,
+        }),
+        db.newsPost.findMany({
+          where: {
+            publishStatus: "PUBLISHED",
+            OR: [{ title: contains }, { excerpt: contains }, { body: contains }],
+          },
+          take: 10,
+        }),
       ])
     : null;
 
   const groups = results
     ? [
-        { title: "News", items: results[7].map((n) => ({ href: `/news/${n.slug}`, title: n.title, meta: "" })) },
-        { title: "Events", items: results[0].map((e) => ({ href: `/events/${e.slug}`, title: e.title, meta: formatRange(e.startsAt, e.endsAt, e.timeTbc) })) },
-        { title: "Sessions", items: results[1].map((s) => ({ href: `/events/${s.event.slug}#session-${s.id}`, title: s.title, meta: s.event.title })) },
-        { title: "Exhibitors", items: results[2].map((x) => ({ href: `/exhibitors/${x.slug}`, title: x.name, meta: [x.hall && `Hall ${x.hall}`, x.stand && `Stand ${x.stand}`].filter(Boolean).join(" · ") })) },
-        { title: "Speakers", items: results[3].map((p) => ({ href: `/speakers/${p.slug}`, title: p.name, meta: p.organisation ?? "" })) },
-        { title: "Documents", items: results[4].map((d) => ({ href: `/media/documents/${d.slug}`, title: d.title, meta: "" })) },
-        { title: "Galleries", items: results[5].map((a) => ({ href: `/gallery/${a.slug}`, title: a.title, meta: "" })) },
-        { title: "Videos", items: results[6].map((v) => ({ href: `https://www.youtube.com/watch?v=${v.youtubeId}`, title: v.title, meta: "" })) },
+        {
+          title: "News",
+          items: results[7].map((n) => ({
+            href: `/news/${n.slug}`,
+            title: n.title,
+            meta: "",
+          })),
+        },
+        {
+          title: "Events",
+          items: results[0].map((e) => ({
+            href: `/events/${e.slug}`,
+            title: e.title,
+            meta: formatRange(e.startsAt, e.endsAt, e.timeTbc),
+          })),
+        },
+        {
+          title: "Sessions",
+          items: results[1].map((s) => ({
+            href: `/events/${s.event.slug}#session-${s.id}`,
+            title: s.title,
+            meta: s.event.title,
+          })),
+        },
+        {
+          title: "Exhibitors",
+          items: results[2].map((x) => ({
+            href: `/exhibitors/${x.slug}`,
+            title: x.name,
+            meta: [x.hall && `Hall ${x.hall}`, x.stand && `Stand ${x.stand}`].filter(Boolean).join(" · "),
+          })),
+        },
+        {
+          title: "Speakers",
+          items: results[3].map((p) => ({
+            href: `/speakers/${p.slug}`,
+            title: p.name,
+            meta: p.organisation ?? "",
+          })),
+        },
+        {
+          title: "Documents",
+          items: results[4].map((d) => ({
+            href: `/media/documents/${d.slug}`,
+            title: d.title,
+            meta: "",
+          })),
+        },
+        {
+          title: "Galleries",
+          items: results[5].map((a) => ({
+            href: `/gallery/${a.slug}`,
+            title: a.title,
+            meta: "",
+          })),
+        },
+        {
+          title: "Videos",
+          items: results[6].map((v) => ({
+            href: `https://www.youtube.com/watch?v=${v.youtubeId}`,
+            title: v.title,
+            meta: "",
+          })),
+        },
       ].filter((g) => g.items.length)
     : [];
 

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { FileDown, MapPin } from "lucide-react";
+import { FileDown, MapPin, Radio } from "lucide-react";
 import type { ProgrammeItem } from "@/lib/programme";
 import { fileUrl } from "@/lib/files";
 import { formatTimes } from "@/lib/time";
@@ -26,7 +26,7 @@ export function ProgrammeBanner({ banner, className, priority }: { banner: { wid
   return (
     <picture className={cn("block overflow-hidden bg-green-950", className)}>
       {mobile && <source media="(max-width: 639px)" srcSet={mobile} />}
-      { }
+      {}
       <img
         src={wide}
         alt=""
@@ -79,7 +79,7 @@ export function ProgrammeRow({ item }: { item: ProgrammeItem }) {
           </div>
           {item.statusNote && <p className="mt-1 text-sm font-semibold text-danger">{item.statusNote}</p>}
           {item.parentTitle && <p className="mt-0.5 text-sm text-muted">{item.parentTitle}</p>}
-          {(place || item.pdf) && (
+          {(place || item.pdf || item.watchHref) && (
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {place &&
                 (item.venueMapUrl ? (
@@ -106,6 +106,17 @@ export function ProgrammeRow({ item }: { item: ProgrammeItem }) {
                 >
                   <FileDown className="size-3.5" aria-hidden /> Programme PDF
                 </a>
+              )}
+              {item.watchHref && !done && (
+                <Link
+                  href={item.watchHref}
+                  className={cn(
+                    "relative z-10 inline-flex items-center gap-1.5 rounded-[var(--radius-control)] px-2.5 py-1 text-xs font-semibold transition-colors",
+                    live ? "bg-orange text-white hover:bg-orange-dark" : "bg-orange-50 text-orange-deeper hover:bg-orange hover:text-white",
+                  )}
+                >
+                  <Radio className="size-3.5" aria-hidden /> {live ? "Watch live" : "Live stream"}
+                </Link>
               )}
             </div>
           )}

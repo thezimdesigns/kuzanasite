@@ -17,10 +17,7 @@ const TABS = [
 export function MobileTabBar() {
   const pathname = usePathname();
   return (
-    <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
-      aria-label="Quick links"
-    >
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label="Quick links">
       <ul className="grid grid-cols-5">
         {TABS.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || (href !== "/programme/today" && pathname.startsWith(`${href}/`));
@@ -28,10 +25,7 @@ export function MobileTabBar() {
             <li key={href}>
               <Link
                 href={href}
-                className={cn(
-                  "flex flex-col items-center gap-0.5 py-2 text-[0.7rem] font-semibold",
-                  active ? "text-orange-dark" : "text-green-900",
-                )}
+                className={cn("flex flex-col items-center gap-0.5 py-2 text-[0.7rem] font-semibold", active ? "text-orange-dark" : "text-green-900")}
               >
                 <Icon className="size-5" aria-hidden />
                 {label}

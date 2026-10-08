@@ -154,8 +154,8 @@ export function EventForm({
 
           <Panel title="Programme banner">
             <p className="mb-3 text-sm text-muted">
-              A wide image shown above this item in the programme and at the top of its page. Use about 1600 × 500 px; add a
-              taller crop (about 800 × 450 px) for phones if the wide one gets too thin.
+              A wide image shown above this item in the programme and at the top of its page. Use about 1600 × 500 px; add a taller crop (about 800 × 450 px)
+              for phones if the wide one gets too thin.
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <UploadField name="bannerKey" label="Banner (wide)" current={v.bannerKey} folder="banners" maxDim={2400} />
@@ -164,9 +164,7 @@ export function EventForm({
           </Panel>
 
           <Panel title="Detailed programme (PDF)">
-            <p className="mb-3 text-sm text-muted">
-              Visitors get a “Download detailed programme” button on this event and in the programme listings.
-            </p>
+            <p className="mb-3 text-sm text-muted">Visitors get a “Download detailed programme” button on this event and in the programme listings.</p>
             <UploadField
               name="programmePdf"
               mode="json"

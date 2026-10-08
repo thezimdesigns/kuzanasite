@@ -22,14 +22,38 @@ export async function audienceOptions() {
     select: { id: true, title: true },
   });
   return [
-    { group: "General", options: [{ value: "all", label: "All opted-in visitors and alert subscribers" }, { value: "exhibitors", label: "Exhibitors (email)" }] },
-    { group: "Event followers (Notify me)", options: events.map((e) => ({ value: `event:${e.id}`, label: `${e.title} followers` })) },
-    { group: "Visitor interests", options: VISITOR_INTERESTS.map((i) => ({ value: `interest:${i}`, label: i })) },
-    { group: "Visitor types", options: VISITOR_TYPES.map((t) => ({ value: `type:${t}`, label: t })) },
+    {
+      group: "General",
+      options: [
+        { value: "all", label: "All opted-in visitors and alert subscribers" },
+        { value: "exhibitors", label: "Exhibitors (email)" },
+      ],
+    },
+    {
+      group: "Event followers (Notify me)",
+      options: events.map((e) => ({
+        value: `event:${e.id}`,
+        label: `${e.title} followers`,
+      })),
+    },
+    {
+      group: "Visitor interests",
+      options: VISITOR_INTERESTS.map((i) => ({
+        value: `interest:${i}`,
+        label: i,
+      })),
+    },
+    {
+      group: "Visitor types",
+      options: VISITOR_TYPES.map((t) => ({ value: `type:${t}`, label: t })),
+    },
   ];
 }
 
-type Recipients = { pushIds: string[]; emails: { email: string; token?: string }[] };
+type Recipients = {
+  pushIds: string[];
+  emails: { email: string; token?: string }[];
+};
 
 export async function resolveAudience(audience: string, channels: Channel[]): Promise<Recipients> {
   const wantPush = channels.includes("WEB_PUSH");
@@ -39,9 +63,15 @@ export async function resolveAudience(audience: string, channels: Channel[]): Pr
 
   if (kind === "exhibitors") {
     const ex = wantEmail
-      ? await db.exhibitor.findMany({ where: { status: "APPROVED", email: { not: null } }, select: { email: true } })
+      ? await db.exhibitor.findMany({
+          where: { status: "APPROVED", email: { not: null } },
+          select: { email: true },
+        })
       : [];
-    return { pushIds: [], emails: dedupe(ex.map((e) => ({ email: e.email! }))) };
+    return {
+      pushIds: [],
+      emails: dedupe(ex.map((e) => ({ email: e.email! }))),
+    };
   }
 
   if (kind === "event") {
@@ -52,18 +82,27 @@ export async function resolveAudience(audience: string, channels: Channel[]): Pr
     return {
       pushIds: wantPush ? subs.filter((s) => s.pushSubscription?.active).map((s) => s.pushSubscriptionId!) : [],
       emails: wantEmail
-        ? dedupe(subs.filter((s) => s.visitor?.emailConsent && s.visitor.email).map((s) => ({ email: s.visitor!.email!, token: s.visitor!.unsubscribeToken })))
+        ? dedupe(
+            subs
+              .filter((s) => s.visitor?.emailConsent && s.visitor.email)
+              .map((s) => ({
+                email: s.visitor!.email!,
+                token: s.visitor!.unsubscribeToken,
+              })),
+          )
         : [],
     };
   }
 
-  const visitorWhere =
-    kind === "interest" ? { interests: { has: value } } : kind === "type" ? { visitorType: value } : {};
+  const visitorWhere = kind === "interest" ? { interests: { has: value } } : kind === "type" ? { visitorType: value } : {};
 
   const pushIds = wantPush
     ? (
         await db.pushSubscription.findMany({
-          where: { active: true, ...(kind === "all" ? {} : { visitor: visitorWhere }) },
+          where: {
+            active: true,
+            ...(kind === "all" ? {} : { visitor: visitorWhere }),
+          },
           select: { id: true },
         })
       ).map((p) => p.id)
@@ -74,7 +113,10 @@ export async function resolveAudience(audience: string, channels: Channel[]): Pr
         select: { email: true, unsubscribeToken: true },
       })
     : [];
-  return { pushIds, emails: dedupe(visitors.map((v) => ({ email: v.email!, token: v.unsubscribeToken }))) };
+  return {
+    pushIds,
+    emails: dedupe(visitors.map((v) => ({ email: v.email!, token: v.unsubscribeToken }))),
+  };
 }
 
 function dedupe(list: { email: string; token?: string }[]) {
@@ -93,17 +135,26 @@ export function channelAvailability() {
 
 /** Delivers a message. Runs after the admin's request has returned. */
 export async function deliverMessage(messageId: string) {
-  const message = await db.message.findUniqueOrThrow({ where: { id: messageId } });
+  const message = await db.message.findUniqueOrThrow({
+    where: { id: messageId },
+  });
   const { pushIds, emails } = await resolveAudience(message.audience, message.channels);
   let sent = 0;
   let failed = 0;
 
   try {
     if (message.channels.includes("WEB_PUSH") && pushIds.length) {
-      const r = await sendPush(pushIds, { title: message.title, body: message.body, url: message.url });
+      const r = await sendPush(pushIds, {
+        title: message.title,
+        body: message.body,
+        url: message.url,
+      });
       sent += r.sent;
       failed += r.failed;
-      await db.message.update({ where: { id: messageId }, data: { sentCount: sent, failedCount: failed } });
+      await db.message.update({
+        where: { id: messageId },
+        data: { sentCount: sent, failedCount: failed },
+      });
     }
 
     if (message.channels.includes("EMAIL") && emails.length) {
@@ -116,12 +167,22 @@ export async function deliverMessage(messageId: string) {
           ctaLabel: "Open on the KUZANA website",
           unsubscribeUrl,
         });
-        const ok = await sendEmail({ to: r.email, subject: message.title, html, text, unsubscribeUrl });
+        const ok = await sendEmail({
+          to: r.email,
+          subject: message.title,
+          html,
+          text,
+          unsubscribeUrl,
+        });
         if (ok) sent++;
         else failed++;
         // Stay under the SES send rate (default 14/s in production, 1/s in the sandbox).
         await new Promise((res) => setTimeout(res, Number(process.env.SES_SEND_INTERVAL_MS ?? 120)));
-        if (i % 25 === 0) await db.message.update({ where: { id: messageId }, data: { sentCount: sent, failedCount: failed } });
+        if (i % 25 === 0)
+          await db.message.update({
+            where: { id: messageId },
+            data: { sentCount: sent, failedCount: failed },
+          });
       }
     }
   } finally {

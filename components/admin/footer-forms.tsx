@@ -5,7 +5,10 @@ import { createFooterLink, saveFooterSettings, updateFooterLink } from "@/app/ad
 import { AdminForm } from "@/components/admin/admin-form";
 import { Button, Checkbox, Field, Input, Select } from "@/components/ui";
 
-export type LinkGroups = { group: string; options: { href: string; label: string }[] }[];
+export type LinkGroups = {
+  group: string;
+  options: { href: string; label: string }[];
+}[];
 
 const SETTING_FIELDS: [string, string, string?][] = [
   ["tagline", "Tagline"],
@@ -27,7 +30,12 @@ export function FooterSettingsForm({ values, readOnly }: { values: Record<string
       {(_, pending) => (
         <fieldset disabled={readOnly} className="grid gap-3 sm:grid-cols-2">
           {SETTING_FIELDS.map(([key, label, hint]) => (
-            <Field key={key} label={label} hint={hint ?? (key.length > 8 ? undefined : "Leave empty to hide")} className={key === "tagline" ? "sm:col-span-2" : undefined}>
+            <Field
+              key={key}
+              label={label}
+              hint={hint ?? (key.length > 8 ? undefined : "Leave empty to hide")}
+              className={key === "tagline" ? "sm:col-span-2" : undefined}
+            >
               <Input name={key} defaultValue={values[`footer.${key}`] ?? ""} />
             </Field>
           ))}
@@ -52,7 +60,14 @@ export function FooterLinkForm({
 }: {
   groups: LinkGroups;
   columns: [string, string];
-  link?: { id: string; label: string; href: string; column: number; newTab: boolean; sortOrder: number };
+  link?: {
+    id: string;
+    label: string;
+    href: string;
+    column: number;
+    newTab: boolean;
+    sortOrder: number;
+  };
 }) {
   const known = groups.some((g) => g.options.some((o) => o.href === link?.href));
   const [page, setPage] = useState(link ? (known ? link.href : "__custom") : "");

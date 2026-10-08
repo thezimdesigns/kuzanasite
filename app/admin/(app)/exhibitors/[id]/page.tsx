@@ -6,13 +6,7 @@ import { fileUrl, formatBytes } from "@/lib/files";
 import { EXHIBITOR_STATUS_LABELS } from "@/lib/options";
 import { can, requireStaff } from "@/lib/permissions";
 import { formatDay, formatTime } from "@/lib/time";
-import {
-  deleteExhibitor,
-  deleteExhibitorMedia,
-  revokeCompletionLinks,
-  setExhibitorLogo,
-  setExhibitorStatus,
-} from "@/app/admin/actions/exhibitors";
+import { deleteExhibitor, deleteExhibitorMedia, revokeCompletionLinks, setExhibitorLogo, setExhibitorStatus } from "@/app/admin/actions/exhibitors";
 import { ActionButton } from "@/components/admin/admin-form";
 import { CompletionLink } from "@/components/admin/completion-link";
 import { ExhibitorEditForm } from "@/components/admin/exhibitor-edit-form";
@@ -32,7 +26,10 @@ export default async function AdminExhibitor({ params }: PageProps<"/admin/exhib
         claimTokens: { orderBy: { createdAt: "desc" }, take: 5 },
       },
     }),
-    db.exhibitorCategory.findMany({ orderBy: { sortOrder: "asc" }, select: { id: true, name: true } }),
+    db.exhibitorCategory.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
   if (!x) notFound();
   const activeLinks = x.claimTokens.filter((t) => !t.revokedAt && t.expiresAt > new Date());

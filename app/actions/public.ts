@@ -5,26 +5,21 @@ import { findValidClaim } from "@/lib/claim";
 import { db } from "@/lib/db";
 import { requireCurrentEdition } from "@/lib/edition";
 import { exhibitorCodeValid } from "@/lib/exhibitor-access";
-import {
-  checkbox,
-  formToObject,
-  invalid,
-  optionalEmail,
-  optionalText,
-  optionalUrl,
-  phone,
-  requiredText,
-  stringValues,
-  type FormState,
-} from "@/lib/forms";
+import { checkbox, formToObject, invalid, optionalEmail, optionalText, optionalUrl, phone, requiredText, stringValues, type FormState } from "@/lib/forms";
 import { ExhibitorMediaKind } from "@/lib/generated/prisma/enums";
 import { FEEDBACK_CATEGORIES, INTEREST_TYPES, OPPORTUNITIES, VISITOR_INTERESTS, VISITOR_TYPES } from "@/lib/options";
 import { rateLimit } from "@/lib/rate-limit";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { uniqueSlug } from "@/lib/slug";
 
-const TOO_MANY: FormState = { ok: false, message: "Too many submissions. Please wait a few minutes and try again." };
-const CAPTCHA: FormState = { ok: false, message: "We couldn't verify your submission. Please refresh the page and try again." };
+const TOO_MANY: FormState = {
+  ok: false,
+  message: "Too many submissions. Please wait a few minutes and try again.",
+};
+const CAPTCHA: FormState = {
+  ok: false,
+  message: "We couldn't verify your submission. Please refresh the page and try again.",
+};
 
 /** Honeypot: real people never fill the hidden "website_url" field. */
 const isBot = (fd: FormData) => !!fd.get("website_url");
@@ -47,11 +42,16 @@ const interestSchema = z
     email: optionalEmail,
     phone: optionalText(30),
     country: optionalText(100),
-    interest: z.enum(INTEREST_TYPES, { error: "Choose what you're interested in." }),
+    interest: z.enum(INTEREST_TYPES, {
+      error: "Choose what you're interested in.",
+    }),
     message: optionalText(2000),
     consent: checkbox.refine((v) => v, "Please agree so we can contact you."),
   })
-  .refine((v) => v.email || v.phone, { message: "Give an email or phone number.", path: ["email"] });
+  .refine((v) => v.email || v.phone, {
+    message: "Give an email or phone number.",
+    path: ["email"],
+  });
 
 export async function submitInterest(_: FormState, fd: FormData): Promise<FormState> {
   const blocked = await guard(fd, "interest", 8, 600);
@@ -59,7 +59,10 @@ export async function submitInterest(_: FormState, fd: FormData): Promise<FormSt
   const parsed = interestSchema.safeParse(formToObject(fd));
   if (!parsed.success) return invalid(parsed.error, fd);
   await db.interestRegistration.create({ data: parsed.data });
-  return { ok: true, message: "Thank you. Your interest has been captured and we will be in touch." };
+  return {
+    ok: true,
+    message: "Thank you. Your interest has been captured and we will be in touch.",
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -96,7 +99,10 @@ export async function submitFeedback(_: FormState, fd: FormData): Promise<FormSt
       venueId: (await db.venue.findUnique({ where: { id: d.venueId ?? "" } })) ? d.venueId : null,
     },
   });
-  return { ok: true, message: "Thank you for your feedback. The KUZANA team reviews every message." };
+  return {
+    ok: true,
+    message: "Thank you for your feedback. The KUZANA team reviews every message.",
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -117,7 +123,10 @@ const visitorSchema = z
     emailConsent: checkbox,
     consent: checkbox.refine((v) => v, "Please accept the privacy notice to register."),
   })
-  .refine((v) => v.email || v.phone, { message: "Give a mobile number or an email address.", path: ["phone"] });
+  .refine((v) => v.email || v.phone, {
+    message: "Give a mobile number or an email address.",
+    path: ["phone"],
+  });
 
 export async function registerVisitor(_: FormState, fd: FormData): Promise<FormState> {
   const blocked = await guard(fd, "visitor", 10, 600);
@@ -126,8 +135,14 @@ export async function registerVisitor(_: FormState, fd: FormData): Promise<FormS
   if (!parsed.success) return invalid(parsed.error, fd);
   const { consent: _consent, ...data } = parsed.data;
   void _consent;
-  const visitor = await db.visitor.create({ data: { ...data, emailConsent: data.emailConsent && !!data.email } });
-  return { ok: true, id: visitor.id, message: "You're registered. Welcome to KUZANA SCEEZ!" };
+  const visitor = await db.visitor.create({
+    data: { ...data, emailConsent: data.emailConsent && !!data.email },
+  });
+  return {
+    ok: true,
+    id: visitor.id,
+    message: "You're registered. Welcome to KUZANA SCEEZ!",
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -172,7 +187,10 @@ const exhibitorSchema = z.object({
       try {
         return z.array(mediaItem).max(12).parse(JSON.parse(s));
       } catch {
-        ctx.addIssue({ code: "custom", message: "Some uploads were invalid. Please re-add them." });
+        ctx.addIssue({
+          code: "custom",
+          message: "Some uploads were invalid. Please re-add them.",
+        });
         return z.NEVER;
       }
     }),
@@ -180,7 +198,10 @@ const exhibitorSchema = z.object({
 
 export async function submitExhibitorRegistration(_: FormState, fd: FormData): Promise<FormState> {
   if (!exhibitorCodeValid(fd.get("code") as string | null)) {
-    return { ok: false, message: "This registration link is not valid. Please scan the QR code at the exhibitor desk." };
+    return {
+      ok: false,
+      message: "This registration link is not valid. Please scan the QR code at the exhibitor desk.",
+    };
   }
   const blocked = await guard(fd, "exhibitor", 12, 3600);
   if (blocked) return blocked;
@@ -196,7 +217,11 @@ export async function submitExhibitorRegistration(_: FormState, fd: FormData): P
     };
   }
   if (!(await db.exhibitorCategory.findUnique({ where: { id: data.categoryId } }))) {
-    return { ok: false, errors: { categoryId: "Choose a sector." }, values: stringValues(fd) };
+    return {
+      ok: false,
+      errors: { categoryId: "Choose a sector." },
+      values: stringValues(fd),
+    };
   }
 
   const edition = await requireCurrentEdition();
@@ -231,10 +256,14 @@ const claimSchema = exhibitorSchema.omit({ categoryId: true }).extend({
 });
 
 export async function completeExhibitorProfile(_: FormState, fd: FormData): Promise<FormState> {
-  if (isBot(fd)) return { ok: true };
-  if (!(await rateLimit("claim", 30, 3600))) return TOO_MANY;
+  const blocked = await guard(fd, "claim", 30, 3600);
+  if (blocked) return blocked;
   const claim = await findValidClaim(fd.get("claim") as string | null);
-  if (!claim) return { ok: false, message: "This link has expired or is no longer valid. Please ask KUZANA for a new one." };
+  if (!claim)
+    return {
+      ok: false,
+      message: "This link has expired or is no longer valid. Please ask KUZANA for a new one.",
+    };
 
   const parsed = claimSchema.safeParse(formToObject(fd, ["opportunities"]));
   if (!parsed.success) return invalid(parsed.error, fd);
@@ -259,16 +288,26 @@ export async function completeExhibitorProfile(_: FormState, fd: FormData): Prom
         consent,
         consentAt: new Date(),
         ...(logo && { logoKey: logo.key }),
-        ...(claim.exhibitor.status === "NEEDS_INFORMATION" && { status: "PENDING" as const }),
+        ...(claim.exhibitor.status === "NEEDS_INFORMATION" && {
+          status: "PENDING" as const,
+        }),
         reviewNotes: [claim.exhibitor.reviewNotes, `Updated by exhibitor via completion link (${new Date().toISOString().slice(0, 16)})`]
           .filter(Boolean)
           .join("\n"),
-        media: { create: media.map((m, i) => ({ ...m, sortOrder: startOrder + i })) },
+        media: {
+          create: media.map((m, i) => ({ ...m, sortOrder: startOrder + i })),
+        },
       },
     }),
-    db.exhibitorClaimToken.update({ where: { id: claim.id }, data: { usedAt: claim.usedAt ?? new Date() } }),
+    db.exhibitorClaimToken.update({
+      where: { id: claim.id },
+      data: { usedAt: claim.usedAt ?? new Date() },
+    }),
   ]);
-  return { ok: true, message: "Thank you. Your exhibitor profile has been updated." };
+  return {
+    ok: true,
+    message: "Thank you. Your exhibitor profile has been updated.",
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -288,13 +327,30 @@ export async function savePushSubscription(input: unknown, eventId?: string, vis
   const visitor = visitorId ? await db.visitor.findUnique({ where: { id: visitorId } }) : null;
   const sub = await db.pushSubscription.upsert({
     where: { endpoint },
-    update: { p256dh: keys.p256dh, auth: keys.auth, active: true, failureCount: 0, ...(visitor ? { visitorId: visitor.id } : {}) },
-    create: { endpoint, p256dh: keys.p256dh, auth: keys.auth, visitorId: visitor?.id },
+    update: {
+      p256dh: keys.p256dh,
+      auth: keys.auth,
+      active: true,
+      failureCount: 0,
+      ...(visitor ? { visitorId: visitor.id } : {}),
+    },
+    create: {
+      endpoint,
+      p256dh: keys.p256dh,
+      auth: keys.auth,
+      visitorId: visitor?.id,
+    },
   });
-  if (visitor) await db.visitor.update({ where: { id: visitor.id }, data: { pushConsent: true } });
+  if (visitor)
+    await db.visitor.update({
+      where: { id: visitor.id },
+      data: { pushConsent: true },
+    });
   if (eventId && (await db.event.findUnique({ where: { id: eventId } }))) {
     await db.eventSubscription.upsert({
-      where: { eventId_pushSubscriptionId: { eventId, pushSubscriptionId: sub.id } },
+      where: {
+        eventId_pushSubscriptionId: { eventId, pushSubscriptionId: sub.id },
+      },
       update: {},
       create: { eventId, pushSubscriptionId: sub.id },
     });
@@ -303,7 +359,10 @@ export async function savePushSubscription(input: unknown, eventId?: string, vis
 }
 
 export async function removePushSubscription(endpoint: string) {
-  await db.pushSubscription.updateMany({ where: { endpoint }, data: { active: false } });
+  await db.pushSubscription.updateMany({
+    where: { endpoint },
+    data: { active: false },
+  });
   return { ok: true };
 }
 
@@ -320,18 +379,27 @@ const ratingSchema = z.object({
 });
 
 export async function submitRating(_: FormState, fd: FormData): Promise<FormState> {
-  if (isBot(fd)) return { ok: true };
-  if (!(await rateLimit("rating", 20, 600))) return TOO_MANY;
+  const blocked = await guard(fd, "rating", 20, 600);
+  if (blocked) return blocked;
   const parsed = ratingSchema.safeParse(formToObject(fd));
   if (!parsed.success) return invalid(parsed.error, fd);
   const { eventId, sessionId, exhibitorId, ...rest } = parsed.data;
   // Exactly one target: a session, an exhibitor stand, or an event.
   const target = sessionId
-    ? await db.session.findUnique({ where: { id: sessionId }, select: { id: true } })
+    ? await db.session.findUnique({
+        where: { id: sessionId },
+        select: { id: true },
+      })
     : exhibitorId
-      ? await db.exhibitor.findFirst({ where: { id: exhibitorId, status: "APPROVED" }, select: { id: true } })
+      ? await db.exhibitor.findFirst({
+          where: { id: exhibitorId, status: "APPROVED" },
+          select: { id: true },
+        })
       : eventId
-        ? await db.event.findUnique({ where: { id: eventId }, select: { id: true } })
+        ? await db.event.findUnique({
+            where: { id: eventId },
+            select: { id: true },
+          })
         : null;
   if (!target) return { ok: false, message: "Nothing to rate." };
   await db.rating.create({

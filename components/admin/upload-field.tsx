@@ -29,7 +29,20 @@ export function UploadField({
 }) {
   const [file, setFile] = useState<UploadedFile | null>(null);
   const [cleared, setCleared] = useState(false);
-  const value = file ? (mode === "json" ? JSON.stringify({ key: file.key, mimeType: file.mimeType, size: file.size, fileName: file.fileName }) : file.key) : cleared ? "" : mode === "key" ? (current ?? "") : "";
+  const value = file
+    ? mode === "json"
+      ? JSON.stringify({
+          key: file.key,
+          mimeType: file.mimeType,
+          size: file.size,
+          fileName: file.fileName,
+        })
+      : file.key
+    : cleared
+      ? ""
+      : mode === "key"
+        ? (current ?? "")
+        : "";
 
   return (
     <div>

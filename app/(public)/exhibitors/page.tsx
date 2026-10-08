@@ -36,7 +36,14 @@ export default async function ExhibitorsPage({ searchParams }: PageProps<"/exhib
     db.exhibitor.findMany({
       where,
       orderBy: { name: "asc" },
-      include: { category: true, media: { where: { kind: "BOOTH" }, take: 1, orderBy: { sortOrder: "asc" } } },
+      include: {
+        category: true,
+        media: {
+          where: { kind: "BOOTH" },
+          take: 1,
+          orderBy: { sortOrder: "asc" },
+        },
+      },
       take: 300,
     }),
     db.exhibitorCategory.findMany({ orderBy: { sortOrder: "asc" } }),

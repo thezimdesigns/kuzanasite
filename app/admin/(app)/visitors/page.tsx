@@ -20,14 +20,27 @@ export default async function AdminVisitors({ searchParams }: PageProps<"/admin/
     db.visitor.count({ where: { emailConsent: true } }),
     db.pushSubscription.count({ where: { active: true } }),
     db.$queryRaw<{ interest: string; count: bigint }[]>`SELECT unnest(interests) AS interest, count(*) FROM "Visitor" GROUP BY 1 ORDER BY 2 DESC`,
-    db.visitor.groupBy({ by: ["visitorType"], _count: true, orderBy: { _count: { visitorType: "desc" } } }),
+    db.visitor.groupBy({
+      by: ["visitorType"],
+      _count: true,
+      orderBy: { _count: { visitorType: "desc" } },
+    }),
     db.eventSubscription.groupBy({ by: ["eventId"], _count: true }),
     db.interestRegistration.count(),
   ]);
-  const events = await db.event.findMany({ where: { id: { in: eventSubs.map((e) => e.eventId) } }, select: { id: true, title: true } });
+  const events = await db.event.findMany({
+    where: { id: { in: eventSubs.map((e) => e.eventId) } },
+    select: { id: true, title: true },
+  });
 
   const visitors = tab === "visitors" && canSeeContacts ? await db.visitor.findMany({ orderBy: { createdAt: "desc" }, take: 200 }) : [];
-  const interests = tab === "interest" && canSeeContacts ? await db.interestRegistration.findMany({ orderBy: { createdAt: "desc" }, take: 200 }) : [];
+  const interests =
+    tab === "interest" && canSeeContacts
+      ? await db.interestRegistration.findMany({
+          orderBy: { createdAt: "desc" },
+          take: 200,
+        })
+      : [];
 
   const stats = [
     ["Registered visitors", total],
@@ -107,8 +120,18 @@ export default async function AdminVisitors({ searchParams }: PageProps<"/admin/
           <Tabs
             current={tab}
             tabs={[
-              { value: "visitors", label: "Visitor registrations", href: "/admin/visitors", count: total },
-              { value: "interest", label: "Future-edition interest", href: "/admin/visitors?tab=interest", count: interestTotal },
+              {
+                value: "visitors",
+                label: "Visitor registrations",
+                href: "/admin/visitors",
+                count: total,
+              },
+              {
+                value: "interest",
+                label: "Future-edition interest",
+                href: "/admin/visitors?tab=interest",
+                count: interestTotal,
+              },
             ]}
           />
           {tab === "visitors" ? (

@@ -24,7 +24,12 @@ export function PhotoUploader({ albumId }: { albumId: string }) {
             start(async () => {
               const n = await addPhotos(
                 albumId,
-                files.map((f) => ({ key: f.key, size: f.size, width: f.width, height: f.height })),
+                files.map((f) => ({
+                  key: f.key,
+                  size: f.size,
+                  width: f.width,
+                  height: f.height,
+                })),
               );
               setMessage(`${n} photos added.`);
               setFiles([]);
@@ -40,15 +45,7 @@ export function PhotoUploader({ albumId }: { albumId: string }) {
   );
 }
 
-export function PhotoTile({
-  photo,
-  albumId,
-  isCover,
-}: {
-  photo: { id: string; key: string; caption: string | null };
-  albumId: string;
-  isCover: boolean;
-}) {
+export function PhotoTile({ photo, albumId, isCover }: { photo: { id: string; key: string; caption: string | null }; albumId: string; isCover: boolean }) {
   const [pending, start] = useTransition();
   return (
     <li className={cn("overflow-hidden rounded-lg border bg-white", isCover ? "border-orange" : "border-line", pending && "opacity-50")}>

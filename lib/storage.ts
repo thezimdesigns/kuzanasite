@@ -3,12 +3,7 @@ import { createReadStream } from "node:fs";
 import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
-import {
-  DeleteObjectCommand,
-  GetObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 /**
  * Object storage. Production uses S3-compatible storage (Garage);
@@ -47,20 +42,25 @@ export async function putObject(key: string, body: Buffer, contentType: string) 
     return;
   }
   await client().send(
-    new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: contentType }),
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    }),
   );
 }
 
-export async function getObject(
-  key: string,
-): Promise<{ body: ReadableStream; contentType: string; size?: number } | null> {
+export async function getObject(key: string): Promise<{
+  body: ReadableStream;
+  contentType: string;
+  size?: number;
+} | null> {
   try {
     if (driver === "local") {
       const file = localPath(key);
       const info = await stat(file);
-      const contentType = await readFile(`${file}.type`, "utf8").catch(
-        () => "application/octet-stream",
-      );
+      const contentType = await readFile(`${file}.type`, "utf8").catch(() => "application/octet-stream");
       const body = Readable.toWeb(createReadStream(file)) as ReadableStream;
       return { body, contentType, size: info.size };
     }

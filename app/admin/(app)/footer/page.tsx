@@ -56,11 +56,7 @@ export default async function AdminFooter() {
                           <ActionButton action={moveFooterLink.bind(null, l.id, -1)} variant="ghost" className={i === 0 ? "invisible" : ""}>
                             <ArrowUp className="size-4" aria-label="Move up" />
                           </ActionButton>
-                          <ActionButton
-                            action={moveFooterLink.bind(null, l.id, 1)}
-                            variant="ghost"
-                            className={i === links.length - 1 ? "invisible" : ""}
-                          >
+                          <ActionButton action={moveFooterLink.bind(null, l.id, 1)} variant="ghost" className={i === links.length - 1 ? "invisible" : ""}>
                             <ArrowDown className="size-4" aria-label="Move down" />
                           </ActionButton>
                           <ActionButton action={deleteFooterLink.bind(null, l.id)} variant="ghost" confirm={`Remove "${l.label}" from the footer?`}>

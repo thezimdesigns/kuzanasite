@@ -10,7 +10,9 @@ export const metadata = { title: "News" };
 
 export default async function AdminNews() {
   const user = await requireStaff();
-  const posts = await db.newsPost.findMany({ orderBy: { publishedAt: "desc" } });
+  const posts = await db.newsPost.findMany({
+    orderBy: { publishedAt: "desc" },
+  });
   return (
     <AdminPage
       title="News"

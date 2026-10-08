@@ -15,6 +15,7 @@ import { PushOptIn } from "@/components/public/push-opt-in";
 import { RatingForm } from "@/components/public/rating-form";
 import { ShareButtons } from "@/components/public/share-buttons";
 import { StatusBadge } from "@/components/public/status-badge";
+import { StreamPlayer } from "@/components/public/stream-player";
 import { Markdown } from "@/components/markdown";
 import { Avatar } from "@/components/public/avatar";
 import { BackLink, Badge, ButtonLink, Card, cn, Section, SectionTitle } from "@/components/ui";
@@ -26,25 +27,53 @@ async function getEvent(slug: string) {
       venue: true,
       category: true,
       edition: true,
-      participants: { include: { person: true }, orderBy: { sortOrder: "asc" } },
+      participants: {
+        include: { person: true },
+        orderBy: { sortOrder: "asc" },
+      },
       sessions: {
         where: { publishStatus: "PUBLISHED" },
         orderBy: [{ startsAt: "asc" }, { sortOrder: "asc" }],
         include: {
-          participants: { include: { person: true }, orderBy: { sortOrder: "asc" } },
+          participants: {
+            include: { person: true },
+            orderBy: { sortOrder: "asc" },
+          },
           documents: { where: { publishStatus: "PUBLISHED" } },
           videos: { where: { publishStatus: "PUBLISHED" } },
+          streams: {
+            where: { active: true },
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+            select: { id: true, label: true, url: true },
+          },
         },
       },
-      documents: { where: { publishStatus: "PUBLISHED", sessionId: null }, orderBy: { date: "desc" } },
+      documents: {
+        where: { publishStatus: "PUBLISHED", sessionId: null },
+        orderBy: { date: "desc" },
+      },
       albums: {
         where: { publishStatus: "PUBLISHED" },
-        include: { _count: { select: { photos: true } }, photos: { take: 1, orderBy: { sortOrder: "asc" } } },
+        include: {
+          _count: { select: { photos: true } },
+          photos: { take: 1, orderBy: { sortOrder: "asc" } },
+        },
       },
-      videos: { where: { publishStatus: "PUBLISHED", sessionId: null }, orderBy: { date: "desc" } },
+      videos: {
+        where: { publishStatus: "PUBLISHED", sessionId: null },
+        orderBy: { date: "desc" },
+      },
+      streams: {
+        where: { active: true },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        select: { id: true, label: true, url: true },
+      },
       _count: { select: { routes: true } },
       announcements: {
-        where: { publishStatus: "PUBLISHED", OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
+        where: {
+          publishStatus: "PUBLISHED",
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+        },
         orderBy: { createdAt: "desc" },
       },
     },
@@ -84,9 +113,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 
   return (
     <>
-      {event.bannerKey && (
-        <ProgrammeBanner banner={{ wide: event.bannerKey, mobile: event.bannerMobileKey }} priority className="border-b border-line" />
-      )}
+      {event.bannerKey && <ProgrammeBanner banner={{ wide: event.bannerKey, mobile: event.bannerMobileKey }} priority className="border-b border-line" />}
       <header className="border-b border-line bg-ivory-pattern">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 sm:py-12 md:grid-cols-[1.4fr_1fr]">
           <div>
@@ -136,7 +163,12 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
             </dl>
             <div className="mt-5 flex flex-wrap gap-3">
               {event.ticketRequired && (
-                <TicketBox icon={<Ticket className="size-5" />} title={`Ticket required${event.ticketPrice ? ` · ${event.ticketPrice}` : ""}`} url={event.ticketUrl} cta="Get tickets" />
+                <TicketBox
+                  icon={<Ticket className="size-5" />}
+                  title={`Ticket required${event.ticketPrice ? ` · ${event.ticketPrice}` : ""}`}
+                  url={event.ticketUrl}
+                  cta="Get tickets"
+                />
               )}
               {event.registrationRequired && (
                 <TicketBox icon={<UserCheck className="size-5" />} title="Registration required" url={event.registrationUrl} cta="Register" />
@@ -189,7 +221,13 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
         <Section className="pb-0">
           <div className="space-y-2">
             {event.announcements.map((a) => (
-              <div key={a.id} className={cn("rounded-[var(--radius-control)] border p-3.5", a.priority === "URGENT" ? "border-danger bg-danger-50" : "border-gold bg-[#fbf5e4]")}>
+              <div
+                key={a.id}
+                className={cn(
+                  "rounded-[var(--radius-control)] border p-3.5",
+                  a.priority === "URGENT" ? "border-danger bg-danger-50" : "border-gold bg-[#fbf5e4]",
+                )}
+              >
                 <p className="font-heading font-bold">{a.title}</p>
                 {a.body && <p className="text-sm whitespace-pre-line">{a.body}</p>}
               </div>
@@ -200,6 +238,14 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 
       <Section className="grid gap-10 lg:grid-cols-[1.6fr_1fr]">
         <div className="min-w-0 space-y-10">
+          {event.streams.length > 0 && status !== "CANCELLED" && (
+            <div id="watch" className="scroll-mt-24">
+              <SectionTitle>{status === "LIVE" ? "Watch live" : "Live stream"}</SectionTitle>
+              {now < event.startsAt && <p className="-mt-2 mb-3 text-sm text-muted">The stream starts with the event: {when}.</p>}
+              <StreamPlayer streams={event.streams} title={event.title} live={status === "LIVE"} />
+            </div>
+          )}
+
           {event.description && (
             <div>
               <SectionTitle>About</SectionTitle>
@@ -271,6 +317,16 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                                   </li>
                                 ))}
                               </ul>
+                            )}
+                            {s.streams.length > 0 && sStatus !== "CANCELLED" && (
+                              <details id={`watch-${s.id}`} open={sStatus === "LIVE"} className="mt-2 scroll-mt-24">
+                                <summary className="cursor-pointer text-xs font-semibold text-orange-deeper">
+                                  {sStatus === "LIVE" ? "Watch live" : "Live stream"} ({s.streams.length})
+                                </summary>
+                                <div className="mt-2">
+                                  <StreamPlayer streams={s.streams} title={s.title} live={sStatus === "LIVE"} />
+                                </div>
+                              </details>
                             )}
                             {now >= s.startsAt && (
                               <details className="mt-2">
@@ -414,7 +470,11 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                   ? "https://schema.org/EventPostponed"
                   : "https://schema.org/EventScheduled",
             ...(event.venue && {
-              location: { "@type": "Place", name: event.venue.name, address: event.venue.address ?? "Bulawayo, Zimbabwe" },
+              location: {
+                "@type": "Place",
+                name: event.venue.name,
+                address: event.venue.address ?? "Bulawayo, Zimbabwe",
+              },
             }),
             description: event.summary ?? undefined,
             organizer: { "@type": "Organization", name: "KUZANA SCEEZ" },

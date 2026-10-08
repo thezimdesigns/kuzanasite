@@ -8,7 +8,10 @@ export const metadata = { title: "New story" };
 
 export default async function NewNews() {
   await requireAreaPage("press");
-  const events = await db.event.findMany({ orderBy: { startsAt: "asc" }, select: { id: true, title: true } });
+  const events = await db.event.findMany({
+    orderBy: { startsAt: "asc" },
+    select: { id: true, title: true },
+  });
   return (
     <AdminPage title="New story" back={{ href: "/admin/news", label: "News" }}>
       <NewsForm

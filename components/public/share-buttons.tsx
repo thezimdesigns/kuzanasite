@@ -15,9 +15,21 @@ export function ShareButtons({ title, path }: { title: string; path: string }) {
   const enc = encodeURIComponent;
 
   const others = [
-    { label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`, Icon: IconBrandFacebook },
-    { label: "X", href: `https://x.com/intent/post?text=${enc(title)}&url=${enc(url)}`, Icon: IconBrandX },
-    { label: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${enc(url)}`, Icon: IconBrandLinkedin },
+    {
+      label: "Facebook",
+      href: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`,
+      Icon: IconBrandFacebook,
+    },
+    {
+      label: "X",
+      href: `https://x.com/intent/post?text=${enc(title)}&url=${enc(url)}`,
+      Icon: IconBrandX,
+    },
+    {
+      label: "LinkedIn",
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${enc(url)}`,
+      Icon: IconBrandLinkedin,
+    },
   ];
 
   async function copy() {

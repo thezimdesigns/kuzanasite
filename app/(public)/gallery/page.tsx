@@ -12,7 +12,10 @@ export default async function GalleryPage() {
   const albums = await db.photoAlbum.findMany({
     where: { publishStatus: "PUBLISHED" },
     orderBy: [{ date: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }],
-    include: { _count: { select: { photos: true } }, photos: { take: 1, orderBy: { sortOrder: "asc" } } },
+    include: {
+      _count: { select: { photos: true } },
+      photos: { take: 1, orderBy: { sortOrder: "asc" } },
+    },
   });
   return (
     <>

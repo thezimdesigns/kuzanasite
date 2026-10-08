@@ -54,7 +54,12 @@ export const updateAlbum = adminFormAction("media", albumSchema.and(z.object({ i
   const { id, slug, ...data } = d;
   await db.photoAlbum.update({
     where: { id },
-    data: { ...data, description: data.description ?? null, photographer: data.photographer ?? null, ...(slug && { slug: slugify(slug) }) },
+    data: {
+      ...data,
+      description: data.description ?? null,
+      photographer: data.photographer ?? null,
+      ...(slug && { slug: slugify(slug) }),
+    },
   });
   return { ok: true, message: "Album saved." };
 });
@@ -72,11 +77,23 @@ const photoBatch = z.array(
 export async function addPhotos(albumId: string, photos: unknown) {
   return runAdmin("media", async () => {
     const list = photoBatch.parse(photos);
-    const max = await db.photo.aggregate({ where: { albumId }, _max: { sortOrder: true } });
+    const max = await db.photo.aggregate({
+      where: { albumId },
+      _max: { sortOrder: true },
+    });
     const start = (max._max.sortOrder ?? -1) + 1;
-    await db.photo.createMany({ data: list.map((p, i) => ({ ...p, albumId, sortOrder: start + i })) });
-    const album = await db.photoAlbum.findUnique({ where: { id: albumId }, select: { coverKey: true } });
-    if (album && !album.coverKey && list[0]) await db.photoAlbum.update({ where: { id: albumId }, data: { coverKey: list[0].key } });
+    await db.photo.createMany({
+      data: list.map((p, i) => ({ ...p, albumId, sortOrder: start + i })),
+    });
+    const album = await db.photoAlbum.findUnique({
+      where: { id: albumId },
+      select: { coverKey: true },
+    });
+    if (album && !album.coverKey && list[0])
+      await db.photoAlbum.update({
+        where: { id: albumId },
+        data: { coverKey: list[0].key },
+      });
     return list.length;
   });
 }
@@ -87,20 +104,29 @@ export async function setAlbumCover(albumId: string, key: string) {
 
 export async function updatePhotoCaption(photoId: string, caption: string) {
   await requireArea("media");
-  await db.photo.update({ where: { id: photoId }, data: { caption: caption.trim().slice(0, 500) || null } });
+  await db.photo.update({
+    where: { id: photoId },
+    data: { caption: caption.trim().slice(0, 500) || null },
+  });
 }
 
 export async function deletePhoto(photoId: string) {
   return runAdmin("media", async () => {
     const p = await db.photo.delete({ where: { id: photoId } });
-    await db.photoAlbum.updateMany({ where: { id: p.albumId, coverKey: p.key }, data: { coverKey: null } });
+    await db.photoAlbum.updateMany({
+      where: { id: p.albumId, coverKey: p.key },
+      data: { coverKey: null },
+    });
     await deleteObject(p.key);
   });
 }
 
 export async function deleteAlbum(id: string) {
   await runAdmin("media", async () => {
-    const photos = await db.photo.findMany({ where: { albumId: id }, select: { key: true } });
+    const photos = await db.photo.findMany({
+      where: { albumId: id },
+      select: { key: true },
+    });
     await db.photoAlbum.delete({ where: { id } });
     await Promise.all(photos.map((p) => deleteObject(p.key)));
   });
@@ -113,14 +139,20 @@ export async function deleteAlbum(id: string) {
 
 const videoSchema = z.object({
   title: requiredText("Title"),
-  url: z.string().trim().transform((v, ctx) => {
-    const id = youtubeId(v);
-    if (!id) {
-      ctx.addIssue({ code: "custom", message: "Paste a valid YouTube link." });
-      return z.NEVER;
-    }
-    return id;
-  }),
+  url: z
+    .string()
+    .trim()
+    .transform((v, ctx) => {
+      const id = youtubeId(v);
+      if (!id) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Paste a valid YouTube link.",
+        });
+        return z.NEVER;
+      }
+      return id;
+    }),
   description: optionalText(3000),
   date: optionalDay,
   eventId: optionalId,
@@ -133,13 +165,24 @@ const videoSchema = z.object({
 export const createVideo = adminFormAction("media", videoSchema, async (d, user) => {
   const edition = await requireCurrentEdition();
   const { url, ...data } = d;
-  await db.video.create({ data: { ...data, youtubeId: url, description: d.description ?? null, editionId: edition.id, createdById: user.id } });
+  await db.video.create({
+    data: {
+      ...data,
+      youtubeId: url,
+      description: d.description ?? null,
+      editionId: edition.id,
+      createdById: user.id,
+    },
+  });
   return { ok: true, message: "Video added." };
 });
 
 export const updateVideo = adminFormAction("media", videoSchema.and(z.object({ id: z.string() })), async (d) => {
   const { id, url, ...data } = d;
-  await db.video.update({ where: { id }, data: { ...data, youtubeId: url, description: data.description ?? null } });
+  await db.video.update({
+    where: { id },
+    data: { ...data, youtubeId: url, description: data.description ?? null },
+  });
   return { ok: true, message: "Video saved." };
 });
 
@@ -169,7 +212,12 @@ const documentSchema = z.object({
       if (!s) return null;
       try {
         return z
-          .object({ key: z.string().startsWith("staff/"), mimeType: z.string(), size: z.number(), fileName: z.string().optional() })
+          .object({
+            key: z.string().startsWith("staff/"),
+            mimeType: z.string(),
+            size: z.number(),
+            fileName: z.string().optional(),
+          })
           .parse(JSON.parse(s));
       } catch {
         return null;
@@ -185,7 +233,12 @@ function documentData(d: z.infer<typeof documentSchema>) {
     description: d.description ?? null,
     body: d.body ?? null,
     author: d.author ?? null,
-    ...(file && { key: file.key, mimeType: file.mimeType, size: file.size, fileName: file.fileName ?? null }),
+    ...(file && {
+      key: file.key,
+      mimeType: file.mimeType,
+      size: file.size,
+      fileName: file.fileName ?? null,
+    }),
   };
 }
 
@@ -193,13 +246,23 @@ export const createDocument = adminFormAction("press", documentSchema, async (d,
   if (!d.file && !d.body) return { ok: false, message: "Upload a file or write the text." };
   const edition = await requireCurrentEdition();
   const slug = await uniqueSlug(d.slug || d.title, async (s) => !!(await db.document.findUnique({ where: { slug: s } })));
-  const doc = await db.document.create({ data: { ...documentData(d), slug, editionId: edition.id, createdById: user.id } });
+  const doc = await db.document.create({
+    data: {
+      ...documentData(d),
+      slug,
+      editionId: edition.id,
+      createdById: user.id,
+    },
+  });
   redirect(`/admin/documents/${doc.id}?saved=1`);
 });
 
 export const updateDocument = adminFormAction("press", documentSchema.and(z.object({ id: z.string() })), async (d) => {
   const old = await db.document.findUniqueOrThrow({ where: { id: d.id } });
-  await db.document.update({ where: { id: d.id }, data: { ...documentData(d), ...(d.slug && { slug: slugify(d.slug) }) } });
+  await db.document.update({
+    where: { id: d.id },
+    data: { ...documentData(d), ...(d.slug && { slug: slugify(d.slug) }) },
+  });
   if (d.file && old.key && old.key !== d.file.key) await deleteObject(old.key);
   return { ok: true, message: "Document saved." };
 });

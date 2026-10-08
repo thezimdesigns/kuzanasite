@@ -10,8 +10,20 @@ export default async function NewVenue() {
     <AdminPage title="New venue" back={{ href: "/admin/venues", label: "Venues" }}>
       <VenueForm
         values={{
-          name: "", slug: "", description: "", address: "", latitude: "", longitude: "", mapUrl: "", directions: "", parking: "",
-          accessibility: "", openingTimes: "", contact: "", imageKey: "", sortOrder: 0,
+          name: "",
+          slug: "",
+          description: "",
+          address: "",
+          latitude: "",
+          longitude: "",
+          mapUrl: "",
+          directions: "",
+          parking: "",
+          accessibility: "",
+          openingTimes: "",
+          contact: "",
+          imageKey: "",
+          sortOrder: 0,
         }}
       />
     </AdminPage>

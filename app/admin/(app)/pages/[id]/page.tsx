@@ -20,7 +20,15 @@ export default async function AdminPageEdit({ params }: PageProps<"/admin/pages/
       }
     >
       {!can(user, "site") && <ReadOnlyNotice />}
-      <PageForm readOnly={!can(user, "site")} values={{ id: page.id, title: page.title, summary: page.summary ?? "", body: page.body }} />
+      <PageForm
+        readOnly={!can(user, "site")}
+        values={{
+          id: page.id,
+          title: page.title,
+          summary: page.summary ?? "",
+          body: page.body,
+        }}
+      />
     </AdminPage>
   );
 }

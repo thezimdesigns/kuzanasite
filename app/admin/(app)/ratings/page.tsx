@@ -6,14 +6,35 @@ import { AdminPage, Panel, RowLink, Table } from "@/components/admin/ui";
 
 export const metadata = { title: "Ratings" };
 
-type Row = { id: string; name: string; href: string; avg: number; count: number };
+type Row = {
+  id: string;
+  name: string;
+  href: string;
+  avg: number;
+  count: number;
+};
 
 export default async function AdminRatings() {
   await requireStaff();
   const [byEvent, bySession, byExhibitor, recent] = await Promise.all([
-    db.rating.groupBy({ by: ["eventId"], where: { eventId: { not: null } }, _avg: { stars: true }, _count: { stars: true } }),
-    db.rating.groupBy({ by: ["sessionId"], where: { sessionId: { not: null } }, _avg: { stars: true }, _count: { stars: true } }),
-    db.rating.groupBy({ by: ["exhibitorId"], where: { exhibitorId: { not: null } }, _avg: { stars: true }, _count: { stars: true } }),
+    db.rating.groupBy({
+      by: ["eventId"],
+      where: { eventId: { not: null } },
+      _avg: { stars: true },
+      _count: { stars: true },
+    }),
+    db.rating.groupBy({
+      by: ["sessionId"],
+      where: { sessionId: { not: null } },
+      _avg: { stars: true },
+      _count: { stars: true },
+    }),
+    db.rating.groupBy({
+      by: ["exhibitorId"],
+      where: { exhibitorId: { not: null } },
+      _avg: { stars: true },
+      _count: { stars: true },
+    }),
     db.rating.findMany({
       where: { comment: { not: null } },
       orderBy: { createdAt: "desc" },
@@ -26,9 +47,18 @@ export default async function AdminRatings() {
     }),
   ]);
   const [events, sessions, exhibitors] = await Promise.all([
-    db.event.findMany({ where: { id: { in: byEvent.map((r) => r.eventId!) } }, select: { id: true, title: true } }),
-    db.session.findMany({ where: { id: { in: bySession.map((r) => r.sessionId!) } }, select: { id: true, title: true, eventId: true } }),
-    db.exhibitor.findMany({ where: { id: { in: byExhibitor.map((r) => r.exhibitorId!) } }, select: { id: true, name: true } }),
+    db.event.findMany({
+      where: { id: { in: byEvent.map((r) => r.eventId!) } },
+      select: { id: true, title: true },
+    }),
+    db.session.findMany({
+      where: { id: { in: bySession.map((r) => r.sessionId!) } },
+      select: { id: true, title: true, eventId: true },
+    }),
+    db.exhibitor.findMany({
+      where: { id: { in: byExhibitor.map((r) => r.exhibitorId!) } },
+      select: { id: true, name: true },
+    }),
   ]);
 
   const rows = (

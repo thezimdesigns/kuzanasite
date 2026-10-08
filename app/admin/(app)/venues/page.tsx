@@ -8,7 +8,10 @@ export const metadata = { title: "Venues" };
 
 export default async function AdminVenues() {
   const user = await requireStaff();
-  const venues = await db.venue.findMany({ orderBy: { sortOrder: "asc" }, include: { _count: { select: { events: true } } } });
+  const venues = await db.venue.findMany({
+    orderBy: { sortOrder: "asc" },
+    include: { _count: { select: { events: true } } },
+  });
   return (
     <AdminPage
       title="Venues"

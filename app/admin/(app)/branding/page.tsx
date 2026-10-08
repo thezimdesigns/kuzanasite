@@ -16,7 +16,9 @@ export default async function AdminBranding() {
   const editable = can(user, "site");
   const [logo, slides] = await Promise.all([
     db.siteSetting.findUnique({ where: { key: "brand.logoKey" } }),
-    db.heroSlide.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
+    db.heroSlide.findMany({
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    }),
   ]);
 
   return (
@@ -37,8 +39,7 @@ export default async function AdminBranding() {
         </div>
         <Panel title={`Hero photos (${slides.filter((s) => s.active).length} showing)`}>
           <p className="mb-4 text-sm text-muted">
-            Photos crossfade every few seconds under a dark green tint, so the headline stays readable. Landscape photos of at least
-            1920 × 1080 px work best.
+            Photos crossfade every few seconds under a dark green tint, so the headline stays readable. Landscape photos of at least 1920 × 1080 px work best.
           </p>
           <ul className="grid gap-3 sm:grid-cols-2">
             {slides.map((s, i) => {

@@ -26,7 +26,13 @@ export type EditorRoute = {
   name: string;
   distanceKm: number | null;
   color: string;
-  points: { id: string; kind: RoutePointKind; label: string | null; lat: number; lng: number }[];
+  points: {
+    id: string;
+    kind: RoutePointKind;
+    label: string | null;
+    lat: number;
+    lng: number;
+  }[];
 };
 
 const PRESETS = [
@@ -36,7 +42,12 @@ const PRESETS = [
   { name: "42.2 km", distanceKm: 42.2, color: "#d4381c" },
 ];
 
-const KIND_LABELS: Record<RoutePointKind, string> = { START: "Start", TURN: "Turning point", WAYPOINT: "Route point", FINISH: "Finish" };
+const KIND_LABELS: Record<RoutePointKind, string> = {
+  START: "Start",
+  TURN: "Turning point",
+  WAYPOINT: "Route point",
+  FINISH: "Finish",
+};
 
 export function RouteEditor({ eventId, routes }: { eventId: string; routes: EditorRoute[] }) {
   const [selectedId, setSelectedId] = useState(routes[0]?.id ?? "");
@@ -63,7 +74,9 @@ export function RouteEditor({ eventId, routes }: { eventId: string; routes: Edit
     if (kind === "START") setKind("TURN");
   };
 
-  const { markers, lines } = routeMarkers(routes, { editableRouteId: selected?.id });
+  const { markers, lines } = routeMarkers(routes, {
+    editableRouteId: selected?.id,
+  });
 
   return (
     <div className="grid gap-6 xl:grid-cols-[22rem_1fr]">
@@ -183,7 +196,13 @@ export function RouteEditor({ eventId, routes }: { eventId: string; routes: Edit
                       onBlur={(e) => e.target.value !== (p.label ?? "") && run(() => updateRoutePoint(p.id, p.kind, e.target.value))}
                       className="min-w-0 flex-1 rounded border border-transparent px-1 py-0.5 text-xs hover:border-line"
                     />
-                    <button type="button" className="p-0.5 text-muted disabled:opacity-30" disabled={i === 0} onClick={() => run(() => reorderRoutePoint(p.id, -1))} aria-label="Move up">
+                    <button
+                      type="button"
+                      className="p-0.5 text-muted disabled:opacity-30"
+                      disabled={i === 0}
+                      onClick={() => run(() => reorderRoutePoint(p.id, -1))}
+                      aria-label="Move up"
+                    >
                       <ArrowUp className="size-3.5" />
                     </button>
                     <button
@@ -195,7 +214,12 @@ export function RouteEditor({ eventId, routes }: { eventId: string; routes: Edit
                     >
                       <ArrowDown className="size-3.5" />
                     </button>
-                    <button type="button" className="p-0.5 text-muted hover:text-danger" onClick={() => run(() => deleteRoutePoint(p.id))} aria-label="Delete point">
+                    <button
+                      type="button"
+                      className="p-0.5 text-muted hover:text-danger"
+                      onClick={() => run(() => deleteRoutePoint(p.id))}
+                      aria-label="Delete point"
+                    >
                       <Trash2 className="size-3.5" />
                     </button>
                   </li>
@@ -224,7 +248,13 @@ export function RouteEditor({ eventId, routes }: { eventId: string; routes: Edit
           onMapClick={(p) => {
             if (!selected || pending) return;
             run(async () => {
-              await addRoutePoint({ routeId: selected.id, kind, label, lat: p.lat, lng: p.lng });
+              await addRoutePoint({
+                routeId: selected.id,
+                kind,
+                label,
+                lat: p.lat,
+                lng: p.lng,
+              });
               afterAdd();
             });
           }}

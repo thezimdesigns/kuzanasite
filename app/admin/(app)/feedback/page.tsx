@@ -31,8 +31,18 @@ export default async function AdminFeedback({ searchParams }: PageProps<"/admin/
       <Tabs
         current={status ?? "ALL"}
         tabs={[
-          { value: "ALL", label: "All", href: "/admin/feedback", count: count() },
-          ...Object.values(FeedbackStatus).map((s) => ({ value: s, label: FEEDBACK_STATUS_LABELS[s], href: `/admin/feedback?status=${s}`, count: count(s) })),
+          {
+            value: "ALL",
+            label: "All",
+            href: "/admin/feedback",
+            count: count(),
+          },
+          ...Object.values(FeedbackStatus).map((s) => ({
+            value: s,
+            label: FEEDBACK_STATUS_LABELS[s],
+            href: `/admin/feedback?status=${s}`,
+            count: count(s),
+          })),
         ]}
       />
       <Table>

@@ -260,8 +260,9 @@ model Venue {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  events   Event[]
-  feedback Feedback[]
+  events     Event[]
+  feedback   Feedback[]
+  floorPlans FloorPlan[]
 }
 
 model EventCategory {
@@ -317,6 +318,7 @@ model Event {
   sessions      Session[]
   participants  EventParticipant[]
   routes        EventRoute[]
+  streams       EventStream[]
   news          NewsPost[]
   albums        PhotoAlbum[]
   videos        Video[]
@@ -353,6 +355,7 @@ model Session {
   documents    Document[]
   videos       Video[]
   ratings      Rating[]
+  streams      EventStream[]
 
   @@index([eventId, startsAt])
 }
@@ -475,6 +478,7 @@ model Exhibitor {
   media       ExhibitorMedia[]
   claimTokens ExhibitorClaimToken[]
   ratings     Rating[]
+  stalls      FloorPlanStall[]
 
   @@index([status, name])
   @@index([categoryId])
@@ -893,4 +897,138 @@ model RoutePoint {
   sortOrder Int            @default(0)
 
   @@index([routeId, sortOrder])
+}
+
+// ---------------------------------------------------------------------------
+// Media coverage: links to articles, posts and broadcasts about KUZANA
+// ---------------------------------------------------------------------------
+
+enum MentionPlatform {
+  WEBSITE
+  NEWS
+  FACEBOOK
+  INSTAGRAM
+  X
+  YOUTUBE
+  TIKTOK
+  LINKEDIN
+  RADIO
+  TV
+  OTHER
+}
+
+model MediaMention {
+  id            String          @id @default(cuid())
+  url           String
+  title         String
+  outlet        String?
+  platform      MentionPlatform @default(WEBSITE)
+  excerpt       String?
+  imageUrl      String?
+  publishedAt   DateTime?
+  featured      Boolean         @default(false)
+  publishStatus PublishStatus   @default(PUBLISHED)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([publishStatus, publishedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Live streams for programme items (several per event or session)
+// ---------------------------------------------------------------------------
+
+model EventStream {
+  id        String   @id @default(cuid())
+  eventId   String?
+  event     Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sessionId String?
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  label     String
+  url       String
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId])
+  @@index([sessionId])
+}
+
+// ---------------------------------------------------------------------------
+// Floor plans with clickable stalls
+// ---------------------------------------------------------------------------
+
+model FloorPlan {
+  id            String           @id @default(cuid())
+  title         String
+  slug          String           @unique
+  venueId       String?
+  venue         Venue?           @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  description   String?
+  imageKey      String
+  imageWidth    Int
+  imageHeight   Int
+  pdfKey        String?
+  publishStatus PublishStatus    @default(PUBLISHED)
+  sortOrder     Int              @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  stalls        FloorPlanStall[]
+}
+
+model FloorPlanStall {
+  id          String     @id @default(cuid())
+  floorPlanId String
+  floorPlan   FloorPlan  @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+  /// Stand number or label printed on the plan, e.g. "B12".
+  label       String
+  /// Position as a fraction (0-1) of the image width and height.
+  x           Float
+  y           Float
+  exhibitorId String?
+  exhibitor   Exhibitor? @relation(fields: [exhibitorId], references: [id], onDelete: SetNull)
+  note        String?
+
+  @@index([floorPlanId])
+}
+
+// ---------------------------------------------------------------------------
+// Service providers (people and organisations who delivered KUZANA)
+// ---------------------------------------------------------------------------
+
+model ServiceCategory {
+  id        String            @id @default(cuid())
+  name      String            @unique
+  slug      String            @unique
+  sortOrder Int               @default(0)
+  providers ServiceProvider[]
+}
+
+enum ProviderKind {
+  PERSON
+  ORGANISATION
+}
+
+model ServiceProvider {
+  id            String           @id @default(cuid())
+  name          String
+  kind          ProviderKind     @default(ORGANISATION)
+  categoryId    String?
+  category      ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  role          String?
+  description   String?
+  photoKey      String?
+  website       String?
+  email         String?
+  phone         String?
+  facebook      String?
+  instagram     String?
+  linkedin      String?
+  publishStatus PublishStatus    @default(PUBLISHED)
+  sortOrder     Int              @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([categoryId])
 }

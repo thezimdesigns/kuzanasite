@@ -29,18 +29,20 @@ export default async function ClaimPage({ params }: PageProps<"/exhibitors/claim
     );
   }
 
-  const sectors = await db.exhibitorCategory.findMany({ orderBy: { sortOrder: "asc" }, select: { id: true, name: true } });
+  const sectors = await db.exhibitorCategory.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, name: true },
+  });
   const x = claim.exhibitor;
 
   return (
     <>
-      <PageHeader
-        title={`Complete your profile: ${x.name}`}
-        intro="Check your details and add anything that's missing. No account is needed."
-      />
+      <PageHeader title={`Complete your profile: ${x.name}`} intro="Check your details and add anything that's missing. No account is needed." />
       <Section className="max-w-2xl">
         {claim.exhibitor.reviewNotes && claim.exhibitor.status === "NEEDS_INFORMATION" && (
-          <p className="mb-4 rounded-[var(--radius-control)] bg-orange-50 p-3 text-sm text-orange-dark">The KUZANA team has asked for more information about your stand.</p>
+          <p className="mb-4 rounded-[var(--radius-control)] bg-orange-50 p-3 text-sm text-orange-dark">
+            The KUZANA team has asked for more information about your stand.
+          </p>
         )}
         <ExhibitorClaimForm
           token={token}

@@ -15,8 +15,14 @@ export default async function AdminDocument({ params }: PageProps<"/admin/docume
   const { id } = await params;
   const [d, events, sessions] = await Promise.all([
     db.document.findUnique({ where: { id } }),
-    db.event.findMany({ orderBy: { startsAt: "asc" }, select: { id: true, title: true } }),
-    db.session.findMany({ orderBy: { startsAt: "asc" }, select: { id: true, title: true, event: { select: { title: true } } } }),
+    db.event.findMany({
+      orderBy: { startsAt: "asc" },
+      select: { id: true, title: true },
+    }),
+    db.session.findMany({
+      orderBy: { startsAt: "asc" },
+      select: { id: true, title: true, event: { select: { title: true } } },
+    }),
   ]);
   if (!d) notFound();
   return (
@@ -33,7 +39,11 @@ export default async function AdminDocument({ params }: PageProps<"/admin/docume
       <DocumentForm
         readOnly={!editable}
         events={events}
-        sessions={sessions.map((s) => ({ id: s.id, title: s.title, event: s.event.title }))}
+        sessions={sessions.map((s) => ({
+          id: s.id,
+          title: s.title,
+          event: s.event.title,
+        }))}
         values={{
           id: d.id,
           title: d.title,

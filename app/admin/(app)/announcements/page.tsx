@@ -14,8 +14,15 @@ export default async function AdminAnnouncements() {
   const user = await requireStaff();
   const editable = can(user, "announcements");
   const [items, events] = await Promise.all([
-    db.announcement.findMany({ orderBy: { createdAt: "desc" }, take: 100, include: { event: { select: { title: true } } } }),
-    db.event.findMany({ orderBy: { startsAt: "asc" }, select: { id: true, title: true } }),
+    db.announcement.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: { event: { select: { title: true } } },
+    }),
+    db.event.findMany({
+      orderBy: { startsAt: "asc" },
+      select: { id: true, title: true },
+    }),
   ]);
   const now = new Date();
   return (
@@ -24,7 +31,18 @@ export default async function AdminAnnouncements() {
       <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
         {editable && (
           <Panel title="New announcement">
-            <AnnouncementForm events={events} values={{ title: "", body: "", linkUrl: "", priority: "INFO", eventId: "", expiresAt: "", publishStatus: "PUBLISHED" }} />
+            <AnnouncementForm
+              events={events}
+              values={{
+                title: "",
+                body: "",
+                linkUrl: "",
+                priority: "INFO",
+                eventId: "",
+                expiresAt: "",
+                publishStatus: "PUBLISHED",
+              }}
+            />
             <p className="mt-3 text-xs text-muted">To also notify phones, send it from Messaging.</p>
           </Panel>
         )}

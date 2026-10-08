@@ -12,7 +12,12 @@ import { Badge, ButtonLink, Input } from "@/components/ui";
 
 export const metadata = { title: "Exhibitors" };
 
-const TONE = { PENDING: "gold", APPROVED: "green", REJECTED: "red", NEEDS_INFORMATION: "orange" } as const;
+const TONE = {
+  PENDING: "gold",
+  APPROVED: "green",
+  REJECTED: "red",
+  NEEDS_INFORMATION: "orange",
+} as const;
 
 export default async function AdminExhibitors({ searchParams }: PageProps<"/admin/exhibitors">) {
   await requireStaff();
@@ -21,14 +26,24 @@ export default async function AdminExhibitors({ searchParams }: PageProps<"/admi
   const q = typeof sp.q === "string" ? sp.q.trim() : "";
   const where: Prisma.ExhibitorWhereInput = {
     ...(status && { status }),
-    ...(q && { OR: [{ name: { contains: q, mode: "insensitive" } }, { contactName: { contains: q, mode: "insensitive" } }, { stand: { contains: q, mode: "insensitive" } }] }),
+    ...(q && {
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { contactName: { contains: q, mode: "insensitive" } },
+        { stand: { contains: q, mode: "insensitive" } },
+      ],
+    }),
   };
   const [rows, grouped] = await Promise.all([
     db.exhibitor.findMany({
       where,
       orderBy: { createdAt: "desc" },
       take: 500,
-      include: { category: true, media: { where: { kind: "BOOTH" }, take: 1 }, _count: { select: { media: true } } },
+      include: {
+        category: true,
+        media: { where: { kind: "BOOTH" }, take: 1 },
+        _count: { select: { media: true } },
+      },
     }),
     db.exhibitor.groupBy({ by: ["status"], _count: true }),
   ]);
@@ -46,8 +61,18 @@ export default async function AdminExhibitors({ searchParams }: PageProps<"/admi
       <Tabs
         current={status ?? "ALL"}
         tabs={[
-          { value: "ALL", label: "All", href: "/admin/exhibitors", count: count() },
-          ...Object.values(ExhibitorStatus).map((s) => ({ value: s, label: EXHIBITOR_STATUS_LABELS[s], href: `/admin/exhibitors?status=${s}`, count: count(s) })),
+          {
+            value: "ALL",
+            label: "All",
+            href: "/admin/exhibitors",
+            count: count(),
+          },
+          ...Object.values(ExhibitorStatus).map((s) => ({
+            value: s,
+            label: EXHIBITOR_STATUS_LABELS[s],
+            href: `/admin/exhibitors?status=${s}`,
+            count: count(s),
+          })),
         ]}
       />
       <form className="mb-4 flex max-w-md gap-2">
@@ -101,7 +126,11 @@ export default async function AdminExhibitors({ searchParams }: PageProps<"/admi
           {rows.length === 0 && (
             <tr>
               <td colSpan={7} className="py-8 text-center text-muted">
-                No exhibitors here yet. <Link href="/admin/qr" className="underline">Print the registration QR code</Link>.
+                No exhibitors here yet.{" "}
+                <Link href="/admin/qr" className="underline">
+                  Print the registration QR code
+                </Link>
+                .
               </td>
             </tr>
           )}

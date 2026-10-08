@@ -15,7 +15,9 @@ export async function GET(request: Request) {
   const type = new URL(request.url).searchParams.get("type") === "interest" ? "interest" : "visitors";
   const rows: Record<string, unknown>[] =
     type === "interest"
-      ? await db.interestRegistration.findMany({ orderBy: { createdAt: "desc" } })
+      ? await db.interestRegistration.findMany({
+          orderBy: { createdAt: "desc" },
+        })
       : (await db.visitor.findMany({ orderBy: { createdAt: "desc" } })).map(({ unsubscribeToken: _t, ...v }) => v);
 
   const headers = rows[0] ? Object.keys(rows[0]) : ["id"];

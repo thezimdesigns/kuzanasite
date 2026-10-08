@@ -13,7 +13,10 @@ export function Rail({ children, label }: { children: ReactNode; label: string }
     const el = ref.current;
     if (!el) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: reduce ? "auto" : "smooth" });
+    el.scrollBy({
+      left: dir * el.clientWidth * 0.85,
+      behavior: reduce ? "auto" : "smooth",
+    });
   };
   return (
     <div className="relative">

@@ -10,7 +10,10 @@ export default async function AdminFeedbackItem({ params }: PageProps<"/admin/fe
   const user = await requireStaff();
   const f = await db.feedback.findUnique({
     where: { id: (await params).id },
-    include: { event: { select: { title: true } }, venue: { select: { name: true } } },
+    include: {
+      event: { select: { title: true } },
+      venue: { select: { name: true } },
+    },
   });
   if (!f) notFound();
   const wa = f.phone ? `https://wa.me/${f.phone.replace(/[^\d]/g, "").replace(/^0/, "263")}` : null;
@@ -39,12 +42,25 @@ export default async function AdminFeedbackItem({ params }: PageProps<"/admin/fe
                 </div>
                 <div>
                   <dt className="inline font-semibold">Email: </dt>
-                  <dd className="inline">{f.email ? <a href={`mailto:${f.email}`} className="underline">{f.email}</a> : "-"}</dd>
+                  <dd className="inline">
+                    {f.email ? (
+                      <a href={`mailto:${f.email}`} className="underline">
+                        {f.email}
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </dd>
                 </div>
                 <div>
                   <dt className="inline font-semibold">Phone: </dt>
                   <dd className="inline">
-                    {f.phone ?? "-"} {wa && f.contactPermission && <a href={wa} target="_blank" rel="noopener" className="ml-2 font-semibold text-green-800 underline">WhatsApp</a>}
+                    {f.phone ?? "-"}{" "}
+                    {wa && f.contactPermission && (
+                      <a href={wa} target="_blank" rel="noopener" className="ml-2 font-semibold text-green-800 underline">
+                        WhatsApp
+                      </a>
+                    )}
                   </dd>
                 </div>
                 <div>

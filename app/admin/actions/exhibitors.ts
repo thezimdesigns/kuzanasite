@@ -7,7 +7,8 @@ import { createClaimToken } from "@/lib/claim";
 import { db } from "@/lib/db";
 import { requireCurrentEdition } from "@/lib/edition";
 import { checkbox, optionalEmail, optionalText, optionalUrl, phone, requiredText } from "@/lib/forms";
-import { ExhibitorMediaKind, ExhibitorStatus } from "@/lib/generated/prisma/enums";
+import { ExhibitorMediaKind, ExhibitorStatus, PublishStatus } from "@/lib/generated/prisma/enums";
+import { storedImageSize } from "@/lib/image-size";
 import { OPPORTUNITIES } from "@/lib/options";
 import { siteUrl } from "@/lib/site";
 import { uniqueSlug } from "@/lib/slug";
@@ -72,7 +73,10 @@ export const captureExhibitor = adminFormAction("exhibitors", captureSchema, asy
       media: { create: media.map((m, i) => ({ ...m, sortOrder: i })) },
     },
   });
-  return { ok: true, message: `${d.name} captured${publishNow ? " and published" : ""}. Ready for the next stand.` };
+  return {
+    ok: true,
+    message: `${d.name} captured${publishNow ? " and published" : ""}. Ready for the next stand.`,
+  };
 });
 
 // ---------------------------------------------------------------------------
@@ -120,7 +124,9 @@ export const updateExhibitor = adminFormAction(
         opportunities: d.opportunities,
         updatedById: user.id,
         ...(logo && { logoKey: logo.key }),
-        media: { create: media.map((m, i) => ({ ...m, sortOrder: count + i })) },
+        media: {
+          create: media.map((m, i) => ({ ...m, sortOrder: count + i })),
+        },
       },
     });
     return { ok: true, message: "Exhibitor saved." };
@@ -129,12 +135,19 @@ export const updateExhibitor = adminFormAction(
 );
 
 export async function setExhibitorStatus(id: string, status: ExhibitorStatus) {
-  return runAdmin("exhibitors", (user) => db.exhibitor.update({ where: { id }, data: { status, updatedById: user.id } }));
+  return runAdmin("exhibitors", (user) =>
+    db.exhibitor.update({
+      where: { id },
+      data: { status, updatedById: user.id },
+    }),
+  );
 }
 
 export async function deleteExhibitor(id: string) {
   await runAdmin("exhibitors", async () => {
-    const media = await db.exhibitorMedia.findMany({ where: { exhibitorId: id } });
+    const media = await db.exhibitorMedia.findMany({
+      where: { exhibitorId: id },
+    });
     await db.exhibitor.delete({ where: { id } });
     await Promise.all(media.map((m) => deleteObject(m.key)));
   });
@@ -144,7 +157,10 @@ export async function deleteExhibitor(id: string) {
 export async function deleteExhibitorMedia(mediaId: string) {
   return runAdmin("exhibitors", async () => {
     const m = await db.exhibitorMedia.delete({ where: { id: mediaId } });
-    await db.exhibitor.updateMany({ where: { id: m.exhibitorId, logoKey: m.key }, data: { logoKey: null } });
+    await db.exhibitor.updateMany({
+      where: { id: m.exhibitorId, logoKey: m.key },
+      data: { logoKey: null },
+    });
     await deleteObject(m.key);
   });
 }
@@ -157,13 +173,124 @@ export async function setExhibitorLogo(exhibitorId: string, key: string) {
 export async function createCompletionLink(exhibitorId: string, markNeedsInfo: boolean) {
   return runAdmin("exhibitors", async (user) => {
     const code = await createClaimToken(exhibitorId, user.id);
-    if (markNeedsInfo) await db.exhibitor.update({ where: { id: exhibitorId }, data: { status: "NEEDS_INFORMATION" } });
+    if (markNeedsInfo)
+      await db.exhibitor.update({
+        where: { id: exhibitorId },
+        data: { status: "NEEDS_INFORMATION" },
+      });
     return siteUrl(`/exhibitors/claim/${code}`);
   });
 }
 
 export async function revokeCompletionLinks(exhibitorId: string) {
   return runAdmin("exhibitors", () =>
-    db.exhibitorClaimToken.updateMany({ where: { exhibitorId, revokedAt: null }, data: { revokedAt: new Date() } }),
+    db.exhibitorClaimToken.updateMany({
+      where: { exhibitorId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    }),
   );
+}
+
+// ---------------------------------------------------------------------------
+// Floor plans (an uploaded plan image with stall markers)
+// ---------------------------------------------------------------------------
+
+const floorPlanSchema = z.object({
+  title: requiredText("Title", 120),
+  venueId: optionalText(40),
+  description: optionalText(1000),
+  imageKey: requiredText("Plan image", 300),
+  pdfKey: optionalText(300),
+  publishStatus: z.enum(PublishStatus),
+  sortOrder: z.coerce.number().int().default(0),
+});
+
+async function floorPlanData(d: z.infer<typeof floorPlanSchema>, oldImageKey?: string) {
+  const size = d.imageKey !== oldImageKey ? await storedImageSize(d.imageKey) : null;
+  return {
+    title: d.title,
+    venueId: d.venueId ?? null,
+    description: d.description ?? null,
+    imageKey: d.imageKey,
+    pdfKey: d.pdfKey ?? null,
+    publishStatus: d.publishStatus,
+    sortOrder: d.sortOrder,
+    ...(size && { imageWidth: size.width, imageHeight: size.height }),
+  };
+}
+
+export const createFloorPlan = adminFormAction("exhibitors", floorPlanSchema, async (d) => {
+  const data = await floorPlanData(d);
+  const slug = await uniqueSlug(d.title, async (s) => !!(await db.floorPlan.findUnique({ where: { slug: s } })));
+  const plan = await db.floorPlan.create({
+    data: {
+      ...data,
+      slug,
+      imageWidth: data.imageWidth!,
+      imageHeight: data.imageHeight!,
+    },
+  });
+  redirect(`/admin/floor-plans/${plan.id}`);
+});
+
+export const updateFloorPlan = adminFormAction("exhibitors", floorPlanSchema.and(z.object({ id: z.string() })), async (d) => {
+  const old = await db.floorPlan.findUniqueOrThrow({ where: { id: d.id } });
+  await db.floorPlan.update({
+    where: { id: d.id },
+    data: await floorPlanData(d, old.imageKey),
+  });
+  // Stall positions are stored as fractions, so they stay put on a re-exported plan of the same layout.
+  if (old.imageKey !== d.imageKey) await deleteObject(old.imageKey);
+  if (old.pdfKey && old.pdfKey !== d.pdfKey) await deleteObject(old.pdfKey);
+  return { ok: true, message: "Floor plan saved." };
+});
+
+export async function deleteFloorPlan(id: string) {
+  await runAdmin("exhibitors", async () => {
+    const plan = await db.floorPlan.delete({ where: { id } });
+    await deleteObject(plan.imageKey);
+    if (plan.pdfKey) await deleteObject(plan.pdfKey);
+  });
+  redirect("/admin/floor-plans");
+}
+
+const fraction = z.number().min(0).max(1);
+const stallInput = z.object({
+  floorPlanId: z.string(),
+  label: z.string().trim().min(1, "Enter a stand number.").max(20),
+  x: fraction,
+  y: fraction,
+  exhibitorId: z.string().nullable().optional(),
+});
+
+export async function addStall(input: z.input<typeof stallInput>) {
+  const d = stallInput.parse(input);
+  return runAdmin("exhibitors", () =>
+    db.floorPlanStall.create({
+      data: { ...d, exhibitorId: d.exhibitorId || null },
+    }),
+  );
+}
+
+export async function moveStall(id: string, x: number, y: number) {
+  return runAdmin("exhibitors", () =>
+    db.floorPlanStall.update({
+      where: { id },
+      data: { x: fraction.parse(x), y: fraction.parse(y) },
+    }),
+  );
+}
+
+export async function updateStall(id: string, label: string, exhibitorId: string | null) {
+  const clean = z.string().trim().min(1, "Enter a stand number.").max(20).parse(label);
+  return runAdmin("exhibitors", () =>
+    db.floorPlanStall.update({
+      where: { id },
+      data: { label: clean, exhibitorId: exhibitorId || null },
+    }),
+  );
+}
+
+export async function deleteStall(id: string) {
+  return runAdmin("exhibitors", () => db.floorPlanStall.delete({ where: { id } }));
 }

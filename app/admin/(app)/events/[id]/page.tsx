@@ -10,6 +10,7 @@ import { ActionButton } from "@/components/admin/admin-form";
 import { EventForm } from "@/components/admin/event-form";
 import { ParticipantForm } from "@/components/admin/participant-form";
 import { SessionForm } from "@/components/admin/session-form";
+import { StreamsPanel } from "@/components/admin/streams-panel";
 import { AdminPage, Panel, PublishBadge, ReadOnlyNotice, RowLink, Table } from "@/components/admin/ui";
 import { Badge, ButtonLink } from "@/components/ui";
 
@@ -25,12 +26,18 @@ export default async function AdminEvent({ params }: PageProps<"/admin/events/[i
           orderBy: [{ startsAt: "asc" }, { sortOrder: "asc" }],
           include: { participants: { include: { person: true } } },
         },
-        participants: { include: { person: true }, orderBy: { sortOrder: "asc" } },
+        participants: {
+          include: { person: true },
+          orderBy: { sortOrder: "asc" },
+        },
       },
     }),
     db.eventCategory.findMany({ orderBy: { sortOrder: "asc" } }),
     db.venue.findMany({ orderBy: { sortOrder: "asc" } }),
-    db.person.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.person.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
   if (!e) notFound();
   const routeCount = await db.eventRoute.count({ where: { eventId: e.id } });
@@ -45,7 +52,8 @@ export default async function AdminEvent({ params }: PageProps<"/admin/events/[i
       actions={
         <div className="flex flex-wrap items-center gap-3">
           <ButtonLink href={`/admin/events/${e.id}/routes`} size="sm" variant="outline">
-            <Route className="size-4" /> Route map{routeCount ? ` (${routeCount})` : ""}
+            <Route className="size-4" /> Route map
+            {routeCount ? ` (${routeCount})` : ""}
           </ButtonLink>
           <Link href={`/events/${e.slug}`} target="_blank" className="inline-flex items-center gap-1 text-sm font-semibold text-green-800 underline">
             View public page <ExternalLink className="size-3.5" />
@@ -131,11 +139,27 @@ export default async function AdminEvent({ params }: PageProps<"/admin/events/[i
               <details open={e.sessions.length === 0}>
                 <summary className="cursor-pointer text-sm font-semibold text-green-800">+ Add session</summary>
                 <div className="mt-3">
-                  <SessionForm eventId={e.id} values={{ title: "", description: "", startsAt: nextStart, endsAt: "", room: "", posterKey: "", type: "OTHER", statusOverride: "", publishStatus: "PUBLISHED", sortOrder: e.sessions.length }} />
+                  <SessionForm
+                    eventId={e.id}
+                    values={{
+                      title: "",
+                      description: "",
+                      startsAt: nextStart,
+                      endsAt: "",
+                      room: "",
+                      posterKey: "",
+                      type: "OTHER",
+                      statusOverride: "",
+                      publishStatus: "PUBLISHED",
+                      sortOrder: e.sessions.length,
+                    }}
+                  />
                 </div>
               </details>
             )}
           </Panel>
+
+          <StreamsPanel eventId={e.id} editable={editable} />
 
           <Panel title="Featured participants">
             {e.participants.length > 0 && (

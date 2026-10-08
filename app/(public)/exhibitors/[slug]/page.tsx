@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Download, Globe, Mail, MapPin, MessageCircle, Phone, Star } from "lucide-react";
+import { Download, Globe, Map as MapIcon, Mail, MapPin, MessageCircle, Phone, Star } from "lucide-react";
 import { db } from "@/lib/db";
 import { fileUrl, formatBytes } from "@/lib/files";
+import { findExhibitorStall } from "@/lib/floor-plans";
 import { RatingForm } from "@/components/public/rating-form";
 import { ShareButtons } from "@/components/public/share-buttons";
 import { Badge, Card, Section, SectionTitle } from "@/components/ui";
@@ -12,7 +13,11 @@ import { Badge, Card, Section, SectionTitle } from "@/components/ui";
 async function getExhibitor(slug: string) {
   return db.exhibitor.findFirst({
     where: { slug, status: "APPROVED" },
-    include: { category: true, media: { orderBy: { sortOrder: "asc" } }, edition: true },
+    include: {
+      category: true,
+      media: { orderBy: { sortOrder: "asc" } },
+      edition: true,
+    },
   });
 }
 
@@ -33,7 +38,14 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
   const x = await getExhibitor((await params).slug);
   if (!x) notFound();
 
-  const rating = await db.rating.aggregate({ where: { exhibitorId: x.id }, _avg: { stars: true }, _count: { stars: true } });
+  const [rating, stall] = await Promise.all([
+    db.rating.aggregate({
+      where: { exhibitorId: x.id },
+      _avg: { stars: true },
+      _count: { stars: true },
+    }),
+    findExhibitorStall(x.id),
+  ]);
   const images = x.media.filter((m) => m.mimeType.startsWith("image/") && m.kind !== "LOGO");
   const files = x.media.filter((m) => !m.mimeType.startsWith("image/"));
   const logo = fileUrl(x.logoKey);
@@ -69,6 +81,14 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
               )}
               <Badge>KUZANA SCEEZ {x.edition.year}</Badge>
             </div>
+            {stall && (
+              <Link
+                href={stall.href}
+                className="mt-4 inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-green-900 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-800"
+              >
+                <MapIcon className="size-4" aria-hidden /> Find stand {stall.label} on the floor plan
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -93,8 +113,20 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
               <SectionTitle>Photos</SectionTitle>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {images.map((m) => (
-                  <a key={m.id} href={fileUrl(m.key)!} target="_blank" rel="noopener" className="relative block aspect-[4/3] overflow-hidden rounded-[var(--radius-control)] bg-cream-dark">
-                    <Image src={fileUrl(m.key)!} alt={m.caption ?? `${x.name} ${m.kind.toLowerCase().replace("_", " ")}`} fill sizes="(min-width: 640px) 25vw, 50vw" className="object-cover" />
+                  <a
+                    key={m.id}
+                    href={fileUrl(m.key)!}
+                    target="_blank"
+                    rel="noopener"
+                    className="relative block aspect-[4/3] overflow-hidden rounded-[var(--radius-control)] bg-cream-dark"
+                  >
+                    <Image
+                      src={fileUrl(m.key)!}
+                      alt={m.caption ?? `${x.name} ${m.kind.toLowerCase().replace("_", " ")}`}
+                      fill
+                      sizes="(min-width: 640px) 25vw, 50vw"
+                      className="object-cover"
+                    />
                   </a>
                 ))}
               </div>
@@ -162,7 +194,12 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
               <ul className="flex flex-wrap gap-2 pt-2">
                 {socials.map(([label, url]) => (
                   <li key={label}>
-                    <a href={url} target="_blank" rel="noopener nofollow" className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-line px-3 py-1 text-xs font-semibold hover:border-green-800">
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener nofollow"
+                      className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-line px-3 py-1 text-xs font-semibold hover:border-green-800"
+                    >
                       <Globe className="size-3" /> {label}
                     </a>
                   </li>

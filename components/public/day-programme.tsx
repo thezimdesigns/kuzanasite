@@ -27,9 +27,7 @@ export async function DayProgramme({ day, isToday }: { day: string; isToday: boo
           />
         </div>
       </PageHeader>
-      <Section>
-        {items.length ? <ProgrammeList items={items} /> : <EmptyState>There are no programme items on this day.</EmptyState>}
-      </Section>
+      <Section>{items.length ? <ProgrammeList items={items} /> : <EmptyState>There are no programme items on this day.</EmptyState>}</Section>
     </>
   );
 }

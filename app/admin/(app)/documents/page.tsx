@@ -11,7 +11,10 @@ export const metadata = { title: "Documents & press" };
 
 export default async function AdminDocuments() {
   const user = await requireStaff();
-  const docs = await db.document.findMany({ orderBy: [{ date: "desc" }, { createdAt: "desc" }], include: { event: { select: { title: true } } } });
+  const docs = await db.document.findMany({
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    include: { event: { select: { title: true } } },
+  });
   return (
     <AdminPage
       title="Documents & press"

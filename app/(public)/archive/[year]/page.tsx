@@ -11,18 +11,35 @@ async function getEdition(year: number) {
   return db.edition.findUnique({
     where: { year },
     include: {
-      events: { where: { publishStatus: { in: ["PUBLISHED", "ARCHIVED"] } }, include: { venue: true, category: true }, orderBy: { startsAt: "asc" } },
+      events: {
+        where: { publishStatus: { in: ["PUBLISHED", "ARCHIVED"] } },
+        include: { venue: true, category: true },
+        orderBy: { startsAt: "asc" },
+      },
       albums: {
         where: { publishStatus: { in: ["PUBLISHED", "ARCHIVED"] } },
-        include: { _count: { select: { photos: true } }, photos: { take: 1, orderBy: { sortOrder: "asc" } } },
+        include: {
+          _count: { select: { photos: true } },
+          photos: { take: 1, orderBy: { sortOrder: "asc" } },
+        },
         orderBy: { date: "asc" },
       },
-      videos: { where: { publishStatus: { in: ["PUBLISHED", "ARCHIVED"] } }, orderBy: { date: "desc" } },
-      documents: { where: { publishStatus: { in: ["PUBLISHED", "ARCHIVED"] } }, orderBy: { date: "desc" }, include: { event: { select: { title: true } } } },
+      videos: {
+        where: { publishStatus: { in: ["PUBLISHED", "ARCHIVED"] } },
+        orderBy: { date: "desc" },
+      },
+      documents: {
+        where: { publishStatus: { in: ["PUBLISHED", "ARCHIVED"] } },
+        orderBy: { date: "desc" },
+        include: { event: { select: { title: true } } },
+      },
       exhibitors: {
         where: { status: "APPROVED" },
         orderBy: { name: "asc" },
-        include: { category: true, media: { where: { kind: "BOOTH" }, take: 1 } },
+        include: {
+          category: true,
+          media: { where: { kind: "BOOTH" }, take: 1 },
+        },
       },
     },
   });

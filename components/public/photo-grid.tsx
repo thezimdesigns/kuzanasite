@@ -4,7 +4,13 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, X } from "lucide-react";
 
-type Photo = { id: string; src: string; caption: string | null; width: number | null; height: number | null };
+type Photo = {
+  id: string;
+  src: string;
+  caption: string | null;
+  width: number | null;
+  height: number | null;
+};
 
 /** Lazy-loaded photo grid with a keyboard- and swipe-friendly lightbox. */
 export function PhotoGrid({ photos }: { photos: Photo[] }) {
@@ -35,7 +41,11 @@ export function PhotoGrid({ photos }: { photos: Photo[] }) {
       <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
         {photos.map((p, i) => (
           <li key={p.id}>
-            <button type="button" onClick={() => setOpen(i)} className="relative block aspect-square w-full overflow-hidden rounded-[var(--radius-control)] bg-cream-dark">
+            <button
+              type="button"
+              onClick={() => setOpen(i)}
+              className="relative block aspect-square w-full overflow-hidden rounded-[var(--radius-control)] bg-cream-dark"
+            >
               <Image src={p.src} alt={p.caption ?? ""} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw" className="object-cover" />
             </button>
           </li>
@@ -69,10 +79,20 @@ export function PhotoGrid({ photos }: { photos: Photo[] }) {
           </div>
           <div className="relative flex-1">
             <Image src={current.src} alt={current.caption ?? ""} fill sizes="100vw" className="object-contain" />
-            <button type="button" onClick={() => step(-1)} className="absolute top-1/2 left-2 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white" aria-label="Previous">
+            <button
+              type="button"
+              onClick={() => step(-1)}
+              className="absolute top-1/2 left-2 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white"
+              aria-label="Previous"
+            >
               <ChevronLeft className="size-7" />
             </button>
-            <button type="button" onClick={() => step(1)} className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white" aria-label="Next">
+            <button
+              type="button"
+              onClick={() => step(1)}
+              className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white"
+              aria-label="Next"
+            >
               <ChevronRight className="size-7" />
             </button>
           </div>

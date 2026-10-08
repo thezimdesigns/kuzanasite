@@ -16,9 +16,16 @@ import { deliverMessage, resolveAudience } from "@/lib/messaging";
 
 export const updateFeedback = adminFormAction(
   "feedback",
-  z.object({ id: z.string(), status: z.enum(FeedbackStatus), adminNotes: optionalText(5000) }),
+  z.object({
+    id: z.string(),
+    status: z.enum(FeedbackStatus),
+    adminNotes: optionalText(5000),
+  }),
   async (d) => {
-    await db.feedback.update({ where: { id: d.id }, data: { status: d.status, adminNotes: d.adminNotes ?? null } });
+    await db.feedback.update({
+      where: { id: d.id },
+      data: { status: d.status, adminNotes: d.adminNotes ?? null },
+    });
     return { ok: true, message: "Feedback updated." };
   },
 );
@@ -45,7 +52,13 @@ export const createMessage = adminFormAction(
   async (d, user) => {
     const eventId = d.audience.startsWith("event:") ? d.audience.slice(6) : null;
     const m = await db.message.create({
-      data: { ...d, url: d.url ?? null, eventId, status: "DRAFT", createdById: user.id },
+      data: {
+        ...d,
+        url: d.url ?? null,
+        eventId,
+        status: "DRAFT",
+        createdById: user.id,
+      },
     });
     redirect(`/admin/messages/${m.id}`);
   },
@@ -60,14 +73,24 @@ export async function sendMessage(id: string) {
     const r = await resolveAudience(m.audience, m.channels);
     await db.message.update({
       where: { id },
-      data: { status: "SENDING", recipientCount: r.pushIds.length + r.emails.length, sentCount: 0, failedCount: 0 },
+      data: {
+        status: "SENDING",
+        recipientCount: r.pushIds.length + r.emails.length,
+        sentCount: 0,
+        failedCount: 0,
+      },
     });
     after(() => deliverMessage(id).catch((e) => console.error("Message delivery failed", e)));
   });
 }
 
 export async function cancelMessage(id: string) {
-  return runAdmin("messages", () => db.message.update({ where: { id, status: "DRAFT" }, data: { status: "CANCELLED" } }));
+  return runAdmin("messages", () =>
+    db.message.update({
+      where: { id, status: "DRAFT" },
+      data: { status: "CANCELLED" },
+    }),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -88,9 +111,14 @@ export const createVisitor = adminFormAction(
       interests: z.array(z.enum(VISITOR_INTERESTS)).default([]),
       emailConsent: checkbox,
     })
-    .refine((v) => v.email || v.phone, { message: "Give a mobile number or an email address.", path: ["phone"] }),
+    .refine((v) => v.email || v.phone, {
+      message: "Give a mobile number or an email address.",
+      path: ["phone"],
+    }),
   async (d) => {
-    await db.visitor.create({ data: { ...d, emailConsent: d.emailConsent && !!d.email } });
+    await db.visitor.create({
+      data: { ...d, emailConsent: d.emailConsent && !!d.email },
+    });
     return { ok: true, message: `${d.name} added.` };
   },
   { arrays: ["interests"] },

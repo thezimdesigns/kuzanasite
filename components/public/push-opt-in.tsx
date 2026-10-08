@@ -24,7 +24,10 @@ export async function subscribeToPush(eventId?: string) {
   const existing = await reg.pushManager.getSubscription();
   const sub =
     existing ??
-    (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID!) }));
+    (await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID!),
+    }));
   const visitorId = localStorage.getItem("kuzana.visitorId") ?? undefined;
   await savePushSubscription(sub.toJSON(), eventId, visitorId);
   return sub;

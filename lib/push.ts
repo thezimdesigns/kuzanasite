@@ -32,11 +32,7 @@ export async function sendPush(subscriptionIds: string[], payload: PushPayload) 
     await Promise.all(
       subs.slice(i, i + 50).map(async (s) => {
         try {
-          await webpush.sendNotification(
-            { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-            body,
-            { TTL: 60 * 60 * 6 },
-          );
+          await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, body, { TTL: 60 * 60 * 6 });
           sent++;
           await db.pushSubscription.update({
             where: { id: s.id },

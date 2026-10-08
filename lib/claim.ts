@@ -25,7 +25,11 @@ export async function findValidClaim(code: string | null | undefined) {
   if (!code || code.length > 40) return null;
   const token = await db.exhibitorClaimToken.findUnique({
     where: { tokenHash: hash(code) },
-    include: { exhibitor: { include: { category: true, media: { orderBy: { sortOrder: "asc" } } } } },
+    include: {
+      exhibitor: {
+        include: { category: true, media: { orderBy: { sortOrder: "asc" } } },
+      },
+    },
   });
   if (!token || token.revokedAt || token.expiresAt < new Date()) return null;
   return token;

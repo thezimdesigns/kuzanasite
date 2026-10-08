@@ -9,15 +9,33 @@ export const metadata = { title: "Galleries" };
 export default async function AdminGalleries() {
   const user = await requireStaff();
   const [albums, events] = await Promise.all([
-    db.photoAlbum.findMany({ orderBy: [{ date: "desc" }, { createdAt: "desc" }], include: { _count: { select: { photos: true } } } }),
-    db.event.findMany({ orderBy: { startsAt: "asc" }, select: { id: true, title: true } }),
+    db.photoAlbum.findMany({
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+      include: { _count: { select: { photos: true } } },
+    }),
+    db.event.findMany({
+      orderBy: { startsAt: "asc" },
+      select: { id: true, title: true },
+    }),
   ]);
   return (
     <AdminPage title="Photo galleries" description="Create an album, then upload photos straight from a phone or laptop.">
       <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
         {can(user, "media") && (
           <Panel title="New album">
-            <AlbumForm events={events} values={{ title: "", slug: "", description: "", date: "", eventId: "", photographer: "", sortOrder: 0, publishStatus: "PUBLISHED" }} />
+            <AlbumForm
+              events={events}
+              values={{
+                title: "",
+                slug: "",
+                description: "",
+                date: "",
+                eventId: "",
+                photographer: "",
+                sortOrder: 0,
+                publishStatus: "PUBLISHED",
+              }}
+            />
           </Panel>
         )}
         <Table className="h-fit">

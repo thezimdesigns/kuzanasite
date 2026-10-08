@@ -4,6 +4,7 @@ import { startTransition, useActionState, type FormEvent, type ReactNode } from 
 import { CheckCircle2 } from "lucide-react";
 import type { FormState } from "@/lib/forms";
 import { Alert } from "@/components/ui";
+import { playSfx } from "@/components/public/sfx";
 import { useRecaptcha } from "@/components/public/use-recaptcha";
 
 type Action = (state: FormState, fd: FormData) => Promise<FormState>;
@@ -32,7 +33,10 @@ export function ActionForm({
   const getToken = useRecaptcha();
   const [state, formAction, pending] = useActionState(async (prev: FormState, fd: FormData) => {
     const next = await action(prev, fd);
-    if (next.ok) onSuccess?.(next);
+    if (next.ok) {
+      playSfx("drum");
+      onSuccess?.(next);
+    }
     return next;
   }, {});
 

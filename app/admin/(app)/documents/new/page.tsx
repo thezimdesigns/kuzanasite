@@ -10,14 +10,24 @@ export default async function NewDocument({ searchParams }: PageProps<"/admin/do
   await requireAreaPage("press");
   const sp = await searchParams;
   const [events, sessions] = await Promise.all([
-    db.event.findMany({ orderBy: { startsAt: "asc" }, select: { id: true, title: true } }),
-    db.session.findMany({ orderBy: { startsAt: "asc" }, select: { id: true, title: true, event: { select: { title: true } } } }),
+    db.event.findMany({
+      orderBy: { startsAt: "asc" },
+      select: { id: true, title: true },
+    }),
+    db.session.findMany({
+      orderBy: { startsAt: "asc" },
+      select: { id: true, title: true, event: { select: { title: true } } },
+    }),
   ]);
   return (
     <AdminPage title="New document" back={{ href: "/admin/documents", label: "Documents" }}>
       <DocumentForm
         events={events}
-        sessions={sessions.map((s) => ({ id: s.id, title: s.title, event: s.event.title }))}
+        sessions={sessions.map((s) => ({
+          id: s.id,
+          title: s.title,
+          event: s.event.title,
+        }))}
         values={{
           title: "",
           slug: "",

@@ -10,6 +10,7 @@ import { getActiveAnnouncements, getEditionEvents, getLiveBoard } from "@/lib/pr
 import { computeStatus, dateKey, formatLongDay, startOfDay } from "@/lib/time";
 import { AutoRefresh } from "@/components/public/auto-refresh";
 import { AlbumCard, EventCard, ExhibitorCard, VideoCard } from "@/components/public/cards";
+import { CoverageColumns } from "@/components/public/coverage-columns";
 import { HeroSlides } from "@/components/public/hero-slides";
 import { InterestForm } from "@/components/public/interest-form";
 import { LeadStory, NewsRow } from "@/components/public/news-blocks";
@@ -27,7 +28,7 @@ const SectionLink = ({ href, children }: { href: string; children: string }) => 
 
 export default async function HomePage() {
   const edition = await getCurrentEdition();
-  const [board, events, announcements, news, albums, videos, exhibitors, exhibitorCount, partners, branding] = await Promise.all([
+  const [board, events, announcements, news, albums, videos, exhibitors, exhibitorCount, partners, branding, mentions] = await Promise.all([
     getLiveBoard(),
     getEditionEvents(),
     getActiveAnnouncements(3),
@@ -36,9 +37,16 @@ export default async function HomePage() {
       where: { publishStatus: "PUBLISHED" },
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       take: 4,
-      include: { _count: { select: { photos: true } }, photos: { take: 1, orderBy: { sortOrder: "asc" } } },
+      include: {
+        _count: { select: { photos: true } },
+        photos: { take: 1, orderBy: { sortOrder: "asc" } },
+      },
     }),
-    db.video.findMany({ where: { publishStatus: "PUBLISHED" }, orderBy: [{ featured: "desc" }, { date: "desc" }], take: 3 }),
+    db.video.findMany({
+      where: { publishStatus: "PUBLISHED" },
+      orderBy: [{ featured: "desc" }, { date: "desc" }],
+      take: 3,
+    }),
     db.exhibitor.findMany({
       where: { status: "APPROVED" },
       orderBy: { updatedAt: "desc" },
@@ -49,11 +57,18 @@ export default async function HomePage() {
     db.partner.findMany({
       where: {
         tier: { in: ["CONVENOR", "HOST", "TECHNICAL_PARTNER", "PARTNER"] },
-        ...(edition && { OR: [{ editionId: edition.id }, { editionId: null }] }),
+        ...(edition && {
+          OR: [{ editionId: edition.id }, { editionId: null }],
+        }),
       },
       orderBy: { sortOrder: "asc" },
     }),
     getBranding(),
+    db.mediaMention.findMany({
+      where: { publishStatus: "PUBLISHED" },
+      orderBy: [{ featured: "desc" }, { publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+      take: 6,
+    }),
   ]);
 
   const now = new Date();
@@ -95,7 +110,10 @@ export default async function HomePage() {
             Towards Vision 2030 through <strong className="font-bold text-white">sport &amp; creative industries</strong>.{" "}
             <span className="font-bold whitespace-nowrap text-orange-bright">#FromTalentToGDP</span>
           </p>
-          <p className="hero-fade mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 font-heading font-semibold text-white/90" style={{ "--i": 1 } as CSSProperties}>
+          <p
+            className="hero-fade mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 font-heading font-semibold text-white/90"
+            style={{ "--i": 1 } as CSSProperties}
+          >
             <span>7–11 October 2026</span>
             <span className="h-4 w-px bg-white/30" aria-hidden />
             <span>Bulawayo, Zimbabwe</span>
@@ -112,6 +130,7 @@ export default async function HomePage() {
           <div className="hero-fade mt-9 flex flex-col gap-3 sm:flex-row" style={{ "--i": 2 } as CSSProperties}>
             <Link
               href="/live"
+              data-sfx="kick"
               className="group inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-orange-bright px-6 py-3.5 font-heading font-bold text-green-950 transition-[filter,transform] duration-200 hover:brightness-105 active:scale-[0.98]"
             >
               What&apos;s on now <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
@@ -216,6 +235,14 @@ export default async function HomePage() {
         </Section>
       )}
 
+      {/* Coverage elsewhere */}
+      {mentions.length > 0 && (
+        <Section>
+          <SectionTitle action={<SectionLink href="/media/coverage">All coverage</SectionLink>}>In the media</SectionTitle>
+          <CoverageColumns mentions={mentions} />
+        </Section>
+      )}
+
       {/* The week: poster-led rail */}
       {events.length > 0 && (
         <Section>
@@ -237,7 +264,8 @@ export default async function HomePage() {
             <div>
               <h2 className="text-2xl font-extrabold text-green-900 sm:text-3xl">Find an exhibitor</h2>
               <p className="mt-2 text-muted">
-                {exhibitorCount > 0 ? `${exhibitorCount} stands so far, ` : ""}from sport and fashion to tech and finance. Search by name, product or stand number.
+                {exhibitorCount > 0 ? `${exhibitorCount} stands so far, ` : ""}
+                from sport and fashion to tech and finance. Search by name, product or stand number.
               </p>
               <form action="/exhibitors" className="mt-5 flex gap-2" role="search">
                 <label className="relative flex-1">
@@ -308,13 +336,13 @@ export default async function HomePage() {
           </h2>
           <div className="space-y-4 text-lg leading-relaxed text-ink/85">
             <p>
-              KUZANA SCEEZ 2026 is an inaugural sport, creative economy and investment platform designed to connect talent, capital,
-              brands, institutions and audiences.
+              KUZANA SCEEZ 2026 is an inaugural sport, creative economy and investment platform designed to connect talent, capital, brands, institutions and
+              audiences.
             </p>
             <p>
-              Talent must move beyond visibility into income, investment, intellectual property, business growth and national economic
-              contribution. KUZANA creates a marketplace where sport and creative industries meet capital, infrastructure, policy
-              support, technology and commercial partnerships, in support of Zimbabwe&apos;s Vision 2030.
+              Talent must move beyond visibility into income, investment, intellectual property, business growth and national economic contribution. KUZANA
+              creates a marketplace where sport and creative industries meet capital, infrastructure, policy support, technology and commercial partnerships, in
+              support of Zimbabwe&apos;s Vision 2030.
             </p>
           </div>
         </div>

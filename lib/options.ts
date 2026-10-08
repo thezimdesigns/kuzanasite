@@ -68,19 +68,7 @@ export const VISITOR_INTERESTS = [
 
 export const AGE_RANGES = ["Under 18", "18–24", "25–34", "35–44", "45–54", "55+"];
 
-export const INTEREST_TYPES = [
-  "Visitor",
-  "Exhibitor",
-  "Sponsor",
-  "Speaker",
-  "Artist",
-  "Athlete",
-  "Investor",
-  "Media",
-  "Supplier",
-  "Volunteer",
-  "Partner",
-];
+export const INTEREST_TYPES = ["Visitor", "Exhibitor", "Sponsor", "Speaker", "Artist", "Athlete", "Investor", "Media", "Supplier", "Volunteer", "Partner"];
 
 export const SESSION_TYPE_LABELS: Record<SessionType, string> = {
   REGISTRATION: "Registration",
@@ -125,8 +113,14 @@ export const MEDIA_SECTIONS: Record<string, { title: string; types: DocumentType
   "press-releases": { title: "Press releases", types: ["PRESS_RELEASE"] },
   speeches: { title: "Speeches", types: ["SPEECH"] },
   presentations: { title: "Presentations", types: ["PRESENTATION"] },
-  "press-kits": { title: "Press kits & brand assets", types: ["PRESS_KIT", "BRAND_ASSET"] },
-  documents: { title: "Reports & programmes", types: ["REPORT", "PROGRAMME", "OTHER"] },
+  "press-kits": {
+    title: "Press kits & brand assets",
+    types: ["PRESS_KIT", "BRAND_ASSET"],
+  },
+  documents: {
+    title: "Reports & programmes",
+    types: ["REPORT", "PROGRAMME", "OTHER"],
+  },
 };
 
 export const VIDEO_CATEGORY_LABELS: Record<VideoCategory, string> = {

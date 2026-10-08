@@ -7,12 +7,16 @@ const OFFSET_MS = 2 * 60 * 60 * 1000;
 const STARTING_SOON_MS = 30 * 60 * 1000;
 const DEFAULT_DURATION_MS = 2 * 60 * 60 * 1000;
 
-const fmt = (options: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, ...options });
+const fmt = (options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, ...options });
 
 const timeFmt = fmt({ hour: "2-digit", minute: "2-digit", hour12: false });
 const dayFmt = fmt({ weekday: "short", day: "numeric", month: "short" });
-const longDayFmt = fmt({ weekday: "long", day: "numeric", month: "long", year: "numeric" });
+const longDayFmt = fmt({
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
 const dateFmt = fmt({ day: "numeric", month: "long", year: "numeric" });
 const keyFmt = new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE });
 

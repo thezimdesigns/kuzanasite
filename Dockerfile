@@ -27,10 +27,8 @@ COPY . .
 # NEXT_PUBLIC_* values are compiled into the browser bundle, so they are build arguments.
 ARG NEXT_PUBLIC_SITE_URL=https://www.kuzana.org.zw
 ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY=""
-ARG NEXT_PUBLIC_RECAPTCHA_SITE_KEY=""
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
-    NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY \
-    NEXT_PUBLIC_RECAPTCHA_SITE_KEY=$NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY
 RUN npx prisma generate && BETTER_AUTH_SECRET=build-time-placeholder-not-used-at-runtime npm run build
 
 # ---------------------------------------------------------------------------

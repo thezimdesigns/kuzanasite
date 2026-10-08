@@ -15,7 +15,9 @@ export const metadata: Metadata = {
 export default async function VenuesPage() {
   const venues = await db.venue.findMany({
     orderBy: { sortOrder: "asc" },
-    include: { _count: { select: { events: { where: { publishStatus: "PUBLISHED" } } } } },
+    include: {
+      _count: { select: { events: { where: { publishStatus: "PUBLISHED" } } } },
+    },
   });
   return (
     <>

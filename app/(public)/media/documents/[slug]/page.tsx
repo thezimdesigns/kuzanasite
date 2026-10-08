@@ -29,14 +29,18 @@ export default async function DocumentPage({ params }: PageProps<"/media/documen
   return (
     <>
       <PageHeader
-        back={{ href: "/media", label: `Media centre: ${DOCUMENT_TYPE_LABELS[d.type]}` }}
+        back={{
+          href: "/media",
+          label: `Media centre: ${DOCUMENT_TYPE_LABELS[d.type]}`,
+        }}
         title={d.title}
         intro={[d.date && formatDate(d.date), d.author].filter(Boolean).join(" · ")}
       >
         <div className="flex flex-col gap-4">
           {download && (
             <ButtonLink href={download} size="lg" className="w-fit" prefetch={false}>
-              <Download className="size-5" /> Download{d.size ? ` (${formatBytes(d.size)})` : ""}
+              <Download className="size-5" /> Download
+              {d.size ? ` (${formatBytes(d.size)})` : ""}
             </ButtonLink>
           )}
           <ShareButtons title={d.title} path={`/media/documents/${d.slug}`} />

@@ -19,7 +19,11 @@ export async function generateMetadata({ params }: PageProps<"/news/[slug]">): P
     title: p.title,
     description: p.excerpt ?? undefined,
     alternates: { canonical: `/news/${p.slug}` },
-    openGraph: { type: "article", publishedTime: p.publishedAt.toISOString(), ...(cover && { images: [cover] }) },
+    openGraph: {
+      type: "article",
+      publishedTime: p.publishedAt.toISOString(),
+      ...(cover && { images: [cover] }),
+    },
   };
 }
 
@@ -28,7 +32,11 @@ export default async function NewsArticle({ params }: PageProps<"/news/[slug]">)
   if (!p) notFound();
   const cover = fileUrl(p.coverKey);
   const more = await db.newsPost.findMany({
-    where: { publishStatus: "PUBLISHED", publishedAt: { lte: new Date() }, id: { not: p.id } },
+    where: {
+      publishStatus: "PUBLISHED",
+      publishedAt: { lte: new Date() },
+      id: { not: p.id },
+    },
     orderBy: { publishedAt: "desc" },
     take: 3,
   });

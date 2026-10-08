@@ -47,10 +47,18 @@ export function CompletionLink({ exhibitorId, phone, name }: { exhibitorId: stri
         >
           <Copy className="size-4" /> {copied ? "Copied" : "Copy message"}
         </Button>
-        <a href={wa} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3.5 py-1.5 text-sm font-bold text-white">
+        <a
+          href={wa}
+          target="_blank"
+          rel="noopener"
+          className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3.5 py-1.5 text-sm font-bold text-white"
+        >
           <MessageCircle className="size-4" /> Send by WhatsApp
         </a>
-        <a href={`sms:${phone}?body=${encodeURIComponent(message)}`} className="inline-flex items-center rounded-full border border-line px-3.5 py-1.5 text-sm font-semibold">
+        <a
+          href={`sms:${phone}?body=${encodeURIComponent(message)}`}
+          className="inline-flex items-center rounded-full border border-line px-3.5 py-1.5 text-sm font-semibold"
+        >
           SMS
         </a>
       </div>

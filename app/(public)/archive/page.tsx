@@ -12,7 +12,17 @@ export const metadata: Metadata = {
 export default async function ArchivePage() {
   const editions = await db.edition.findMany({
     orderBy: { year: "desc" },
-    include: { _count: { select: { events: true, exhibitors: { where: { status: "APPROVED" } }, albums: true, videos: true, documents: true } } },
+    include: {
+      _count: {
+        select: {
+          events: true,
+          exhibitors: { where: { status: "APPROVED" } },
+          albums: true,
+          videos: true,
+          documents: true,
+        },
+      },
+    },
   });
   return (
     <>
@@ -28,7 +38,8 @@ export default async function ArchivePage() {
                     {formatDate(e.startDate)} – {formatDate(e.endDate)}
                   </p>
                   <p className="mt-3 text-sm">
-                    {e._count.events} events · {e._count.exhibitors} exhibitors · {e._count.albums} albums · {e._count.videos} videos · {e._count.documents} documents
+                    {e._count.events} events · {e._count.exhibitors} exhibitors · {e._count.albums} albums · {e._count.videos} videos · {e._count.documents}{" "}
+                    documents
                   </p>
                 </Link>
               </li>

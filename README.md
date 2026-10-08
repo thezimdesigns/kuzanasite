@@ -62,8 +62,8 @@ Garage needs no public domain.
    pick `thezimdesigns/kuzanasite`, branch `main`.
 2. **Build Pack: Docker Compose**, compose file `/docker-compose.yml`.
 3. **Environment Variables:** add everything from [`.env.example`](.env.example).
-   Tick **"Build Variable"** for `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
-   and `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` (they are compiled into the browser bundle).
+   Tick **"Build Variable"** for `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+   (they are compiled into the browser bundle). reCAPTCHA is off until `RECAPTCHA_ENABLED=true`.
 4. **Domains:** on the `app` service set `https://www.kuzana.org.zw,https://kuzana.org.zw`,
    then enable the redirect to `www`.
 5. Remove `kuzana.org.zw` / `www.kuzana.org.zw` from the **old landing-page resource**

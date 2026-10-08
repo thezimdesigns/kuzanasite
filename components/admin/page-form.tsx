@@ -19,12 +19,7 @@ export function PageForm({ values: v, readOnly }: { values: { id: string; title:
               <Field label="Intro line">
                 <Input name="summary" defaultValue={v.summary} />
               </Field>
-              <Field
-                label="Content"
-                required
-                error={state.errors?.body}
-                hint="Markdown: ## Heading, **bold**, - bullet, [link text](/programme)"
-              >
+              <Field label="Content" required error={state.errors?.body} hint="Markdown: ## Heading, **bold**, - bullet, [link text](/programme)">
                 <Textarea name="body" rows={22} defaultValue={v.body} className="font-mono text-sm" />
               </Field>
             </div>

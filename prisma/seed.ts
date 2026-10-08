@@ -258,6 +258,18 @@ async function main() {
     });
   }
 
+  // Service provider categories (then managed in Admin → Service providers)
+  if ((await db.serviceCategory.count()) === 0) {
+    const names = [
+      "Photography", "Videography", "Design", "News & media", "Security", "Logistics", "Transport",
+      "Internet & connectivity", "Lighting", "Stage & sound", "Exhibition stalls", "Printing & branding",
+      "Catering", "Cleaning", "Medical & first aid", "Ushering & volunteers",
+    ];
+    await db.serviceCategory.createMany({
+      data: names.map((name, i) => ({ name, slug: name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-"), sortOrder: i })),
+    });
+  }
+
   // Footer links (then managed in Admin → Footer) --------------------------------
   if ((await db.footerLink.count()) === 0) {
     await db.footerLink.createMany({ data: DEFAULT_FOOTER_LINKS.map((l, i) => ({ ...l, sortOrder: i })) });
