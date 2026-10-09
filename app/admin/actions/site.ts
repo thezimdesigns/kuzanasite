@@ -2,6 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { adminFormAction, runAdmin } from "@/lib/admin-action";
 import { db } from "@/lib/db";
@@ -12,6 +13,8 @@ import { uniqueSlug } from "@/lib/slug";
 import { deleteObject } from "@/lib/storage";
 import { parseLocalInput } from "@/lib/time";
 import { DEFAULT_FOOTER_LINKS } from "@/lib/footer-defaults";
+import { allNavLinks } from "@/lib/nav";
+import { getHiddenNav, NAV_HIDDEN_KEY } from "@/lib/nav-settings";
 import { FOOTER_SETTING_DEFAULTS } from "@/lib/site-settings";
 
 // ---------------------------------------------------------------------------
@@ -430,4 +433,20 @@ export async function moveServiceCategory(id: string, direction: -1 | 1) {
 /** Providers in a deleted category stay, under "Other services". */
 export async function deleteServiceCategory(id: string) {
   return runAdmin("site", () => db.serviceCategory.delete({ where: { id } }));
+}
+
+// ---------------------------------------------------------------------------
+// Menu links on/off
+// ---------------------------------------------------------------------------
+
+export async function setNavLinkVisible(href: string, visible: boolean) {
+  return runAdmin("site", async () => {
+    if (!allNavLinks().some((l) => l.href === href)) throw new Error("Unknown menu link.");
+    const hidden = new Set(await getHiddenNav());
+    if (visible) hidden.delete(href);
+    else hidden.add(href);
+    const value = JSON.stringify([...hidden]);
+    await db.siteSetting.upsert({ where: { key: NAV_HIDDEN_KEY }, update: { value }, create: { key: NAV_HIDDEN_KEY, value } });
+    revalidatePath("/", "layout");
+  });
 }

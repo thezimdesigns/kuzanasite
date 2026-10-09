@@ -136,6 +136,12 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
       editable: can(user, "site"),
     },
     {
+      href: "/admin/menu",
+      label: "Menu",
+      icon: "menu",
+      editable: can(user, "site"),
+    },
+    {
       href: "/admin/footer",
       label: "Footer",
       icon: "footer",

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight, CalendarDays, ChevronDown, Map as MapIcon, Menu, Radio, Search, Store, X } from "lucide-react";
-import { isActivePath, NAV_GROUPS, PRIMARY_NAV, QUICK_NAV } from "@/lib/nav";
+import { isActivePath, visibleNav } from "@/lib/nav";
 import { cn } from "@/components/ui";
 
 const QUICK_ICONS = {
@@ -19,7 +19,9 @@ const QUICK_ICONS = {
  * Header: four direct links plus an "Explore" mega menu on desktop;
  * a slide-in drawer with quick tiles and grouped links on phones.
  */
-export function SiteHeader({ logoUrl }: { logoUrl: string }) {
+export function SiteHeader({ logoUrl, hiddenNav = [] }: { logoUrl: string; hiddenNav?: string[] }) {
+  // Links an admin has switched off are left out of every menu.
+  const { primary: PRIMARY_NAV, quick: QUICK_NAV, groups: NAV_GROUPS } = visibleNav(hiddenNav);
   const pathname = usePathname();
   // Panels remember the page they were opened on, so they close on navigation.
   const [megaOn, setMegaOn] = useState<string | null>(null);

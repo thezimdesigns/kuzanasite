@@ -1,4 +1,5 @@
 import { getBranding } from "@/lib/branding";
+import { getHiddenNav } from "@/lib/nav-settings";
 import { SOCIAL_LINKS, siteUrl } from "@/lib/site";
 import { recaptchaConfig } from "@/lib/recaptcha";
 import { RecaptchaProvider } from "@/components/public/use-recaptcha";
@@ -11,7 +12,7 @@ import { FxLayer } from "@/components/public/fx";
 import { ScrollToTop } from "@/components/public/site-chrome";
 
 export default async function PublicLayout({ children }: LayoutProps<"/">) {
-  const { logoUrl } = await getBranding();
+  const [{ logoUrl }, hiddenNav] = await Promise.all([getBranding(), getHiddenNav()]);
   const recaptcha = recaptchaConfig();
   return (
     <>
@@ -19,12 +20,12 @@ export default async function PublicLayout({ children }: LayoutProps<"/">) {
         Skip to content
       </a>
       <AnnouncementBanner />
-      <SiteHeader logoUrl={logoUrl} />
+      <SiteHeader logoUrl={logoUrl} hiddenNav={hiddenNav} />
       <main id="main" className="min-h-[60vh]">
         <RecaptchaProvider siteKey={recaptcha.siteKey}>{children}</RecaptchaProvider>
       </main>
       <SiteFooter />
-      <MobileTabBar />
+      <MobileTabBar hiddenNav={hiddenNav} />
       <ScrollToTop />
       <FxLayer />
       <Analytics />

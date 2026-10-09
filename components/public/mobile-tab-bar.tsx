@@ -2,24 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Images, MessageSquare, Radio, Store } from "lucide-react";
+import { CalendarDays, Images, MessageSquare, Radio, Store, type LucideIcon } from "lucide-react";
+import { visibleNav } from "@/lib/nav";
 import { cn } from "@/components/ui";
 
-const TABS = [
-  { href: "/live", label: "Live", icon: Radio },
-  { href: "/programme/today", label: "Today", icon: CalendarDays },
-  { href: "/exhibitors", label: "Exhibitors", icon: Store },
-  { href: "/gallery", label: "Gallery", icon: Images },
-  { href: "/feedback", label: "Feedback", icon: MessageSquare },
-];
+const ICONS: Record<string, LucideIcon> = {
+  "/live": Radio,
+  "/programme/today": CalendarDays,
+  "/exhibitors": Store,
+  "/gallery": Images,
+  "/feedback": MessageSquare,
+};
 
 /** Event-time shortcuts, always visible on phones. */
-export function MobileTabBar() {
+export function MobileTabBar({ hiddenNav = [] }: { hiddenNav?: string[] }) {
   const pathname = usePathname();
+  const tabs = visibleNav(hiddenNav).tabs;
+  if (!tabs.length) return null;
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label="Quick links">
-      <ul className="grid grid-cols-5">
-        {TABS.map(({ href, label, icon: Icon }) => {
+      <ul className="grid" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
+        {tabs.map(({ href, label }) => {
+          const Icon = ICONS[href] ?? Radio;
           const active = pathname === href || (href !== "/programme/today" && pathname.startsWith(`${href}/`));
           return (
             <li key={href}>
