@@ -11,6 +11,7 @@ import { PrismaClient } from "../lib/generated/prisma/client";
 import { DEFAULT_FOOTER_LINKS } from "../lib/footer-defaults";
 import { applyConferenceProgrammes } from "./content/conferences-2026";
 import { applyDayOneFigures } from "./content/stats-2026";
+import { applyFridayProgrammes } from "./content/friday-2026";
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 
@@ -201,6 +202,8 @@ async function main() {
   // Official conference running orders (applied once; later CMS edits are kept).
   await applyConferenceProgrammes(db);
   await applyDayOneFigures(db);
+  // Never let a content update stop a deploy.
+  await applyFridayProgrammes(db).catch((e) => console.error("Friday programmes not applied:", e));
 
   // Partners ------------------------------------------------------------------
   if ((await db.partner.count()) === 0) {
