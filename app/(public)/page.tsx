@@ -19,7 +19,7 @@ import { currentQaConference } from "@/lib/qa";
 import { LeadStory, NewsRow } from "@/components/public/news-blocks";
 import { PartnerStrip } from "@/components/public/partner-strip";
 import { ProgrammeList } from "@/components/public/programme-list";
-import { Rail } from "@/components/public/rail";
+import { WeekRail } from "@/components/public/week-rail";
 import { WeekStrip } from "@/components/public/week-strip";
 import { cn, EmptyState, Section, SectionTitle } from "@/components/ui";
 
@@ -31,55 +31,59 @@ const SectionLink = ({ href, children }: { href: string; children: string }) => 
 
 export default async function HomePage() {
   const edition = await getCurrentEdition();
-  const [board, events, announcements, news, albums, videos, exhibitors, exhibitorCount, partners, branding, mentions, [stats, statsBefore], qaConference] = await Promise.all([
-    getLiveBoard(),
-    getEditionEvents(),
-    getActiveAnnouncements(3),
-    getNews(4),
-    db.photoAlbum.findMany({
-      where: { publishStatus: "PUBLISHED" },
-      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-      take: 4,
-      include: {
-        _count: { select: { photos: true } },
-        photos: { take: 1, orderBy: { sortOrder: "asc" } },
-      },
-    }),
-    db.video.findMany({
-      where: { publishStatus: "PUBLISHED" },
-      orderBy: [{ featured: "desc" }, { date: "desc" }],
-      take: 3,
-    }),
-    db.exhibitor.findMany({
-      where: { status: "APPROVED" },
-      orderBy: { updatedAt: "desc" },
-      take: 6,
-      include: { category: true, media: { where: { kind: "BOOTH" }, take: 1 } },
-    }),
-    db.exhibitor.count({ where: { status: "APPROVED" } }),
-    db.partner.findMany({
-      where: {
-        tier: { in: ["CONVENOR", "HOST", "TECHNICAL_PARTNER", "PARTNER"] },
-        ...(edition && {
-          OR: [{ editionId: edition.id }, { editionId: null }],
-        }),
-      },
-      orderBy: { sortOrder: "asc" },
-    }),
-    getBranding(),
-    db.mediaMention.findMany({
-      where: { publishStatus: "PUBLISHED" },
-      orderBy: [{ featured: "desc" }, { publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
-      // Three on the homepage (one per column); the rest are at /media/coverage.
-      take: 3,
-    }),
-    getPublishedReports(2),
-    currentQaConference(),
-  ]);
+  const [board, events, announcements, news, albums, videos, exhibitors, exhibitorCount, partners, branding, mentions, [stats, statsBefore], qaConference] =
+    await Promise.all([
+      getLiveBoard(),
+      getEditionEvents(),
+      getActiveAnnouncements(3),
+      getNews(4),
+      db.photoAlbum.findMany({
+        where: { publishStatus: "PUBLISHED" },
+        orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+        take: 4,
+        include: {
+          _count: { select: { photos: true } },
+          photos: { take: 1, orderBy: { sortOrder: "asc" } },
+        },
+      }),
+      db.video.findMany({
+        where: { publishStatus: "PUBLISHED" },
+        orderBy: [{ featured: "desc" }, { date: "desc" }],
+        take: 3,
+      }),
+      db.exhibitor.findMany({
+        where: { status: "APPROVED" },
+        orderBy: { updatedAt: "desc" },
+        take: 6,
+        include: { category: true, media: { where: { kind: "BOOTH" }, take: 1 } },
+      }),
+      db.exhibitor.count({ where: { status: "APPROVED" } }),
+      db.partner.findMany({
+        where: {
+          tier: { in: ["CONVENOR", "HOST", "TECHNICAL_PARTNER", "PARTNER"] },
+          ...(edition && {
+            OR: [{ editionId: edition.id }, { editionId: null }],
+          }),
+        },
+        orderBy: { sortOrder: "asc" },
+      }),
+      getBranding(),
+      db.mediaMention.findMany({
+        where: { publishStatus: "PUBLISHED" },
+        orderBy: [{ featured: "desc" }, { publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+        // Three on the homepage (one per column); the rest are at /media/coverage.
+        take: 3,
+      }),
+      getPublishedReports(2),
+      currentQaConference(),
+    ]);
 
   const now = new Date();
   const today = dateKey(now);
   const happening = [...board.live, ...board.startingSoon];
+  // The week rail: completed events (oldest first) to the left of "Now", the rest to the right.
+  const weekPast = events.filter((e) => computeStatus(e, now) === "COMPLETED");
+  const weekAhead = events.filter((e) => computeStatus(e, now) !== "COMPLETED");
   const [leadStory, ...moreNews] = news.posts;
 
   // "Day 2 of 5" while the edition is running.
@@ -273,7 +277,7 @@ export default async function HomePage() {
         </section>
       )}
 
-            {/* News: one lead story and a column of headlines */}
+      {/* News: one lead story and a column of headlines */}
       {leadStory && (
         <Section>
           <SectionTitle action={<SectionLink href="/news">All news</SectionLink>}>News</SectionTitle>
@@ -302,13 +306,15 @@ export default async function HomePage() {
       {events.length > 0 && (
         <Section>
           <SectionTitle action={<SectionLink href="/programme">Full programme</SectionLink>}>The KUZANA week</SectionTitle>
-          <Rail label="KUZANA week events">
-            {events.map((e) => (
-              <div key={e.id} className="w-[78%] shrink-0 sm:w-[42%] lg:w-[calc(25%-0.75rem)]">
-                <EventCard event={e} status={computeStatus(e, now)} />
-              </div>
+          <WeekRail
+            label="KUZANA week events"
+            past={weekPast.map((e) => (
+              <EventCard key={e.id} event={e} status={computeStatus(e, now)} />
             ))}
-          </Rail>
+            ahead={weekAhead.map((e) => (
+              <EventCard key={e.id} event={e} status={computeStatus(e, now)} />
+            ))}
+          />
         </Section>
       )}
 
