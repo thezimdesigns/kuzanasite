@@ -50,6 +50,13 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
       editable: can(user, "exhibitors"),
     },
     {
+      href: "/admin/enquiries",
+      label: "Visitor enquiries",
+      icon: "enquiries",
+      editable: can(user, "exhibitors"),
+      hidden: !can(user, "exhibitors"),
+    },
+    {
       href: "/admin/floor-plans",
       label: "Floor plans",
       icon: "floorplans",
@@ -152,7 +159,10 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
 
   return (
     <div className="min-h-dvh bg-cream lg:grid lg:grid-cols-[15rem_1fr]">
-      <AdminNav items={user.role === "QA_MODERATOR" ? items.filter((i) => i.href === "/admin/qa") : items.filter((i) => !i.hidden)} user={{ name: user.name, role: ROLE_LABELS[user.role] }} />
+      <AdminNav
+        items={user.role === "QA_MODERATOR" ? items.filter((i) => i.href === "/admin/qa") : items.filter((i) => !i.hidden)}
+        user={{ name: user.name, role: ROLE_LABELS[user.role] }}
+      />
       <main className="min-w-0 pb-16">{children}</main>
     </div>
   );

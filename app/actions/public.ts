@@ -8,7 +8,7 @@ import { requireCurrentEdition } from "@/lib/edition";
 import { exhibitorCodeValid } from "@/lib/exhibitor-access";
 import { checkbox, formToObject, invalid, optionalEmail, optionalText, optionalUrl, phone, requiredText, stringValues, type FormState } from "@/lib/forms";
 import { ExhibitorMediaKind } from "@/lib/generated/prisma/enums";
-import { FEEDBACK_CATEGORIES, INTEREST_TYPES, OPPORTUNITIES, VISITOR_INTERESTS, VISITOR_TYPES } from "@/lib/options";
+import { ENQUIRY_TOPICS, FEEDBACK_CATEGORIES, INTEREST_TYPES, OPPORTUNITIES, VISITOR_INTERESTS, VISITOR_TYPES } from "@/lib/options";
 import { qaAutoApprove, voterId } from "@/lib/qa";
 import { rateLimit } from "@/lib/rate-limit";
 import { verifyRecaptcha } from "@/lib/recaptcha";
@@ -369,6 +369,42 @@ export async function removePushSubscription(endpoint: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Enquiries to exhibitors (forwarded to the exhibitor after the expo)
+// ---------------------------------------------------------------------------
+
+const enquirySchema = z
+  .object({
+    exhibitorId: z.string().min(1).max(40),
+    name: requiredText("Your name"),
+    organisation: optionalText(200),
+    email: optionalEmail,
+    phone: optionalText(30),
+    topic: z.enum(ENQUIRY_TOPICS, { error: "Choose what it's about." }),
+    message: z.string().trim().min(5, "Write a short message.").max(2000),
+    consent: checkbox.refine((v) => v, "Tick this so the exhibitor can reply to you."),
+  })
+  .refine((v) => v.email || v.phone, {
+    message: "Give an email address or a phone number so they can reply.",
+    path: ["email"],
+  });
+
+export async function submitEnquiry(_: FormState, fd: FormData): Promise<FormState> {
+  const blocked = await guard(fd, "enquiry", 8, 600);
+  if (blocked) return blocked;
+  const parsed = enquirySchema.safeParse(formToObject(fd));
+  if (!parsed.success) return invalid(parsed.error, fd);
+  const { consent: _consent, exhibitorId, ...data } = parsed.data;
+  void _consent;
+  const exhibitor = await db.exhibitor.findFirst({ where: { id: exhibitorId, status: "APPROVED" }, select: { id: true, name: true } });
+  if (!exhibitor) return { ok: false, message: "This exhibitor is no longer listed." };
+  await db.exhibitorEnquiry.create({ data: { ...data, exhibitorId: exhibitor.id } });
+  return {
+    ok: true,
+    message: `Thank you. Your enquiry is saved and KUZANA will pass it to ${exhibitor.name}.`,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Ratings
 // ---------------------------------------------------------------------------
 
@@ -467,8 +503,14 @@ export async function voteQuestion(questionId: string) {
   const existing = await db.questionVote.findUnique({ where: { questionId_voter: { questionId, voter } } });
   const [, updated] = await db.$transaction(
     existing
-      ? [db.questionVote.delete({ where: { questionId_voter: { questionId, voter } } }), db.conferenceQuestion.update({ where: { id: questionId }, data: { votes: { decrement: 1 } } })]
-      : [db.questionVote.create({ data: { questionId, voter } }), db.conferenceQuestion.update({ where: { id: questionId }, data: { votes: { increment: 1 } } })],
+      ? [
+          db.questionVote.delete({ where: { questionId_voter: { questionId, voter } } }),
+          db.conferenceQuestion.update({ where: { id: questionId }, data: { votes: { decrement: 1 } } }),
+        ]
+      : [
+          db.questionVote.create({ data: { questionId, voter } }),
+          db.conferenceQuestion.update({ where: { id: questionId }, data: { votes: { increment: 1 } } }),
+        ],
   );
   return { ok: true as const, votes: updated.votes, voted: !existing };
 }

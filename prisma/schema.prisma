@@ -485,6 +485,7 @@ model Exhibitor {
   claimTokens ExhibitorClaimToken[]
   ratings     Rating[]
   stalls      FloorPlanStall[]
+  enquiries   ExhibitorEnquiry[]
 
   @@index([status, name])
   @@index([categoryId])
@@ -669,6 +670,28 @@ model Feedback {
   updatedAt         DateTime       @updatedAt
 
   @@index([status, createdAt])
+}
+
+/// A visitor's enquiry to an exhibitor, collected on the exhibitor's profile and
+/// forwarded to the exhibitor in one consolidated email after the expo.
+model ExhibitorEnquiry {
+  id            String    @id @default(cuid())
+  exhibitorId   String
+  exhibitor     Exhibitor @relation(fields: [exhibitorId], references: [id], onDelete: Cascade)
+  name          String
+  organisation  String?
+  email         String?
+  phone         String?
+  topic         String
+  message       String
+  /// When the enquiry was passed on to the exhibitor (email, or marked by staff).
+  forwardedAt   DateTime?
+  forwardedById String?
+  forwardedVia  String?
+  createdAt     DateTime  @default(now())
+
+  @@index([exhibitorId, forwardedAt])
+  @@index([createdAt])
 }
 
 model Rating {

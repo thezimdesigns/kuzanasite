@@ -7,6 +7,7 @@ import { Download, Globe, Map as MapIcon, Mail, MapPin, MessageCircle, Phone, St
 import { db } from "@/lib/db";
 import { fileUrl, formatBytes } from "@/lib/files";
 import { findExhibitorStall } from "@/lib/floor-plans";
+import { EnquiryForm } from "@/components/public/enquiry-form";
 import { RatingForm } from "@/components/public/rating-form";
 import { ShareButtons } from "@/components/public/share-buttons";
 import { Badge, Card, Section, SectionTitle } from "@/components/ui";
@@ -158,6 +159,9 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
         </div>
 
         <aside className="space-y-6">
+          <Card className="p-5">
+            <EnquiryForm exhibitorId={x.id} exhibitorName={x.name} />
+          </Card>
           <Card className="p-5">
             {rating._count.stars >= 3 && (
               <p className="mb-3 flex items-center gap-1.5 text-sm">

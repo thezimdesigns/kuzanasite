@@ -5,6 +5,8 @@ import { z } from "zod";
 import { adminFormAction, runAdmin } from "@/lib/admin-action";
 import { createClaimToken } from "@/lib/claim";
 import { db } from "@/lib/db";
+import { emailConfigured, sendEmail } from "@/lib/email/ses";
+import { enquiryDigest, pendingEnquiries } from "@/lib/enquiries";
 import { requireCurrentEdition } from "@/lib/edition";
 import { checkbox, optionalEmail, optionalText, optionalUrl, phone, requiredText } from "@/lib/forms";
 import { ExhibitorMediaKind, ExhibitorStatus, PublishStatus } from "@/lib/generated/prisma/enums";
@@ -293,4 +295,57 @@ export async function updateStall(id: string, label: string, exhibitorId: string
 
 export async function deleteStall(id: string) {
   return runAdmin("exhibitors", () => db.floorPlanStall.delete({ where: { id } }));
+}
+
+// ---------------------------------------------------------------------------
+// Visitor enquiries
+// ---------------------------------------------------------------------------
+
+/**
+ * Emails each exhibitor (one, or every one with pending enquiries) a digest of
+ * its unsent enquiries. Returns a message rather than throwing, so the outcome
+ * reaches the screen in production.
+ */
+export async function emailEnquiries(exhibitorId?: string): Promise<{ ok: boolean; message: string }> {
+  return runAdmin("exhibitors", async (user) => {
+    if (!emailConfigured()) return { ok: false, message: "Email isn't set up on the server yet. Copy the text or download the CSV instead." };
+    const groups = await pendingEnquiries(exhibitorId);
+    let sent = 0;
+    const noEmail: string[] = [];
+    const failed: string[] = [];
+    for (const x of groups) {
+      if (!x.email) {
+        noEmail.push(x.name);
+        continue;
+      }
+      const digest = enquiryDigest({ ...x, year: x.edition.year }, x.enquiries);
+      if (!(await sendEmail({ to: x.email, subject: digest.subject, html: digest.html, text: digest.text }))) {
+        failed.push(x.name);
+        continue;
+      }
+      await db.exhibitorEnquiry.updateMany({
+        where: { id: { in: x.enquiries.map((e) => e.id) } },
+        data: { forwardedAt: new Date(), forwardedById: user.id, forwardedVia: `email to ${x.email}` },
+      });
+      sent++;
+    }
+    const parts = [`Sent to ${sent} exhibitor${sent === 1 ? "" : "s"}.`];
+    if (noEmail.length) parts.push(`No email address: ${noEmail.join(", ")}.`);
+    if (failed.length) parts.push(`Email failed: ${failed.join(", ")}.`);
+    return { ok: !noEmail.length && !failed.length, message: parts.join(" ") };
+  });
+}
+
+/** For enquiries passed on another way (WhatsApp, in person). */
+export async function markEnquiriesForwarded(exhibitorId: string) {
+  return runAdmin("exhibitors", (user) =>
+    db.exhibitorEnquiry.updateMany({
+      where: { exhibitorId, forwardedAt: null },
+      data: { forwardedAt: new Date(), forwardedById: user.id, forwardedVia: "marked by staff" },
+    }),
+  );
+}
+
+export async function deleteEnquiry(id: string) {
+  return runAdmin("exhibitors", () => db.exhibitorEnquiry.delete({ where: { id } }));
 }

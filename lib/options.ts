@@ -164,3 +164,13 @@ export const PARTNER_TIER_LABELS: Record<PartnerTier, string> = {
   MEDIA: "Media partner",
   SUPPORTER: "Supporter",
 };
+
+/** What a visitor's enquiry to an exhibitor is about. */
+export const ENQUIRY_TOPICS = [
+  "Buying products or services",
+  "Wholesale or distribution",
+  "Partnership or collaboration",
+  "Sponsorship or investment",
+  "Booking or hiring",
+  "Something else",
+] as const;
