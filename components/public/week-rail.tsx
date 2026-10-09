@@ -25,7 +25,7 @@ export function WeekRail({ past, ahead, label }: { past: ReactNode[]; ahead: Rea
   useLayoutEffect(() => {
     const el = track.current;
     const marker = now.current;
-    if (el && marker) el.scrollLeft = marker.offsetLeft - el.offsetLeft;
+    if (el && marker) el.scrollLeft = marker.offsetLeft - el.offsetLeft - parseFloat(getComputedStyle(el).paddingLeft);
     measure();
   }, [measure]);
 
@@ -56,7 +56,7 @@ export function WeekRail({ past, ahead, label }: { past: ReactNode[]; ahead: Rea
           ))}
           {past.length > 0 && (
             // Where the past ends and today begins. Scroll target on load.
-            <div ref={now} aria-hidden className="flex w-6 shrink-0 flex-col items-center gap-2 py-2 [scroll-snap-align:start]">
+            <div ref={now} aria-hidden className="flex w-10 shrink-0 flex-col items-center gap-2 py-2 [scroll-snap-align:start]">
               <span className="rounded-[var(--radius-badge)] bg-orange px-1.5 py-0.5 text-[11px] font-bold text-white">Now</span>
               <span className="w-px flex-1 bg-gradient-to-b from-orange to-transparent" />
             </div>
@@ -71,7 +71,7 @@ export function WeekRail({ past, ahead, label }: { past: ReactNode[]; ahead: Rea
         <span
           aria-hidden
           className={cn(
-            "pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-cream to-transparent transition-opacity duration-300 sm:-left-1",
+            "pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-cream to-transparent transition-opacity duration-300 sm:-left-1",
             edges.start ? "opacity-0" : "opacity-100",
           )}
         />
