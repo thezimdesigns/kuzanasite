@@ -13,19 +13,28 @@ import { cn } from "@/components/ui";
 export function WeekRail({ past, ahead, label }: { past: ReactNode[]; ahead: ReactNode[]; label: string }) {
   const track = useRef<HTMLDivElement>(null);
   const now = useRef<HTMLDivElement>(null);
-  const [edges, setEdges] = useState({ start: true, end: false });
+  const home = useRef(0);
+  const [edges, setEdges] = useState({ start: true, end: false, home: true });
 
   const measure = useCallback(() => {
     const el = track.current;
     if (!el) return;
-    setEdges({ start: el.scrollLeft <= 4, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 });
+    setEdges({
+      start: el.scrollLeft <= 4,
+      end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4,
+      // Resting at "Now": the marker itself says the past is to the left, so no fade over it.
+      home: Math.abs(el.scrollLeft - home.current) <= 8,
+    });
   }, []);
 
   // Open at "Now" (before paint, so the past never flashes into view).
   useLayoutEffect(() => {
     const el = track.current;
     const marker = now.current;
-    if (el && marker) el.scrollLeft = marker.offsetLeft - el.offsetLeft - parseFloat(getComputedStyle(el).paddingLeft);
+    if (el && marker) {
+      el.scrollLeft = marker.offsetLeft - el.offsetLeft - parseFloat(getComputedStyle(el).paddingLeft);
+      home.current = el.scrollLeft;
+    }
     measure();
   }, [measure]);
 
@@ -47,7 +56,7 @@ export function WeekRail({ past, ahead, label }: { past: ReactNode[]; ahead: Rea
           aria-label={label}
           tabIndex={0}
           onScroll={measure}
-          className="rail -mx-4 flex gap-4 overflow-x-auto px-4 pb-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-dark sm:mx-0 sm:px-0"
+          className="rail -mx-4 flex scroll-px-4 gap-4 overflow-x-auto px-4 pb-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-dark sm:mx-0 sm:scroll-px-0 sm:px-0"
         >
           {past.map((p, i) => (
             <div key={`past-${i}`} className={cn(card, "opacity-75 transition-opacity duration-300 hover:opacity-100 focus-within:opacity-100")}>
@@ -56,7 +65,7 @@ export function WeekRail({ past, ahead, label }: { past: ReactNode[]; ahead: Rea
           ))}
           {past.length > 0 && (
             // Where the past ends and today begins. Scroll target on load.
-            <div ref={now} aria-hidden className="flex w-10 shrink-0 flex-col items-center gap-2 py-2 [scroll-snap-align:start]">
+            <div ref={now} aria-hidden className="flex w-12 shrink-0 flex-col items-center gap-2 py-2 [scroll-snap-align:start]">
               <span className="rounded-[var(--radius-badge)] bg-orange px-1.5 py-0.5 text-[11px] font-bold text-white">Now</span>
               <span className="w-px flex-1 bg-gradient-to-b from-orange to-transparent" />
             </div>
@@ -72,7 +81,7 @@ export function WeekRail({ past, ahead, label }: { past: ReactNode[]; ahead: Rea
           aria-hidden
           className={cn(
             "pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-cream to-transparent transition-opacity duration-300 sm:-left-1",
-            edges.start ? "opacity-0" : "opacity-100",
+            edges.start || edges.home ? "opacity-0" : "opacity-100",
           )}
         />
         <span
