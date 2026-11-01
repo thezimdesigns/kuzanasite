@@ -4,7 +4,8 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Megaphone, MessageCircleQuestion, MessageSquare, Search } from "lucide-react";
 import { getBranding } from "@/lib/branding";
 import { db } from "@/lib/db";
-import { getCurrentEdition } from "@/lib/edition";
+import { editionDates, getCurrentEdition, getSiteState } from "@/lib/edition";
+import { BetweenHome } from "@/components/public/home-between";
 import { getNews } from "@/lib/news";
 import { getActiveAnnouncements, getEditionEvents, getLiveBoard } from "@/lib/programme";
 import { computeStatus, dateKey, formatLongDay, startOfDay } from "@/lib/time";
@@ -30,6 +31,9 @@ const SectionLink = ({ href, children }: { href: string; children: string }) => 
 );
 
 export default async function HomePage() {
+  // Outside event week the homepage leads with stories and the next edition.
+  const site = await getSiteState();
+  if (site.phase === "between") return <BetweenHome next={site.next} past={site.past} />;
   const edition = await getCurrentEdition();
   const [board, events, announcements, news, albums, videos, exhibitors, exhibitorCount, partners, branding, mentions, [stats, statsBefore], qaConference] =
     await Promise.all([
@@ -124,7 +128,7 @@ export default async function HomePage() {
             className="hero-fade mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 font-heading font-semibold text-white/90"
             style={{ "--i": 1 } as CSSProperties}
           >
-            <span>7–11 October 2026</span>
+            {edition && <span>{editionDates(edition)}</span>}
             <span className="h-4 w-px bg-white/30" aria-hidden />
             <span>Bulawayo, Zimbabwe</span>
             {dayLabel && (
@@ -397,8 +401,8 @@ export default async function HomePage() {
           </h2>
           <div className="space-y-4 text-lg leading-relaxed text-ink/85">
             <p>
-              KUZANA SCEEZ 2026 is an inaugural sport, creative economy and investment platform designed to connect talent, capital, brands, institutions and
-              audiences.
+              KUZANA SCEEZ is a sport, creative economy and investment platform, first held in Bulawayo in 2026, designed to connect talent, capital, brands,
+              institutions and audiences.
             </p>
             <p>
               Talent must move beyond visibility into income, investment, intellectual property, business growth and national economic contribution. KUZANA

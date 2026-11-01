@@ -174,3 +174,36 @@ export const ENQUIRY_TOPICS = [
   "Booking or hiring",
   "Something else",
 ] as const;
+
+/** How someone took part, for "Share your KUZANA story". */
+export const STORY_ROLES = [
+  "Exhibitor",
+  "Speaker or panellist",
+  "Artist or performer",
+  "Athlete or sports body",
+  "Sponsor or partner",
+  "Media",
+  "Volunteer",
+  "Visitor",
+] as const;
+
+/** "Will you be back?" answers. Yes answers also register interest in the next edition. */
+export const RETURNING_OPTIONS = [
+  "Yes, as an exhibitor",
+  "Yes, as a sponsor or partner",
+  "Yes, as a speaker",
+  "Yes, as an artist or performer",
+  "Yes, as an athlete",
+  "Yes, as a visitor",
+  "Not sure yet",
+] as const;
+
+/** Maps a "Yes, as …" answer to the interest type stored for the next edition. */
+export const RETURNING_INTEREST: Record<string, (typeof INTEREST_TYPES)[number]> = {
+  "Yes, as an exhibitor": "Exhibitor",
+  "Yes, as a sponsor or partner": "Sponsor",
+  "Yes, as a speaker": "Speaker",
+  "Yes, as an artist or performer": "Artist",
+  "Yes, as an athlete": "Athlete",
+  "Yes, as a visitor": "Visitor",
+};

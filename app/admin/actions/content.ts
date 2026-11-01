@@ -6,7 +6,7 @@ import { adminFormAction, runAdmin } from "@/lib/admin-action";
 import { db } from "@/lib/db";
 import { getCurrentEdition } from "@/lib/edition";
 import { checkbox, optionalText, requiredText } from "@/lib/forms";
-import { MentionPlatform, PublishStatus } from "@/lib/generated/prisma/enums";
+import { MentionPlatform, NewsKind, PublishStatus } from "@/lib/generated/prisma/enums";
 import { detectPlatform, hostOf } from "@/lib/coverage";
 import { fetchLinkPreview } from "@/lib/link-preview";
 import { slugify, uniqueSlug } from "@/lib/slug";
@@ -33,42 +33,72 @@ const newsSchema = z.object({
     .string()
     .optional()
     .transform((v) => parseLocalInput(v) ?? new Date()),
+  kind: z.enum(NewsKind).default("UPDATE"),
+  seriesId: optionalText(40).transform((v) => v ?? null),
+  seriesPart: z.preprocess((v) => (v === "" || v == null ? undefined : v), z.coerce.number().int().min(1).max(999).optional()),
+  exhibitorIds: z.array(z.string().max(40)).default([]),
+  personIds: z.array(z.string().max(40)).default([]),
 });
 
+const NEWS_ARRAYS = { arrays: ["exhibitorIds", "personIds"] };
+
+/** Replaces the exhibitors and people a story features. */
+async function setFeatured(postId: string, d: { exhibitorIds: string[]; personIds: string[] }) {
+  await db.$transaction([
+    db.newsPostExhibitor.deleteMany({ where: { postId } }),
+    db.newsPostPerson.deleteMany({ where: { postId } }),
+    db.newsPostExhibitor.createMany({ data: [...new Set(d.exhibitorIds)].map((exhibitorId) => ({ postId, exhibitorId })), skipDuplicates: true }),
+    db.newsPostPerson.createMany({ data: [...new Set(d.personIds)].map((personId) => ({ postId, personId })), skipDuplicates: true }),
+  ]);
+}
+
 function newsData(d: z.infer<typeof newsSchema>) {
-  const { slug: _s, ...rest } = d;
+  const { slug: _s, exhibitorIds: _e, personIds: _p, ...rest } = d;
   return {
     ...rest,
     excerpt: d.excerpt ?? null,
     coverKey: d.coverKey ?? null,
     coverAlt: d.coverAlt ?? null,
     author: d.author ?? null,
+    seriesPart: d.seriesId ? (d.seriesPart ?? null) : null,
   };
 }
 
-export const createNews = adminFormAction("press", newsSchema, async (d, user) => {
-  const edition = await getCurrentEdition();
-  const slug = await uniqueSlug(d.slug || d.title, async (s) => !!(await db.newsPost.findUnique({ where: { slug: s } })));
-  const post = await db.newsPost.create({
-    data: {
-      ...newsData(d),
-      slug,
-      editionId: edition?.id,
-      createdById: user.id,
-    },
-  });
-  redirect(`/admin/news/${post.id}?saved=1`);
-});
+export const createNews = adminFormAction(
+  "press",
+  newsSchema,
+  async (d, user) => {
+    const edition = await getCurrentEdition();
+    const slug = await uniqueSlug(d.slug || d.title, async (s) => !!(await db.newsPost.findUnique({ where: { slug: s } })));
+    const post = await db.newsPost.create({
+      data: {
+        ...newsData(d),
+        slug,
+        editionId: edition?.id,
+        createdById: user.id,
+      },
+    });
+    await setFeatured(post.id, d);
+    redirect(`/admin/news/${post.id}?saved=1`);
+  },
+  NEWS_ARRAYS,
+);
 
-export const updateNews = adminFormAction("press", newsSchema.and(z.object({ id: z.string() })), async (d) => {
-  const old = await db.newsPost.findUniqueOrThrow({ where: { id: d.id } });
-  await db.newsPost.update({
-    where: { id: d.id },
-    data: { ...newsData(d), ...(d.slug && { slug: slugify(d.slug) }) },
-  });
-  if (old.coverKey && old.coverKey !== d.coverKey) await deleteObject(old.coverKey);
-  return { ok: true, message: "Story saved." };
-});
+export const updateNews = adminFormAction(
+  "press",
+  newsSchema.and(z.object({ id: z.string() })),
+  async (d) => {
+    const old = await db.newsPost.findUniqueOrThrow({ where: { id: d.id } });
+    await db.newsPost.update({
+      where: { id: d.id },
+      data: { ...newsData(d), ...(d.slug && { slug: slugify(d.slug) }) },
+    });
+    await setFeatured(d.id, d);
+    if (old.coverKey && old.coverKey !== d.coverKey) await deleteObject(old.coverKey);
+    return { ok: true, message: "Story saved." };
+  },
+  NEWS_ARRAYS,
+);
 
 export async function deleteNews(id: string) {
   await runAdmin("press", async () => {
@@ -76,6 +106,91 @@ export async function deleteNews(id: string) {
     if (p.coverKey) await deleteObject(p.coverKey);
   });
   redirect("/admin/news");
+}
+
+// ---------------------------------------------------------------------------
+// Series (e.g. "Signal")
+// ---------------------------------------------------------------------------
+
+const seriesSchema = z.object({
+  id: optionalText(40),
+  title: requiredText("Title", 80),
+  slug: z.string().trim().max(60).optional(),
+  tagline: optionalText(200),
+  description: optionalText(3000),
+  author: optionalText(120),
+  coverKey: optionalText(300),
+  sortOrder: z.coerce.number().int().min(0).max(999).default(0),
+  publishStatus: z.enum(PublishStatus),
+});
+
+export const saveSeries = adminFormAction("press", seriesSchema, async (d) => {
+  const { id, slug: rawSlug, ...data } = d;
+  const fields = { ...data, tagline: d.tagline ?? null, description: d.description ?? null, author: d.author ?? null, coverKey: d.coverKey ?? null };
+  if (id) {
+    const old = await db.series.findUniqueOrThrow({ where: { id } });
+    await db.series.update({ where: { id }, data: { ...fields, ...(rawSlug && { slug: slugify(rawSlug) }) } });
+    if (old.coverKey && old.coverKey !== fields.coverKey) await deleteObject(old.coverKey);
+    return { ok: true, message: "Series saved." };
+  }
+  const slug = await uniqueSlug(rawSlug || d.title, async (s) => !!(await db.series.findUnique({ where: { slug: s } })));
+  const created = await db.series.create({ data: { ...fields, slug } });
+  redirect(`/admin/series?edit=${created.id}`);
+});
+
+// ---------------------------------------------------------------------------
+// Story submissions ("Share your KUZANA story")
+// ---------------------------------------------------------------------------
+
+/** Turns a submission into a draft participant story, with the answers laid out as an interview to edit. */
+export async function startStoryDraft(id: string) {
+  const postId = await runAdmin("press", async (user) => {
+    const s = await db.storySubmission.findUniqueOrThrow({ where: { id } });
+    if (s.postId && (await db.newsPost.findUnique({ where: { id: s.postId } }))) return s.postId;
+    const who = s.organisation ? `${s.name} of ${s.organisation}` : s.name;
+    const qa = (q: string, a: string | null) => (a ? `**${q}**\n\n${a}` : null);
+    const body = [
+      `*Draft from ${who}'s answers to "Share your KUZANA story". Edit into a story before publishing.*`,
+      qa("How did you take part in KUZANA?", s.tookPart),
+      qa("What came out of it?", s.outcomes),
+      qa("What are you working on now?", s.workingOn),
+      qa("Will you be back?", s.returning),
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+    const edition = await getCurrentEdition();
+    const slug = await uniqueSlug(`${s.organisation ?? s.name} story`, async (x) => !!(await db.newsPost.findUnique({ where: { slug: x } })));
+    const post = await db.newsPost.create({
+      data: {
+        title: s.organisation ? `${s.organisation}: after KUZANA` : `${s.name}: after KUZANA`,
+        slug,
+        body,
+        kind: "STORY",
+        publishStatus: "DRAFT",
+        coverKey: s.photoKey,
+        coverAlt: s.photoKey ? who : null,
+        editionId: edition?.id,
+        createdById: user.id,
+        ...(s.exhibitorId && { exhibitors: { create: { exhibitorId: s.exhibitorId } } }),
+        ...(s.personId && { people: { create: { personId: s.personId } } }),
+      },
+    });
+    await db.storySubmission.update({ where: { id }, data: { status: "DRAFTED", postId: post.id } });
+    return post.id;
+  });
+  redirect(`/admin/news/${postId}`);
+}
+
+export async function setSubmissionStatus(id: string, status: "NEW" | "ARCHIVED") {
+  return runAdmin("press", () => db.storySubmission.update({ where: { id }, data: { status } }));
+}
+
+export async function deleteSeries(id: string) {
+  await runAdmin("press", async () => {
+    const s = await db.series.delete({ where: { id } });
+    if (s.coverKey) await deleteObject(s.coverKey);
+  });
+  redirect("/admin/series");
 }
 
 // ---------------------------------------------------------------------------

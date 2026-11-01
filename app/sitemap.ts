@@ -31,6 +31,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/floor-plan",
     "/credits",
     "/stats",
+    "/stories",
+    "/stories/share",
+    "/take-part",
     ...Object.keys(MEDIA_SECTIONS).map((s) => `/media/${s}`),
   ];
   const [events, exhibitors, people, venues, albums, docs, editions, news, routed, plans] = await Promise.all([
@@ -85,5 +88,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...news.map((n) => entry(`/news/${n.slug}`, n.updatedAt)),
     ...routed.map((e) => entry(`/events/${e.slug}/route`, e.updatedAt)),
     ...plans.map((p) => entry(`/floor-plan/${p.slug}`, p.updatedAt)),
+    ...(await db.series.findMany({ where: { publishStatus: "PUBLISHED" }, select: { slug: true, updatedAt: true } })).map((x) =>
+      entry(`/series/${x.slug}`, x.updatedAt),
+    ),
   ];
 }

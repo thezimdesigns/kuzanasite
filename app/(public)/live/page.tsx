@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AlertTriangle, Info, Megaphone } from "lucide-react";
 import { getActiveAnnouncements, getLiveBoard } from "@/lib/programme";
+import { getSiteState } from "@/lib/edition";
+import { BetweenNotice } from "@/components/public/between-notice";
 import { formatDay, formatLongDay, formatRange, formatTime } from "@/lib/time";
 import { AutoRefresh } from "@/components/public/auto-refresh";
 import { ProgrammeList } from "@/components/public/programme-list";
@@ -15,6 +17,7 @@ export const metadata: Metadata = {
 };
 
 export default async function LivePage() {
+  if ((await getSiteState()).phase === "between") return <BetweenNotice title="Live now" />;
   const now = new Date();
   const [board, announcements] = await Promise.all([getLiveBoard(now), getActiveAnnouncements(20)]);
 
@@ -56,14 +59,16 @@ export default async function LivePage() {
             </div>
           )}
           <div>
-            <SectionTitle action={<Link href="/programme/today" className="text-sm font-semibold text-green-800 underline">Full day</Link>}>
+            <SectionTitle
+              action={
+                <Link href="/programme/today" className="text-sm font-semibold text-green-800 underline">
+                  Full day
+                </Link>
+              }
+            >
               Later today
             </SectionTitle>
-            {board.laterToday.length ? (
-              <ProgrammeList items={board.laterToday} />
-            ) : (
-              <EmptyState>Nothing else is scheduled for today.</EmptyState>
-            )}
+            {board.laterToday.length ? <ProgrammeList items={board.laterToday} /> : <EmptyState>Nothing else is scheduled for today.</EmptyState>}
           </div>
           {board.next.length > 0 && (
             <div>
@@ -71,7 +76,10 @@ export default async function LivePage() {
               <ul className="space-y-2">
                 {board.next.map((e) => (
                   <li key={e.id}>
-                    <Link href={`/events/${e.slug}`} className="flex flex-wrap items-baseline justify-between gap-2 rounded-[var(--radius-control)] border border-line bg-white px-4 py-3 hover:border-green-800">
+                    <Link
+                      href={`/events/${e.slug}`}
+                      className="flex flex-wrap items-baseline justify-between gap-2 rounded-[var(--radius-control)] border border-line bg-white px-4 py-3 hover:border-green-800"
+                    >
                       <span className="font-heading font-bold">{e.title}</span>
                       <span className="text-sm text-muted">
                         {formatRange(e.startsAt, e.endsAt, e.timeTbc, e.dailyHours)}

@@ -39,6 +39,7 @@ export default async function AdminVisitors({ searchParams }: PageProps<"/admin/
       ? await db.interestRegistration.findMany({
           orderBy: { createdAt: "desc" },
           take: 200,
+          include: { edition: { select: { year: true } } },
         })
       : [];
 
@@ -173,6 +174,7 @@ export default async function AdminVisitors({ searchParams }: PageProps<"/admin/
                 <tr>
                   <th>Name</th>
                   <th>Interest</th>
+                  <th>For</th>
                   <th>Contact</th>
                   <th>Message</th>
                   <th>Received</th>
@@ -185,7 +187,11 @@ export default async function AdminVisitors({ searchParams }: PageProps<"/admin/
                       {r.name}
                       {r.organisation && <div className="text-xs text-muted">{r.organisation}</div>}
                     </td>
-                    <td>{r.interest}</td>
+                    <td>
+                      {r.interest}
+                      {r.source !== "website" && <div className="text-xs text-muted">via {r.source}</div>}
+                    </td>
+                    <td className="text-xs">{r.edition?.year ?? "Any"}</td>
                     <td className="text-xs">
                       {r.phone}
                       {r.email && <div>{r.email}</div>}

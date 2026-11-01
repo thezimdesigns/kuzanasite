@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentEdition } from "@/lib/edition";
+import { getProgrammeEdition } from "@/lib/edition";
 import { dateKey, startOfDay, TIME_ZONE } from "@/lib/time";
 import { cn } from "@/components/ui";
 
@@ -14,7 +14,7 @@ const dayOfMonth = new Intl.DateTimeFormat("en-GB", {
 
 /** The days of the current edition as a jump bar. `selected` is a YYYY-MM-DD key. */
 export async function WeekStrip({ selected, className }: { selected?: string; className?: string }) {
-  const edition = await getCurrentEdition();
+  const edition = await getProgrammeEdition();
   if (!edition) return null;
   const today = dateKey(new Date());
   const days: string[] = [];

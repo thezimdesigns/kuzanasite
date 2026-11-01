@@ -28,6 +28,12 @@ enum PublishStatus {
   ARCHIVED
 }
 
+enum NewsKind {
+  UPDATE
+  STORY
+  INTERVIEW
+}
+
 enum ProgrammeStatus {
   UPCOMING
   STARTING_SOON
@@ -240,6 +246,7 @@ model Edition {
   announcements Announcement[]
   partners      Partner[]
   news          NewsPost[]
+  interests     InterestRegistration[]
 }
 
 model Venue {
@@ -385,6 +392,8 @@ model Person {
 
   eventRoles   EventParticipant[]
   sessionRoles SessionParticipant[]
+  stories      NewsPostPerson[]
+  submissions  StorySubmission[]
 
   @@index([name])
 }
@@ -486,6 +495,8 @@ model Exhibitor {
   ratings     Rating[]
   stalls      FloorPlanStall[]
   enquiries   ExhibitorEnquiry[]
+  stories     NewsPostExhibitor[]
+  submissions StorySubmission[]
 
   @@index([status, name])
   @@index([categoryId])
@@ -722,9 +733,13 @@ model InterestRegistration {
   message      String?
   consent      Boolean  @default(false)
   source       String   @default("website")
+  /// The edition the person wants to take part in.
+  editionId    String?
+  edition      Edition? @relation(fields: [editionId], references: [id], onDelete: SetNull)
   createdAt    DateTime @default(now())
 
   @@index([interest])
+  @@index([editionId])
 }
 
 model Visitor {
@@ -866,13 +881,87 @@ model NewsPost {
   coverAlt      String?
   author        String?
   featured      Boolean       @default(false)
+  /// Plain update, participant story or interview. Stories and interviews live at /stories.
+  kind          NewsKind      @default(UPDATE)
+  seriesId      String?
+  series        Series?       @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  seriesPart    Int?
   publishStatus PublishStatus @default(DRAFT)
   publishedAt   DateTime      @default(now())
   createdById   String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
+  exhibitors NewsPostExhibitor[]
+  people     NewsPostPerson[]
+
   @@index([publishStatus, publishedAt])
+  @@index([kind, publishStatus, publishedAt])
+  @@index([seriesId, seriesPart])
+}
+
+/// An editorial series, for example "Signal", told in numbered parts.
+model Series {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  title         String
+  tagline       String?
+  description   String?
+  author        String?
+  coverKey      String?
+  sortOrder     Int           @default(0)
+  publishStatus PublishStatus @default(PUBLISHED)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  posts NewsPost[]
+}
+
+/// Exhibitors featured in a story, so the story also shows on their profile.
+model NewsPostExhibitor {
+  postId      String
+  post        NewsPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  exhibitorId String
+  exhibitor   Exhibitor @relation(fields: [exhibitorId], references: [id], onDelete: Cascade)
+
+  @@id([postId, exhibitorId])
+  @@index([exhibitorId])
+}
+
+/// People (speakers, artists, athletes) featured in a story.
+model NewsPostPerson {
+  postId   String
+  post     NewsPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  personId String
+  person   Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([postId, personId])
+  @@index([personId])
+}
+
+/// A participant's answers to "Share your KUZANA story", the raw material for stories.
+model StorySubmission {
+  id           String     @id @default(cuid())
+  exhibitorId  String?
+  exhibitor    Exhibitor? @relation(fields: [exhibitorId], references: [id], onDelete: SetNull)
+  personId     String?
+  person       Person?    @relation(fields: [personId], references: [id], onDelete: SetNull)
+  name         String
+  organisation String?
+  email        String?
+  phone        String?
+  role         String
+  tookPart     String
+  outcomes     String?
+  workingOn    String?
+  returning    String?
+  photoKey     String?
+  consent      Boolean    @default(false)
+  status       String     @default("NEW")
+  postId       String?
+  createdAt    DateTime   @default(now())
+
+  @@index([status, createdAt])
 }
 
 // ---------------------------------------------------------------------------

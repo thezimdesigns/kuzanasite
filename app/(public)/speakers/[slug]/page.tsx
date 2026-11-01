@@ -9,6 +9,8 @@ import { PARTICIPANT_ROLE_LABELS } from "@/lib/options";
 import { formatRange, formatTimes, formatDay } from "@/lib/time";
 import { Avatar } from "@/components/public/avatar";
 import { ShareButtons } from "@/components/public/share-buttons";
+import { StoryCard } from "@/components/public/story-blocks";
+import { getStoriesFeaturing } from "@/lib/news";
 import { Markdown } from "@/components/markdown";
 import { Card, Section, SectionTitle } from "@/components/ui";
 
@@ -38,8 +40,7 @@ export async function generateMetadata({ params }: PageProps<"/speakers/[slug]">
   if (!person) return {};
   return {
     title: person.name,
-    description:
-      [person.jobTitle, person.organisation].filter(Boolean).join(", ") || `${person.name} is taking part in KUZANA SCEEZ 2026 in Bulawayo.`,
+    description: [person.jobTitle, person.organisation].filter(Boolean).join(", ") || `${person.name} at KUZANA SCEEZ in Bulawayo.`,
     alternates: { canonical: `/speakers/${person.slug}` },
     ...shareMetadata({ image: fileUrl(person.photoKey), imageAlt: person.name, type: "profile" }),
   };
@@ -48,6 +49,7 @@ export async function generateMetadata({ params }: PageProps<"/speakers/[slug]">
 export default async function SpeakerPage({ params }: PageProps<"/speakers/[slug]">) {
   const person = await getPerson((await params).slug);
   if (!person) notFound();
+  const stories = await getStoriesFeaturing({ personId: person.id });
   const links = [
     ["Website", person.website],
     ["LinkedIn", person.linkedin],
@@ -89,6 +91,16 @@ export default async function SpeakerPage({ params }: PageProps<"/speakers/[slug
             </>
           )}
           <div className="mt-6">
+            {stories.length > 0 && (
+              <div className="mb-8">
+                <SectionTitle>Stories</SectionTitle>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {stories.map((p) => (
+                    <StoryCard key={p.id} post={p} />
+                  ))}
+                </div>
+              </div>
+            )}
             <ShareButtons title={`${person.name} at KUZANA SCEEZ`} path={`/speakers/${person.slug}`} />
           </div>
         </div>

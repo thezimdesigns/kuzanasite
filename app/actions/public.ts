@@ -4,11 +4,21 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { findValidClaim } from "@/lib/claim";
 import { db } from "@/lib/db";
-import { requireCurrentEdition } from "@/lib/edition";
+import { getSiteState, requireCurrentEdition } from "@/lib/edition";
 import { exhibitorCodeValid } from "@/lib/exhibitor-access";
 import { checkbox, formToObject, invalid, optionalEmail, optionalText, optionalUrl, phone, requiredText, stringValues, type FormState } from "@/lib/forms";
 import { ExhibitorMediaKind } from "@/lib/generated/prisma/enums";
-import { ENQUIRY_TOPICS, FEEDBACK_CATEGORIES, INTEREST_TYPES, OPPORTUNITIES, VISITOR_INTERESTS, VISITOR_TYPES } from "@/lib/options";
+import {
+  RETURNING_INTEREST,
+  RETURNING_OPTIONS,
+  STORY_ROLES,
+  ENQUIRY_TOPICS,
+  FEEDBACK_CATEGORIES,
+  INTEREST_TYPES,
+  OPPORTUNITIES,
+  VISITOR_INTERESTS,
+  VISITOR_TYPES,
+} from "@/lib/options";
 import { qaAutoApprove, voterId } from "@/lib/qa";
 import { rateLimit } from "@/lib/rate-limit";
 import { verifyRecaptcha } from "@/lib/recaptcha";
@@ -60,7 +70,8 @@ export async function submitInterest(_: FormState, fd: FormData): Promise<FormSt
   if (blocked) return blocked;
   const parsed = interestSchema.safeParse(formToObject(fd));
   if (!parsed.success) return invalid(parsed.error, fd);
-  await db.interestRegistration.create({ data: parsed.data });
+  const { current } = await getSiteState();
+  await db.interestRegistration.create({ data: { ...parsed.data, editionId: current?.id ?? null } });
   return {
     ok: true,
     message: "Thank you. Your interest has been captured and we will be in touch.",
@@ -366,6 +377,68 @@ export async function removePushSubscription(endpoint: string) {
     data: { active: false },
   });
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// "Share your KUZANA story": participant follow-up, raw material for stories
+// ---------------------------------------------------------------------------
+
+const storySchema = z
+  .object({
+    exhibitorId: optionalText(40),
+    personId: optionalText(40),
+    name: requiredText("Your name"),
+    organisation: optionalText(200),
+    email: optionalEmail,
+    phone: optionalText(30),
+    role: z.enum(STORY_ROLES, { error: "Choose how you took part." }),
+    tookPart: z.string().trim().min(10, "Tell us a little about how you took part.").max(3000),
+    outcomes: optionalText(4000),
+    workingOn: optionalText(4000),
+    returning: z.enum(RETURNING_OPTIONS).optional().catch(undefined),
+    photoKey: z
+      .string()
+      .regex(/^public\/stories\/[\w/.-]+$/)
+      .optional()
+      .catch(undefined),
+    consent: checkbox.refine((v) => v, "Tick this so we can feature your story and contact you."),
+  })
+  .refine((v) => v.email || v.phone, {
+    message: "Give an email or phone number so we can follow up.",
+    path: ["email"],
+  });
+
+export async function submitStory(_: FormState, fd: FormData): Promise<FormState> {
+  const blocked = await guard(fd, "story", 6, 600);
+  if (blocked) return blocked;
+  const parsed = storySchema.safeParse(formToObject(fd));
+  if (!parsed.success) return invalid(parsed.error, fd);
+  const { exhibitorId, personId, ...d } = parsed.data;
+  const [exhibitor, person] = await Promise.all([
+    exhibitorId ? db.exhibitor.findUnique({ where: { id: exhibitorId }, select: { id: true } }) : null,
+    personId ? db.person.findUnique({ where: { id: personId }, select: { id: true } }) : null,
+  ]);
+  await db.storySubmission.create({ data: { ...d, exhibitorId: exhibitor?.id ?? null, personId: person?.id ?? null } });
+
+  // "Yes, I'll be back" doubles as an expression of interest in the next edition.
+  const interest = d.returning ? RETURNING_INTEREST[d.returning] : undefined;
+  if (interest) {
+    const { current } = await getSiteState();
+    await db.interestRegistration.create({
+      data: {
+        name: d.name,
+        organisation: d.organisation,
+        email: d.email,
+        phone: d.phone,
+        interest,
+        message: 'From "Share your KUZANA story"',
+        consent: true,
+        source: "story",
+        editionId: current?.id ?? null,
+      },
+    });
+  }
+  return { ok: true, message: "Thank you for sharing your story. The KUZANA team reads every one and may be in touch to feature it." };
 }
 
 // ---------------------------------------------------------------------------

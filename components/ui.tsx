@@ -79,9 +79,15 @@ export function Badge({ tone = "neutral", className, children }: { tone?: Tone; 
   );
 }
 
-export function BackLink({ href, label }: { href: string; label: string }) {
+export function BackLink({ href, label, tone = "light" }: { href: string; label: string; tone?: "light" | "dark" }) {
   return (
-    <Link href={href} className="group/back mb-3 inline-flex items-center gap-1 text-sm font-semibold text-green-800 hover:text-green-900">
+    <Link
+      href={href}
+      className={cn(
+        "group/back mb-3 inline-flex items-center gap-1 text-sm font-semibold",
+        tone === "dark" ? "text-white/80 hover:text-white" : "text-green-800 hover:text-green-900",
+      )}
+    >
       <ChevronLeft className="size-4 transition-transform duration-200 group-hover/back:-translate-x-0.5" aria-hidden />
       {label}
     </Link>

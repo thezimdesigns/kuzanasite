@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { db } from "@/lib/db";
 import { eventBanner, eventOnDay, getEditionEvents, venueMapUrl, type ProgrammeItem } from "@/lib/programme";
+import { getProgrammeEdition, getSiteState } from "@/lib/edition";
 import { computeStatus, dateKey, effectiveEnd, startOfDay, TIME_ZONE } from "@/lib/time";
 import { AutoSubmitSelect } from "@/components/public/auto-submit-select";
 import { ProgrammeList } from "@/components/public/programme-list";
@@ -33,11 +34,14 @@ export default async function ProgrammePage({ searchParams }: PageProps<"/progra
   const venue = typeof sp.venue === "string" ? sp.venue : "";
   const when = typeof sp.when === "string" ? sp.when : "";
 
-  const [events, categories, venues] = await Promise.all([
+  const [events, categories, venues, shown, { next }] = await Promise.all([
     getEditionEvents(),
     db.eventCategory.findMany({ orderBy: { sortOrder: "asc" } }),
     db.venue.findMany({ orderBy: { sortOrder: "asc" } }),
+    getProgrammeEdition(),
+    getSiteState(),
   ]);
+  const isPast = !!shown && dateKey(shown.endDate) < dateKey(new Date());
 
   const now = new Date();
   const filtered = events
@@ -96,7 +100,14 @@ export default async function ProgrammePage({ searchParams }: PageProps<"/progra
 
   return (
     <>
-      <PageHeader title="Programme" intro="Every KUZANA SCEEZ event, day by day. Tap an event for times, venue and details.">
+      <PageHeader
+        title={shown ? `Programme ${shown.year}` : "Programme"}
+        intro={
+          isPast && shown
+            ? `Every event of KUZANA SCEEZ ${shown.year}, day by day. The ${next ? `${next.year} ` : ""}programme will be published here when it is announced.`
+            : "Every KUZANA SCEEZ event, day by day. Tap an event for times, venue and details."
+        }
+      >
         <WeekStrip />
       </PageHeader>
 
@@ -200,7 +211,7 @@ export default async function ProgrammePage({ searchParams }: PageProps<"/progra
         )}
         <div className="mt-14 border-t border-line pt-6">
           <p className="mb-3 text-sm font-semibold text-muted">Share the programme</p>
-          <ShareButtons title="KUZANA SCEEZ 2026 programme" path="/programme" />
+          <ShareButtons title={`KUZANA SCEEZ ${shown?.year ?? ""} programme`} path="/programme" />
         </div>
       </Section>
     </>

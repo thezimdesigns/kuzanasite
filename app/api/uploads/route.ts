@@ -10,7 +10,8 @@ import { objectKey, validateUpload } from "@/lib/uploads";
  * Single-file upload. Staff may upload anything allowed; the public exhibitor
  * form may upload only with a valid exhibitor access code.
  *
- * Form fields: file, scope ("exhibitor" | "staff"), code (public only).
+ * Form fields: file, scope ("exhibitor" | "staff" | "story"), code (public only).
+ * "story" lets anyone attach one photo to "Share your KUZANA story": images only, tightly rate limited.
  */
 export async function POST(request: Request) {
   let form: FormData;
@@ -27,6 +28,11 @@ export async function POST(request: Request) {
   if (staff) {
     if (staff.role === "VIEWER" || staff.role === "QA_MODERATOR") return NextResponse.json({ error: "Read-only account." }, { status: 403 });
     prefix = `staff/${String(form.get("folder") ?? "misc").replace(/[^a-z-]/g, "") || "misc"}`;
+  } else if (form.get("scope") === "story") {
+    if (!(await rateLimit("upload-story", 10, 3600))) {
+      return NextResponse.json({ error: "Too many uploads. Please wait and try again." }, { status: 429 });
+    }
+    prefix = "public/stories";
   } else {
     const claim = form.get("claim") as string | null;
     const allowed = claim ? !!(await findValidClaim(claim)) : exhibitorCodeValid(form.get("code") as string | null);
@@ -40,7 +46,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const upload = await validateUpload(file);
+    const upload = await validateUpload(file, { imagesOnly: prefix === "public/stories" });
     const key = objectKey(prefix, upload.ext);
     await putObject(key, upload.buffer, upload.mimeType);
     return NextResponse.json({

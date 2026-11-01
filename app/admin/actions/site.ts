@@ -3,10 +3,11 @@
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { adminFormAction, runAdmin } from "@/lib/admin-action";
 import { db } from "@/lib/db";
-import { requireCurrentEdition } from "@/lib/edition";
+import { getSiteState, PHASE_PREVIEW_COOKIE, PORTAL_DEFAULT_URL, PORTAL_KEYS, requireCurrentEdition } from "@/lib/edition";
 import { checkbox, optionalEmail, optionalText, optionalUrl, requiredText } from "@/lib/forms";
 import { PartnerTier, ProviderKind, PublishStatus, Role } from "@/lib/generated/prisma/enums";
 import { uniqueSlug } from "@/lib/slug";
@@ -214,6 +215,31 @@ export async function setCurrentEdition(id: string) {
     db.$transaction([db.edition.updateMany({ data: { isCurrent: false } }), db.edition.update({ where: { id }, data: { isCurrent: true } })]),
   );
 }
+
+/** Lets staff see the site as it looks in event week or between editions (only in their own browser). */
+export async function setPhasePreview(phase: "live" | "between" | null) {
+  await runAdmin("site", async () => {
+    const jar = await cookies();
+    if (phase) jar.set(PHASE_PREVIEW_COOKIE, phase, { httpOnly: true, sameSite: "lax", secure: true, path: "/", maxAge: 60 * 60 * 8 });
+    else jar.delete(PHASE_PREVIEW_COOKIE);
+  });
+}
+
+/** The exhibitor and sponsor portal: its address and whether applications are open. */
+export const savePortal = adminFormAction("site", z.object({ url: optionalUrl, open: checkbox }), async (d) => {
+  const rows = [
+    { key: PORTAL_KEYS.url, value: d.url ?? PORTAL_DEFAULT_URL },
+    { key: PORTAL_KEYS.open, value: d.open ? "1" : "0" },
+  ];
+  for (const r of rows) await db.siteSetting.upsert({ where: { key: r.key }, update: { value: r.value }, create: r });
+  revalidatePath("/", "layout");
+  return {
+    ok: true,
+    message: d.open
+      ? "Saved. Exhibitor and sponsor cards now send people to the portal."
+      : "Saved. The site invites people to register interest until applications open.",
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Footer (settings + link columns)
@@ -441,7 +467,8 @@ export async function deleteServiceCategory(id: string) {
 
 export async function setNavLinkVisible(href: string, visible: boolean) {
   return runAdmin("site", async () => {
-    if (!allNavLinks().some((l) => l.href === href)) throw new Error("Unknown menu link.");
+    const { next, past } = await getSiteState();
+    if (!allNavLinks({ next: next?.year ?? null, past: past?.year ?? null }).some((l) => l.href === href)) throw new Error("Unknown menu link.");
     const hidden = new Set(await getHiddenNav());
     if (visible) hidden.delete(href);
     else hidden.add(href);

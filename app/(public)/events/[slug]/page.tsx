@@ -4,7 +4,19 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, Download, MessageCircleQuestion, ExternalLink, FileDown, MapPin, Phone, Navigation, Route as RouteIcon, Ticket, UserCheck } from "lucide-react";
+import {
+  CalendarDays,
+  Download,
+  MessageCircleQuestion,
+  ExternalLink,
+  FileDown,
+  MapPin,
+  Phone,
+  Navigation,
+  Route as RouteIcon,
+  Ticket,
+  UserCheck,
+} from "lucide-react";
 import { db } from "@/lib/db";
 import { fileUrl, formatBytes } from "@/lib/files";
 import { DOCUMENT_TYPE_LABELS, PARTICIPANT_ROLE_LABELS, SESSION_TYPE_LABELS } from "@/lib/options";
@@ -19,6 +31,8 @@ import { FriendlyBadge, StatusBadge } from "@/components/public/status-badge";
 import { StatsBoard } from "@/components/public/stats-board";
 import { getPublishedReports } from "@/lib/stats-server";
 import { StreamPlayer } from "@/components/public/stream-player";
+import { StoryCard } from "@/components/public/story-blocks";
+import { getStoriesFeaturing } from "@/lib/news";
 import { Markdown } from "@/components/markdown";
 import { Avatar } from "@/components/public/avatar";
 import { BackLink, Badge, ButtonLink, Card, cn, Section, SectionTitle } from "@/components/ui";
@@ -104,6 +118,10 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 
   const now = new Date();
   const status = computeStatus(event, now);
+  // Once the whole edition is over the page becomes a record: no tickets, questions or rating prompts.
+  const editionOver = dateKey(event.edition.endDate) < dateKey(now);
+  const ratingsOpen = !editionOver || now.getTime() - event.edition.endDate.getTime() < 14 * 86_400_000;
+  const stories = editionOver ? await getStoriesFeaturing({ eventId: event.id }) : [];
   // Daily figures linked to this activity (oldest day first).
   const figures = (await getPublishedReports())
     .reverse()
@@ -170,24 +188,34 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                 </div>
               )}
             </dl>
-            <div className="mt-5 flex flex-wrap gap-3">
-              {event.tickets.length > 0 ? (
-                <TicketList tickets={event.tickets} defaultUrl={event.ticketUrl} />
-              ) : (
-                event.ticketRequired && (
-                  <TicketBox
-                    icon={<Ticket className="size-5" />}
-                    title={`Ticket required${event.ticketPrice ? ` · ${event.ticketPrice}` : ""}`}
-                    url={event.ticketUrl}
-                    cta="Get tickets"
-                  />
-                )
-              )}
-              {event.registrationRequired && (
-                <TicketBox icon={<UserCheck className="size-5" />} title="Registration required" url={event.registrationUrl} cta="Register" />
-              )}
-              {!event.ticketRequired && !event.tickets.length && !event.registrationRequired && <Badge tone="green">No ticket or registration needed</Badge>}
-            </div>
+            {editionOver ? (
+              <p className="mt-5 rounded-[var(--radius-control)] bg-green-100 px-4 py-3 text-sm text-green-900">
+                This took place as part of{" "}
+                <Link href={`/archive/${event.edition.year}`} className="font-semibold underline underline-offset-2">
+                  {event.edition.name}
+                </Link>
+                .
+              </p>
+            ) : (
+              <div className="mt-5 flex flex-wrap gap-3">
+                {event.tickets.length > 0 ? (
+                  <TicketList tickets={event.tickets} defaultUrl={event.ticketUrl} />
+                ) : (
+                  event.ticketRequired && (
+                    <TicketBox
+                      icon={<Ticket className="size-5" />}
+                      title={`Ticket required${event.ticketPrice ? ` · ${event.ticketPrice}` : ""}`}
+                      url={event.ticketUrl}
+                      cta="Get tickets"
+                    />
+                  )
+                )}
+                {event.registrationRequired && (
+                  <TicketBox icon={<UserCheck className="size-5" />} title="Registration required" url={event.registrationUrl} cta="Register" />
+                )}
+                {!event.ticketRequired && !event.tickets.length && !event.registrationRequired && <Badge tone="green">No ticket or registration needed</Badge>}
+              </div>
+            )}
             {event.programmePdfKey && (
               <ButtonLink
                 href={fileUrl(event.programmePdfKey, event.programmePdfName ?? `${event.title} programme.pdf`)!}
@@ -199,7 +227,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                 {event.programmePdfSize ? <span className="font-normal text-white/80">{formatBytes(event.programmePdfSize)}</span> : null}
               </ButtonLink>
             )}
-            {event.isConference && (
+            {event.isConference && !editionOver && (
               <ButtonLink
                 href={`/events/${event.slug}/qa`}
                 variant={status === "LIVE" ? "primary" : "outline"}
@@ -271,7 +299,13 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 
           {figures.length > 0 && (
             <div id="numbers" className="scroll-mt-24">
-              <SectionTitle action={<Link href="/stats?view=week" className="text-sm font-semibold text-green-800">All figures</Link>}>
+              <SectionTitle
+                action={
+                  <Link href="/stats?view=week" className="text-sm font-semibold text-green-800">
+                    All figures
+                  </Link>
+                }
+              >
                 In numbers
               </SectionTitle>
               <div className="space-y-8">
@@ -376,15 +410,17 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                                 </div>
                               </details>
                             )}
-                            {event.isConference && ["PANEL_DISCUSSION", "KEYNOTE", "PRESENTATION", "WORKSHOP", "CLOSING_SESSION"].includes(s.type) && sStatus !== "COMPLETED" && (
-                              <Link
-                                href={`/events/${event.slug}/qa?session=${s.id}`}
-                                className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-orange-deeper hover:underline"
-                              >
-                                <MessageCircleQuestion className="size-3.5" aria-hidden /> Ask about this session
-                              </Link>
-                            )}
-                            {now >= s.startsAt && (
+                            {event.isConference &&
+                              ["PANEL_DISCUSSION", "KEYNOTE", "PRESENTATION", "WORKSHOP", "CLOSING_SESSION"].includes(s.type) &&
+                              sStatus !== "COMPLETED" && (
+                                <Link
+                                  href={`/events/${event.slug}/qa?session=${s.id}`}
+                                  className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-orange-deeper hover:underline"
+                                >
+                                  <MessageCircleQuestion className="size-3.5" aria-hidden /> Ask about this session
+                                </Link>
+                              )}
+                            {now >= s.startsAt && ratingsOpen && (
                               <details className="mt-2">
                                 <summary className="cursor-pointer text-xs font-semibold text-green-800">Rate this session</summary>
                                 <div className="mt-2">
@@ -447,6 +483,17 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
               </div>
             </div>
           )}
+
+          {stories.length > 0 && (
+            <div>
+              <SectionTitle>Stories</SectionTitle>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {stories.map((p) => (
+                  <StoryCard key={p.id} post={p} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <aside className="space-y-6">
@@ -494,7 +541,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
             </Card>
           )}
 
-          {now >= event.startsAt && status !== "CANCELLED" && status !== "POSTPONED" && (
+          {now >= event.startsAt && ratingsOpen && status !== "CANCELLED" && status !== "POSTPONED" && (
             <Card className="p-5">
               <RatingForm eventId={event.id} />
             </Card>
@@ -577,7 +624,9 @@ function TicketList({
                 <span className="block font-semibold text-ink">{t.name}</span>
                 {t.note && <span className="block text-xs text-muted">{t.note}</span>}
               </span>
-              <span className={cn("font-heading font-bold whitespace-nowrap tabular-nums", t.soldOut ? "text-muted line-through" : "text-green-900")}>{t.price}</span>
+              <span className={cn("font-heading font-bold whitespace-nowrap tabular-nums", t.soldOut ? "text-muted line-through" : "text-green-900")}>
+                {t.price}
+              </span>
               {t.soldOut ? (
                 <Badge tone="orange">Sold out</Badge>
               ) : href ? (

@@ -5,7 +5,7 @@ export const DEFAULT_SHARE_IMAGE = {
   url: "/brand/og-default.jpg",
   width: 1200,
   height: 630,
-  alt: "The KUZANA SCEEZ 2026 Creative Economy Conference stage at ZITF, Bulawayo",
+  alt: "The KUZANA SCEEZ Creative Economy Conference stage at ZITF, Bulawayo",
 };
 
 type Share = {

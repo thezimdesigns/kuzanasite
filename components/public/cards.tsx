@@ -29,6 +29,7 @@ const dayNum = (d: Date) =>
     timeZone: TIME_ZONE,
     day: "2-digit",
   }).format(d);
+const yearOf = (d: Date) => new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, year: "numeric" }).format(d);
 const monthShort = (d: Date) =>
   new Intl.DateTimeFormat("en-GB", {
     timeZone: TIME_ZONE,
@@ -72,7 +73,9 @@ export function EventCard({ event, status }: { event: EventCardData; status?: Pr
                 {dayNum(event.startsAt)}
                 {multiDay && <span className="text-gold-light">–{dayNum(event.endsAt!)}</span>}
               </span>
-              <span className="mt-1 block text-lg font-bold tracking-wide text-white/85 uppercase">{monthShort(event.startsAt)} 2026</span>
+              <span className="mt-1 block text-lg font-bold tracking-wide text-white/85 uppercase">
+                {monthShort(event.startsAt)} {yearOf(event.startsAt)}
+              </span>
             </div>
           </div>
         )}

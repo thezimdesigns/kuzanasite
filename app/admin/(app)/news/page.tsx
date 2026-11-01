@@ -12,16 +12,25 @@ export default async function AdminNews() {
   const user = await requireStaff();
   const posts = await db.newsPost.findMany({
     orderBy: { publishedAt: "desc" },
+    include: { series: { select: { title: true } } },
   });
   return (
     <AdminPage
       title="News"
-      description="Stories for the homepage and the news pages."
+      description="News updates, participant stories, interviews and series parts. Stories and series also appear on the Stories page."
       actions={
         can(user, "press") && (
-          <ButtonLink href="/admin/news/new" size="sm">
-            <Plus className="size-4" /> New story
-          </ButtonLink>
+          <>
+            <ButtonLink href="/admin/series" size="sm" variant="outline">
+              Series
+            </ButtonLink>
+            <ButtonLink href="/admin/news/new?kind=STORY" size="sm" variant="outline">
+              <Plus className="size-4" /> New participant story
+            </ButtonLink>
+            <ButtonLink href="/admin/news/new" size="sm">
+              <Plus className="size-4" /> New update
+            </ButtonLink>
+          </>
         )
       }
     >
@@ -44,7 +53,15 @@ export default async function AdminNews() {
                 )}
               </td>
               <td>
-                <RowLink href={`/admin/news/${p.id}`}>{p.title}</RowLink> {p.featured && <Badge tone="orange">lead</Badge>}
+                <RowLink href={`/admin/news/${p.id}`}>{p.title}</RowLink> {p.featured && <Badge tone="orange">lead</Badge>}{" "}
+                {p.series ? (
+                  <Badge tone="green">
+                    {p.series.title}
+                    {p.seriesPart ? ` · Part ${p.seriesPart}` : ""}
+                  </Badge>
+                ) : (
+                  p.kind !== "UPDATE" && <Badge tone="gold">{p.kind === "STORY" ? "story" : "interview"}</Badge>
+                )}
               </td>
               <td className="whitespace-nowrap">{formatDate(p.publishedAt)}</td>
               <td>

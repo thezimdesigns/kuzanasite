@@ -1,5 +1,6 @@
 import { getBranding } from "@/lib/branding";
 import { getHiddenNav } from "@/lib/nav-settings";
+import { getSiteState } from "@/lib/edition";
 import { SOCIAL_LINKS, siteUrl } from "@/lib/site";
 import { recaptchaConfig } from "@/lib/recaptcha";
 import { RecaptchaProvider } from "@/components/public/use-recaptcha";
@@ -12,7 +13,8 @@ import { FxLayer } from "@/components/public/fx";
 import { ScrollToTop } from "@/components/public/site-chrome";
 
 export default async function PublicLayout({ children }: LayoutProps<"/">) {
-  const [{ logoUrl }, hiddenNav] = await Promise.all([getBranding(), getHiddenNav()]);
+  const [{ logoUrl }, hiddenNav, site] = await Promise.all([getBranding(), getHiddenNav(), getSiteState()]);
+  const nav = { hiddenNav, phase: site.phase, years: { next: site.next?.year ?? null, past: site.past?.year ?? null } };
   const recaptcha = recaptchaConfig();
   return (
     <>
@@ -20,12 +22,12 @@ export default async function PublicLayout({ children }: LayoutProps<"/">) {
         Skip to content
       </a>
       <AnnouncementBanner />
-      <SiteHeader logoUrl={logoUrl} hiddenNav={hiddenNav} />
+      <SiteHeader logoUrl={logoUrl} {...nav} />
       <main id="main" className="min-h-[60vh]">
         <RecaptchaProvider siteKey={recaptcha.siteKey}>{children}</RecaptchaProvider>
       </main>
       <SiteFooter />
-      <MobileTabBar hiddenNav={hiddenNav} />
+      <MobileTabBar {...nav} />
       <ScrollToTop />
       <FxLayer />
       <Analytics />

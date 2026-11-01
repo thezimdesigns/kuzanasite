@@ -3,6 +3,7 @@ import { Camera, FileUp, ImagePlus, Megaphone, Plus, Video } from "lucide-react"
 import { db } from "@/lib/db";
 import { getDayProgramme } from "@/lib/programme";
 import { requireStaff } from "@/lib/permissions";
+import { getSiteState } from "@/lib/edition";
 import { endOfDay, startOfDay, dateKey, formatLongDay } from "@/lib/time";
 import { AdminPage, Panel } from "@/components/admin/ui";
 import { Alert } from "@/components/ui";
@@ -15,6 +16,23 @@ export default async function Dashboard({ searchParams }: PageProps<"/admin">) {
   const since = startOfDay(today);
   const until = endOfDay(today);
 
+  const site = await getSiteState();
+  const between = {
+    newStories: await db.storySubmission.count({ where: { status: "NEW" } }),
+    interest: site.next
+      ? await db.interestRegistration.groupBy({
+          by: ["interest"],
+          where: { editionId: site.next.id },
+          _count: { _all: true },
+          orderBy: { _count: { interest: "desc" } },
+        })
+      : [],
+    latestPart: await db.newsPost.findFirst({
+      where: { seriesId: { not: null } },
+      orderBy: { publishedAt: "desc" },
+      include: { series: { select: { title: true } } },
+    }),
+  };
   const [programme, counts] = await Promise.all([
     getDayProgramme(today),
     db.$transaction([
@@ -142,6 +160,50 @@ export default async function Dashboard({ searchParams }: PageProps<"/admin">) {
           </Link>
         ))}
       </div>
+      {site.phase === "between" && (
+        <Panel title={`Between editions${site.next ? `: on the way to ${site.next.year}` : ""}`} className="mb-6">
+          <div className="grid gap-6 md:grid-cols-3">
+            <div>
+              <p className="font-heading text-3xl font-extrabold text-green-900">{between.newStories}</p>
+              <p className="text-sm text-muted">story submissions waiting</p>
+              <Link href="/admin/stories" className="mt-1 inline-block text-sm font-semibold text-green-800 underline">
+                Open stories
+              </Link>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-ink">Interest in {site.next?.year ?? "the next edition"}</p>
+              {between.interest.length ? (
+                <ul className="mt-1 space-y-0.5 text-sm">
+                  {between.interest.map((r) => (
+                    <li key={r.interest} className="flex justify-between gap-3">
+                      <span>{r.interest}</span>
+                      <span className="font-semibold tabular-nums">{r._count._all}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-1 text-sm text-muted">None yet.</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-ink">Latest series part</p>
+              {between.latestPart ? (
+                <Link href={`/admin/news/${between.latestPart.id}`} className="mt-1 block text-sm text-green-800 underline">
+                  {between.latestPart.series?.title}
+                  {between.latestPart.seriesPart ? `, Part ${between.latestPart.seriesPart}` : ""}: {between.latestPart.title}
+                </Link>
+              ) : (
+                <p className="mt-1 text-sm text-muted">
+                  None yet.{" "}
+                  <Link href="/admin/series" className="font-semibold text-green-800 underline">
+                    Set up a series
+                  </Link>
+                </p>
+              )}
+            </div>
+          </div>
+        </Panel>
+      )}
       <Panel
         title="Today's programme"
         actions={

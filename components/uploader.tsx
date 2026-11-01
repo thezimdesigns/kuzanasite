@@ -92,6 +92,7 @@ export function Uploader({
   code,
   claim,
   folder,
+  scope,
   maxDim,
   onChange,
   compact = false,
@@ -104,6 +105,8 @@ export function Uploader({
   code?: string;
   claim?: string;
   folder?: string;
+  /** "story": a public story photo (images only, rate limited). */
+  scope?: "story";
   maxDim?: number;
   onChange: (files: UploadedFile[]) => void;
   compact?: boolean;
@@ -139,6 +142,7 @@ export function Uploader({
       if (code) form.set("code", code);
       if (claim) form.set("claim", claim);
       if (folder) form.set("folder", folder);
+      if (scope) form.set("scope", scope);
       const result = await uploadWithProgress(form, (p) => patch(item.id, { progress: p }));
       patch(item.id, {
         status: "done",

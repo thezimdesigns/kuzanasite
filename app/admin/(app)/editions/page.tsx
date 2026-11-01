@@ -6,12 +6,16 @@ import { ActionButton } from "@/components/admin/admin-form";
 import { EditionForm } from "@/components/admin/edition-form";
 import { AdminPage, Panel, Table } from "@/components/admin/ui";
 import { Badge } from "@/components/ui";
+import { PhasePreview, PortalForm } from "@/components/admin/site-phase";
+import { cookies } from "next/headers";
+import { editionDates, getPortal, getSiteState, PHASE_PREVIEW_COOKIE } from "@/lib/edition";
 
 export const metadata = { title: "Editions" };
 
 export default async function AdminEditions() {
   const user = await requireStaff();
   const editable = can(user, "site");
+  const [site, portal, preview] = await Promise.all([getSiteState(), getPortal(), cookies().then((c) => c.get(PHASE_PREVIEW_COOKIE)?.value)]);
   const editions = await db.edition.findMany({
     orderBy: { year: "desc" },
     include: {
@@ -23,6 +27,33 @@ export default async function AdminEditions() {
       title="Editions"
       description="Each KUZANA year is an edition. New events, exhibitors and media go into the current edition; earlier ones stay in the archive."
     >
+      <div className="mb-6 grid gap-6 lg:grid-cols-2">
+        <Panel title="What the public site shows now">
+          <p className="text-sm">
+            {site.phase === "live" ? (
+              <>
+                <strong>Event week.</strong> Live programme, today and the live board lead the homepage.
+              </>
+            ) : (
+              <>
+                <strong>Between editions.</strong> Stories, series and taking part
+                {site.next ? ` in ${site.next.year} (${editionDates(site.next)})` : ""} lead the homepage
+                {site.past ? `, with ${site.past.year} as the record` : ""}.
+              </>
+            )}
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            This switches by itself on the current edition&apos;s dates. To check how the other mode looks, preview it here (only you see the preview, for 8
+            hours).
+          </p>
+          <div className="mt-3">
+            <PhasePreview preview={preview === "live" || preview === "between" ? preview : null} />
+          </div>
+        </Panel>
+        <Panel title="Exhibitor & sponsor portal">
+          <PortalForm url={portal.url} open={portal.open} readOnly={!editable} />
+        </Panel>
+      </div>
       <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
         {editable && (
           <Panel title="New edition">

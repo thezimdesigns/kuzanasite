@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { QrCode } from "lucide-react";
 import { db } from "@/lib/db";
 import { exhibitorCodeValid } from "@/lib/exhibitor-access";
@@ -25,6 +26,17 @@ export default async function ExhibitorRegisterPage({ searchParams }: PageProps<
             <p className="font-heading text-lg font-bold">Scan the exhibitor QR code to register</p>
             <p className="mt-2 text-muted">
               Stand registration is open to KUZANA exhibitors through the QR code at the exhibitor desk, or from a KUZANA team member walking the halls.
+            </p>
+            <p className="mt-4 text-sm text-muted">
+              Want to exhibit at the next KUZANA SCEEZ? Apply on the{" "}
+              <a href="/portal" className="font-semibold text-green-800 underline">
+                exhibitor portal
+              </a>{" "}
+              or{" "}
+              <Link href="/take-part" className="font-semibold text-green-800 underline">
+                register your interest
+              </Link>
+              .
             </p>
           </Card>
         </Section>

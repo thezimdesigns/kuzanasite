@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui";
 import { db } from "@/lib/db";
 import { allNavLinks } from "@/lib/nav";
 import { getHiddenNav } from "@/lib/nav-settings";
+import { getSiteState } from "@/lib/edition";
 import { can, requireStaff } from "@/lib/permissions";
 
 export const metadata = { title: "Menu" };
@@ -46,8 +47,8 @@ async function contentCounts(): Promise<Record<string, number>> {
 export default async function AdminMenu() {
   const user = await requireStaff();
   const editable = can(user, "site");
-  const [hidden, counts] = await Promise.all([getHiddenNav(), contentCounts()]);
-  const links = allNavLinks();
+  const [hidden, counts, site] = await Promise.all([getHiddenNav(), contentCounts(), getSiteState()]);
+  const links = allNavLinks({ next: site.next?.year ?? null, past: site.past?.year ?? null });
   const off = links.filter((l) => hidden.includes(l.href)).length;
 
   return (

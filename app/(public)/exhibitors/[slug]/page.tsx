@@ -10,6 +10,9 @@ import { findExhibitorStall } from "@/lib/floor-plans";
 import { EnquiryForm } from "@/components/public/enquiry-form";
 import { RatingForm } from "@/components/public/rating-form";
 import { ShareButtons } from "@/components/public/share-buttons";
+import { StoryCard } from "@/components/public/story-blocks";
+import { getStoriesFeaturing } from "@/lib/news";
+import { dateKey } from "@/lib/time";
 import { Badge, Card, Section, SectionTitle } from "@/components/ui";
 
 async function getExhibitor(slug: string) {
@@ -40,13 +43,14 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
   const x = await getExhibitor((await params).slug);
   if (!x) notFound();
 
-  const [rating, stall] = await Promise.all([
+  const [rating, stall, stories] = await Promise.all([
     db.rating.aggregate({
       where: { exhibitorId: x.id },
       _avg: { stars: true },
       _count: { stars: true },
     }),
     findExhibitorStall(x.id),
+    getStoriesFeaturing({ exhibitorId: x.id }),
   ]);
   const images = x.media.filter((m) => m.mimeType.startsWith("image/") && m.kind !== "LOGO");
   const files = x.media.filter((m) => !m.mimeType.startsWith("image/"));
@@ -81,7 +85,9 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
                   {[x.hall && `Hall ${x.hall}`, x.stand && `Stand ${x.stand}`].filter(Boolean).join(" · ")}
                 </Badge>
               )}
-              <Badge>KUZANA SCEEZ {x.edition.year}</Badge>
+              <Badge>
+                {dateKey(x.edition.endDate) < dateKey(new Date()) ? `Exhibited at KUZANA SCEEZ ${x.edition.year}` : `KUZANA SCEEZ ${x.edition.year}`}
+              </Badge>
             </div>
             {stall && (
               <Link
@@ -153,6 +159,16 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
                   <strong>What we offer:</strong> {x.offering}
                 </p>
               )}
+            </div>
+          )}
+          {stories.length > 0 && (
+            <div>
+              <SectionTitle>Stories</SectionTitle>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {stories.map((p) => (
+                  <StoryCard key={p.id} post={p} />
+                ))}
+              </div>
             </div>
           )}
           <ShareButtons title={`${x.name} at KUZANA SCEEZ`} path={`/exhibitors/${x.slug}`} />

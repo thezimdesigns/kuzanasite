@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { getCurrentEdition } from "@/lib/edition";
+import { getCurrentEdition, getProgrammeEdition } from "@/lib/edition";
 import type { ProgrammeStatus } from "@/lib/generated/prisma/enums";
 import { googleMapsUrl } from "@/lib/geo";
 import { computeStatus, dailyWindow, dateKey, endOfDay, formatDay, isDaily, occursOn, startOfDay } from "@/lib/time";
@@ -74,9 +74,9 @@ export function eventBanner(e: { bannerKey: string | null; bannerMobileKey: stri
   return e.bannerKey ? { wide: e.bannerKey, mobile: e.bannerMobileKey } : null;
 }
 
-/** Published events of the current edition, ordered by start. */
+/** Published events of the edition on show (the current one, or the last one until the next programme is published). */
 export async function getEditionEvents() {
-  const edition = await getCurrentEdition();
+  const edition = await getProgrammeEdition();
   if (!edition) return [];
   return db.event.findMany({
     where: { editionId: edition.id, publishStatus: "PUBLISHED" },

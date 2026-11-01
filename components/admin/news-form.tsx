@@ -3,6 +3,7 @@
 import { createNews, updateNews } from "@/app/admin/actions/content";
 import { AdminForm } from "@/components/admin/admin-form";
 import { Panel } from "@/components/admin/ui";
+import { PickList } from "@/components/admin/pick-list";
 import { UploadField } from "@/components/admin/upload-field";
 import { Button, Checkbox, Field, Input, Select, Textarea } from "@/components/ui";
 
@@ -19,9 +20,22 @@ export type NewsValues = {
   featured: boolean;
   publishStatus: string;
   publishedAt: string;
+  kind: string;
+  seriesId: string;
+  seriesPart: string;
+  exhibitorIds: string[];
+  personIds: string[];
 };
 
-export function NewsForm({ values: v, events, readOnly = false }: { values: NewsValues; events: { id: string; title: string }[]; readOnly?: boolean }) {
+export type NewsOptions = {
+  events: { id: string; title: string }[];
+  series: { id: string; title: string }[];
+  exhibitors: { id: string; label: string }[];
+  people: { id: string; label: string }[];
+};
+
+export function NewsForm({ values: v, options, readOnly = false }: { values: NewsValues; options: NewsOptions; readOnly?: boolean }) {
+  const { events } = options;
   return (
     <AdminForm action={v.id ? updateNews : createNews}>
       {(state, pending) => (
@@ -72,6 +86,41 @@ export function NewsForm({ values: v, events, readOnly = false }: { values: News
                     <Input name="slug" defaultValue={v.slug} />
                   </Field>
                 )}
+              </div>
+            </Panel>
+            <Panel title="Story type">
+              <div className="space-y-3">
+                <Field label="Kind" hint="Stories and interviews also appear on the Stories page.">
+                  <Select name="kind" defaultValue={v.kind}>
+                    <option value="UPDATE">News update</option>
+                    <option value="STORY">Participant story</option>
+                    <option value="INTERVIEW">Interview</option>
+                  </Select>
+                </Field>
+                <div className="grid grid-cols-[1fr_6rem] gap-3">
+                  <Field label="Series" hint="For example Signal.">
+                    <Select name="seriesId" defaultValue={v.seriesId}>
+                      <option value="">Not part of a series</option>
+                      {options.series.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.title}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Part" error={state.errors?.seriesPart}>
+                    <Input name="seriesPart" type="number" min={1} max={999} defaultValue={v.seriesPart} />
+                  </Field>
+                </div>
+                <div>
+                  <p className="mb-1.5 text-sm font-semibold text-ink">Featured exhibitors</p>
+                  <PickList name="exhibitorIds" options={options.exhibitors} initial={v.exhibitorIds} placeholder="Type to find an exhibitor…" />
+                </div>
+                <div>
+                  <p className="mb-1.5 text-sm font-semibold text-ink">Featured people</p>
+                  <PickList name="personIds" options={options.people} initial={v.personIds} placeholder="Type to find a speaker, artist or athlete…" />
+                </div>
+                <p className="text-xs text-muted">Featured exhibitors and people show the story on their profile pages.</p>
               </div>
             </Panel>
             <Panel title="Cover image">

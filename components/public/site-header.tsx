@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRight, CalendarDays, ChevronDown, Map as MapIcon, Menu, Radio, Search, Store, X } from "lucide-react";
-import { isActivePath, visibleNav } from "@/lib/nav";
+import { ArrowRight, BookOpen, CalendarDays, ChevronDown, History, Map as MapIcon, Menu, Radio, Search, Sparkles, Store, X } from "lucide-react";
+import { isActivePath, visibleNav, type NavPhase, type NavYears } from "@/lib/nav";
 import { cn } from "@/components/ui";
 
 const QUICK_ICONS = {
@@ -13,15 +13,32 @@ const QUICK_ICONS = {
   "/programme/today": CalendarDays,
   "/map": MapIcon,
   "/exhibitors": Store,
+  "/stories": BookOpen,
+  "/take-part": Sparkles,
 } as const;
 
 /**
  * Header: four direct links plus an "Explore" mega menu on desktop;
  * a slide-in drawer with quick tiles and grouped links on phones.
  */
-export function SiteHeader({ logoUrl, hiddenNav = [] }: { logoUrl: string; hiddenNav?: string[] }) {
+export function SiteHeader({
+  logoUrl,
+  hiddenNav = [],
+  phase = "live",
+  years = { next: null, past: null },
+}: {
+  logoUrl: string;
+  hiddenNav?: string[];
+  phase?: NavPhase;
+  years?: NavYears;
+}) {
   // Links an admin has switched off are left out of every menu.
-  const { primary: PRIMARY_NAV, quick: QUICK_NAV, groups: NAV_GROUPS } = visibleNav(hiddenNav);
+  const { primary: PRIMARY_NAV, quick: QUICK_NAV, groups: NAV_GROUPS } = visibleNav(hiddenNav, phase, years);
+  // The main call to action: register for the event during the week, take part in the next one otherwise.
+  const cta =
+    phase === "between"
+      ? { href: "/take-part", label: years.next ? `Take part in ${years.next}` : "Take part" }
+      : { href: "/register", label: "Register as a visitor" };
   const pathname = usePathname();
   // Panels remember the page they were opened on, so they close on navigation.
   const [megaOn, setMegaOn] = useState<string | null>(null);
@@ -114,11 +131,11 @@ export function SiteHeader({ logoUrl, hiddenNav = [] }: { logoUrl: string; hidde
             <Search className="size-5" />
           </Link>
           <Link
-            href="/register"
+            href={cta.href}
             data-fx="drum"
             className="hidden rounded-[var(--radius-control)] bg-orange-dark px-4 py-2.5 font-heading text-sm font-semibold text-white transition-[background-color,transform] duration-200 hover:bg-orange-deeper active:scale-[0.98] sm:inline-flex"
           >
-            Register as a visitor
+            {cta.label}
           </Link>
           <button
             type="button"
@@ -191,7 +208,7 @@ export function SiteHeader({ logoUrl, hiddenNav = [] }: { logoUrl: string; hidde
               <div className="flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-8">
                 <ul className="grid grid-cols-2 gap-2">
                   {QUICK_NAV.map((q) => {
-                    const Icon = QUICK_ICONS[q.href as keyof typeof QUICK_ICONS];
+                    const Icon = QUICK_ICONS[q.href as keyof typeof QUICK_ICONS] ?? History;
                     const active = isActivePath(pathname, q.href);
                     return (
                       <li key={q.href}>
@@ -235,11 +252,11 @@ export function SiteHeader({ logoUrl, hiddenNav = [] }: { logoUrl: string; hidde
                   </details>
                 ))}
                 <Link
-                  href="/register"
+                  href={cta.href}
                   data-fx="drum"
                   className="mt-5 flex items-center justify-center rounded-[var(--radius-control)] bg-orange-dark px-4 py-3 font-heading font-bold text-white active:scale-[0.98]"
                 >
-                  Register as a visitor
+                  {cta.label}
                 </Link>
               </div>
             </div>

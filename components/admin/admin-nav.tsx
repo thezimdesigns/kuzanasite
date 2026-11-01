@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   Award,
+  BookOpen,
+  Library,
   BarChart3,
   Building2,
   CalendarRange,
@@ -60,6 +62,8 @@ const ICONS = {
   partners: Handshake,
   pages: FileText,
   news: Rss,
+  stories: BookOpen,
+  series: Library,
   coverage: Globe,
   stats: BarChart3,
   qa: MessageCircleQuestion,
