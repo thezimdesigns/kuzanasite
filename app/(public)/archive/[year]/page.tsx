@@ -280,13 +280,8 @@ export default async function EditionReviewPage({ params }: PageProps<"/archive/
       {partners.length > 0 && (
         <section className="border-t border-line bg-white">
           <Section>
-            <div className="mb-8 flex flex-wrap items-center justify-center gap-4">
-              <h2 className="font-heading text-lg font-bold text-green-900">Partners of KUZANA SCEEZ {edition.year}</h2>
-              <Link href={`/partners?year=${edition.year}`} className="text-sm font-semibold text-green-800 hover:underline">
-                About our partners
-              </Link>
-            </div>
-            <PartnerStrip partners={partners} />
+            <h2 className="mb-8 text-center font-heading text-lg font-bold text-green-900">Partners of KUZANA SCEEZ {edition.year}</h2>
+            <PartnerStrip partners={partners} allHref={`/partners?year=${edition.year}`} />
           </Section>
         </section>
       )}

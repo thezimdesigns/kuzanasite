@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Check, Copy, CornerDownLeft, Trash2 } from "lucide-react";
 import { Uploader } from "@/components/uploader";
+import { INSERT_EVENT, type InsertDetail } from "@/components/admin/rich-text";
 import { Button, Field, Input } from "@/components/ui";
 
 export type StoryImage = {
@@ -18,7 +19,8 @@ export type StoryImage = {
 };
 
 const code = (n: number) => `[image ${n}]`;
-const CODE = /\[\s*image\s+(\d+)\s*\]/gi;
+// Also matches the escaped form the rich text editor saves (\[image 2\]).
+const CODE = /\\?\[\s*image\s+(\d+)\s*\\?\]/gi;
 
 /**
  * Images placed inside the story text. Each upload gets a code like [image 3]
@@ -48,20 +50,9 @@ export function StoryImages({ initial, nextNumber, bodyId }: { initial: StoryIma
 
   const update = (n: number, patch: Partial<StoryImage>) => setImages((list) => list.map((i) => (i.number === n ? { ...i, ...patch } : i)));
 
-  /** Puts the code at the cursor in the story, on a line of its own. */
+  /** Puts the code at the cursor in the story, as a paragraph of its own. */
   const insert = (n: number) => {
-    const el = document.getElementById(bodyId) as HTMLTextAreaElement | null;
-    if (!el) return;
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? start;
-    const before = el.value.slice(0, start);
-    const after = el.value.slice(end);
-    const pre = before && !before.endsWith("\n\n") ? (before.endsWith("\n") ? "\n" : "\n\n") : "";
-    const post = after.startsWith("\n") ? "" : "\n\n";
-    const text = `${pre}${code(n)}${post}`;
-    el.focus();
-    el.setRangeText(text, start, end, "end");
-    el.dispatchEvent(new Event("input", { bubbles: true }));
+    document.dispatchEvent(new CustomEvent<InsertDetail>(INSERT_EVENT, { detail: { target: bodyId, text: code(n) } }));
   };
 
   const copy = async (n: number) => {

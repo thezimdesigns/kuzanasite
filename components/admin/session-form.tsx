@@ -3,7 +3,8 @@
 import { createSession, updateSession } from "@/app/admin/actions/programme";
 import { AdminForm } from "@/components/admin/admin-form";
 import { UploadField } from "@/components/admin/upload-field";
-import { Button, Field, Input, Select, Textarea } from "@/components/ui";
+import { Button, Field, Input, Select } from "@/components/ui";
+import { RichField } from "@/components/admin/rich-text";
 import { SESSION_TYPE_LABELS } from "@/lib/options";
 import { STATUS_LABELS } from "@/lib/time";
 
@@ -68,9 +69,7 @@ export function SessionForm({ eventId, values: v, readOnly = false }: { eventId:
               </Select>
             </Field>
           </div>
-          <Field label="Description">
-            <Textarea name="description" rows={3} defaultValue={v.description} />
-          </Field>
+          <RichField label="Description" name="description" id={`session-description-${v.id ?? "new"}`} defaultValue={v.description} minRows={3} />
           <UploadField name="posterKey" label="Poster (optional)" current={v.posterKey} folder="sessions" maxDim={2000} />
           <input type="hidden" name="sortOrder" value={v.sortOrder} />
           {!readOnly && (

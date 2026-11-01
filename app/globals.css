@@ -94,6 +94,73 @@ h4 {
 .prose-kuzana strong {
   font-weight: 700;
 }
+.prose-kuzana blockquote {
+  margin: 1.25rem 0;
+  border-left: 3px solid var(--color-orange);
+  padding: 0.15rem 0 0.15rem 1rem;
+  color: var(--color-green-900);
+  font-size: 1.05em;
+}
+.prose-kuzana blockquote p:last-child,
+.prose-kuzana li > p {
+  margin-bottom: 0;
+}
+.prose-kuzana hr {
+  margin: 1.75rem 0;
+  border-color: var(--color-line);
+}
+/* Markdown on dark green bands. */
+.prose-dark .prose-kuzana a,
+.prose-dark .prose-kuzana h2,
+.prose-dark .prose-kuzana h3,
+.prose-dark .prose-kuzana blockquote {
+  color: inherit;
+}
+
+/* Partner logos below the lead partners: one slow row that loops. */
+.partner-marquee {
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .partner-marquee-track {
+    animation: partner-marquee 45s linear infinite;
+  }
+  .partner-marquee:hover .partner-marquee-track,
+  .partner-marquee:focus-within .partner-marquee-track {
+    animation-play-state: paused;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* No movement: the row scrolls sideways by hand instead. */
+  .partner-marquee {
+    overflow-x: auto;
+    mask-image: none;
+  }
+  .partner-marquee-track > ul[aria-hidden] {
+    display: none;
+  }
+}
+@keyframes partner-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* The admin rich text editor (TipTap). */
+.rich-text-body > :first-child {
+  margin-top: 0;
+}
+.rich-text-body p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--color-muted);
+}
+.rich-text-body a {
+  cursor: text;
+}
+
 /* In-text images ([image N] shortcodes in stories). */
 .prose-kuzana .story-figure {
   margin: 1.75rem 0;

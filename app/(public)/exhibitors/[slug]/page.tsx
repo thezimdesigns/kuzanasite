@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Markdown } from "@/components/markdown";
 import { shareMetadata } from "@/lib/seo";
 import Image from "next/image";
 import Link from "next/link";
@@ -107,14 +108,14 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
           {x.description && (
             <div>
               <SectionTitle>About</SectionTitle>
-              <p className="leading-relaxed whitespace-pre-line">{x.description}</p>
+              <Markdown>{x.description}</Markdown>
             </div>
           )}
           {(x.showcasing || x.products) && (
             <div>
               <SectionTitle>Showcasing at KUZANA</SectionTitle>
-              {x.showcasing && <p className="leading-relaxed whitespace-pre-line">{x.showcasing}</p>}
-              {x.products && <p className="mt-3 leading-relaxed whitespace-pre-line">{x.products}</p>}
+              {x.showcasing && <Markdown>{x.showcasing}</Markdown>}
+              {x.products && <Markdown>{x.products}</Markdown>}
             </div>
           )}
           {images.length > 0 && (
@@ -156,11 +157,12 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
                   ))}
                 </div>
               )}
-              {x.seeking && <p className="whitespace-pre-line">{x.seeking}</p>}
+              {x.seeking && <Markdown>{x.seeking}</Markdown>}
               {x.offering && (
-                <p className="mt-3 whitespace-pre-line">
-                  <strong>What we offer:</strong> {x.offering}
-                </p>
+                <div className="mt-3">
+                  <p className="font-semibold">What we offer</p>
+                  <Markdown>{x.offering}</Markdown>
+                </div>
               )}
             </div>
           )}

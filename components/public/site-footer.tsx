@@ -9,11 +9,18 @@ export async function SiteFooter() {
 
   return (
     <footer className="bg-green-950 pb-20 text-white/85 lg:pb-0">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-[1.2fr_1fr_1fr] sm:px-6">
-        <div>
+      <div className="mx-auto grid max-w-6xl gap-x-8 gap-y-10 px-4 py-12 sm:grid-cols-3 sm:px-6 lg:grid-cols-[1.35fr_1fr_1fr_1fr]">
+        <div className="sm:col-span-3 lg:col-span-1">
           <Link href="/" aria-label="KUZANA SCEEZ home" className="inline-block">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/kuzana-sceez-white.png" alt="KUZANA SCEEZ: Sport Creative Economy Expo of Zimbabwe" width={828} height={303} loading="lazy" className="h-16 w-auto sm:h-[4.5rem]" />
+            <img
+              src="/brand/kuzana-sceez-white.png"
+              alt="KUZANA SCEEZ: Sport Creative Economy Expo of Zimbabwe"
+              width={828}
+              height={303}
+              loading="lazy"
+              className="h-16 w-auto sm:h-[4.5rem]"
+            />
           </Link>
           {s["footer.tagline"] && <p className="mt-2 max-w-xs text-sm">{s["footer.tagline"]}</p>}
           <ul className="mt-4 space-y-2 text-sm">
@@ -53,9 +60,17 @@ export async function SiteFooter() {
         </div>
         <FooterLinks title={s["footer.col1Title"]} links={columns[0]} />
         <FooterLinks title={s["footer.col2Title"]} links={columns[1]} />
+        <FooterLinks title={s["footer.col3Title"]} links={columns[2]} />
       </div>
       <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-white/70">
-        © {new Date().getFullYear()} KUZANA SCEEZ. All rights reserved. Website by{" "}
+        © {new Date().getFullYear()} KUZANA SCEEZ. All rights reserved.{" "}
+        <Link href="/privacy" className="underline decoration-white/30 underline-offset-2 transition-colors hover:text-white hover:decoration-gold-light">
+          Privacy
+        </Link>
+        <span className="mx-2 text-white/30" aria-hidden>
+          |
+        </span>
+        Website by{" "}
         <a
           href="https://www.nhimbe.org"
           target="_blank"

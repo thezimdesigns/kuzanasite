@@ -293,7 +293,7 @@ const footerLinkSchema = z.object({
   label: requiredText("Label", 80),
   page: z.string().optional(),
   custom: z.string().optional(),
-  column: z.coerce.number().int().min(1).max(2),
+  column: z.coerce.number().int().min(1).max(3),
   newTab: checkbox,
   sortOrder: z.coerce.number().int().default(0),
 });

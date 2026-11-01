@@ -6,6 +6,7 @@ import { AdminForm } from "@/components/admin/admin-form";
 import { Panel } from "@/components/admin/ui";
 import { Uploader, type UploadedFile } from "@/components/uploader";
 import { Button, Checkbox, Field, Input, Select, Textarea } from "@/components/ui";
+import { RichField } from "@/components/admin/rich-text";
 import { OPPORTUNITIES } from "@/lib/options";
 import type { ExhibitorMediaKind } from "@/lib/generated/prisma/enums";
 
@@ -93,15 +94,9 @@ export function ExhibitorEditForm({ x, sectors, readOnly }: { x: X; sectors: { i
               </Field>
             </div>
             <div className="mt-4 space-y-4">
-              <Field label="Description">
-                <Textarea name="description" rows={4} defaultValue={x.description} />
-              </Field>
-              <Field label="Showcasing at KUZANA">
-                <Textarea name="showcasing" rows={3} defaultValue={x.showcasing} />
-              </Field>
-              <Field label="Products / services">
-                <Textarea name="products" rows={3} defaultValue={x.products} />
-              </Field>
+              <RichField label="Description" name="description" id="exhibitor-description" defaultValue={x.description} minRows={4} />
+              <RichField label="Showcasing at KUZANA" name="showcasing" id="exhibitor-showcasing" defaultValue={x.showcasing} minRows={3} />
+              <RichField label="Products / services" name="products" id="exhibitor-products" defaultValue={x.products} minRows={3} />
               <Field label="Address">
                 <Input name="address" defaultValue={x.address} />
               </Field>
@@ -123,12 +118,8 @@ export function ExhibitorEditForm({ x, sectors, readOnly }: { x: X; sectors: { i
               ))}
             </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Field label="Looking for">
-                <Textarea name="seeking" rows={3} defaultValue={x.seeking} />
-              </Field>
-              <Field label="Can offer">
-                <Textarea name="offering" rows={3} defaultValue={x.offering} />
-              </Field>
+              <RichField label="Looking for" name="seeking" id="exhibitor-seeking" defaultValue={x.seeking} minRows={3} />
+              <RichField label="Can offer" name="offering" id="exhibitor-offering" defaultValue={x.offering} minRows={3} />
             </div>
           </Panel>
           {!readOnly && (

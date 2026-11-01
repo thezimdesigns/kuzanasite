@@ -13,11 +13,11 @@ export default async function AdminFooter() {
   const user = await requireStaff();
   const editable = can(user, "site");
   const [{ settings, columns }, groups, stored] = await Promise.all([getFooter(), internalLinkOptions(), db.footerLink.count()]);
-  const titles: [string, string] = [settings["footer.col1Title"], settings["footer.col2Title"]];
+  const titles: [string, string, string] = [settings["footer.col1Title"], settings["footer.col2Title"], settings["footer.col3Title"]];
   const labelFor = (href: string) => groups.flatMap((g) => g.options).find((o) => o.href === href)?.label;
 
   return (
-    <AdminPage title="Footer" description="Contact details, social links and the two columns of links shown at the bottom of every page.">
+    <AdminPage title="Footer" description="Contact details, social links and the three columns of links shown at the bottom of every page.">
       {!editable && <ReadOnlyNotice />}
       <div className="grid gap-6 xl:grid-cols-[1fr_1.2fr]">
         <div className="space-y-6">

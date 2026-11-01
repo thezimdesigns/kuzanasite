@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Markdown } from "@/components/markdown";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { fileUrl } from "@/lib/files";
@@ -49,7 +50,11 @@ export default async function SeriesPage({ params }: PageProps<"/series/[slug]">
           <h1 className="mt-1 font-heading text-[clamp(3rem,10vw,6rem)] leading-[0.9] font-extrabold tracking-[-0.04em]">{s.title}</h1>
           {s.author && <p className="mt-3 text-lg font-semibold text-white/90">by {s.author}</p>}
           {s.tagline && <p className="mt-4 max-w-[55ch] text-lg text-pretty text-white/80">{s.tagline}</p>}
-          {s.description && <p className="mt-3 max-w-[65ch] text-pretty whitespace-pre-line text-white/70">{s.description}</p>}
+          {s.description && (
+            <div className="prose-dark mt-3 max-w-[65ch] text-pretty text-white/75">
+              <Markdown>{s.description}</Markdown>
+            </div>
+          )}
         </div>
       </header>
       <Section>

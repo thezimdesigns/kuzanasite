@@ -329,10 +329,7 @@ export async function BetweenHome({ next, past }: { next: Edition | null; past: 
       {partners.length > 0 && (
         <section className="bg-white">
           <Section>
-            <div className="mb-8 flex items-center justify-center gap-4">
-              <h2 className="font-heading text-lg font-bold text-green-900">Convenor, hosts and partners</h2>
-              <SectionLink href="/partners">All partners</SectionLink>
-            </div>
+            <h2 className="mb-8 text-center font-heading text-lg font-bold text-green-900">Convenor, hosts and partners</h2>
             <PartnerStrip partners={partners} />
           </Section>
         </section>

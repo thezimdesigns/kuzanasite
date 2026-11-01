@@ -4,6 +4,7 @@ import { createNews, updateNews } from "@/app/admin/actions/content";
 import { AdminForm } from "@/components/admin/admin-form";
 import { Panel } from "@/components/admin/ui";
 import { PickList } from "@/components/admin/pick-list";
+import { RichField } from "@/components/admin/rich-text";
 import { StoryImages, type StoryImage } from "@/components/admin/story-images";
 import { UploadField } from "@/components/admin/upload-field";
 import { Button, Checkbox, Field, Input, Select, Textarea } from "@/components/ui";
@@ -55,14 +56,16 @@ export function NewsForm({ values: v, options, readOnly = false }: { values: New
               <Field label="Standfirst" hint="One or two sentences under the headline and on cards.">
                 <Textarea name="excerpt" rows={2} defaultValue={v.excerpt} maxLength={320} />
               </Field>
-              <Field
+              <RichField
                 label="Story"
                 required
                 error={state.errors?.body}
-                hint="Markdown: ## Subheading, **bold**, - list, [link](https://…). Photos: [image 1] on its own line (add them below)."
-              >
-                <Textarea id="news-body" name="body" rows={18} defaultValue={v.body} className="font-mono text-sm leading-relaxed" />
-              </Field>
+                hint="Photos: upload them below, then use Insert to place each one ([image 1]) where it belongs."
+                name="body"
+                id="news-body"
+                defaultValue={v.body}
+                minRows={16}
+              />
               <div className="border-t border-line pt-4">
                 <h3 className="mb-2 font-heading text-base font-bold text-green-900">Images in the story</h3>
                 <StoryImages initial={v.images} nextNumber={v.nextImageNumber} bodyId="news-body" />

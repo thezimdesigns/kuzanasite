@@ -3,7 +3,8 @@
 import { saveSeries } from "@/app/admin/actions/content";
 import { AdminForm } from "@/components/admin/admin-form";
 import { UploadField } from "@/components/admin/upload-field";
-import { Button, Field, Input, Select, Textarea } from "@/components/ui";
+import { Button, Field, Input, Select } from "@/components/ui";
+import { RichField } from "@/components/admin/rich-text";
 
 export type SeriesValues = {
   id?: string;
@@ -32,9 +33,7 @@ export function SeriesForm({ values: v, readOnly = false }: { values: SeriesValu
           <Field label="Tagline" hint="One line under the title, on the homepage and the series page." className="sm:col-span-2">
             <Input name="tagline" defaultValue={v.tagline} maxLength={200} />
           </Field>
-          <Field label="About the series" className="sm:col-span-2">
-            <Textarea name="description" rows={4} defaultValue={v.description} />
-          </Field>
+          <RichField label="About the series" className="sm:col-span-2" name="description" id="series-description" defaultValue={v.description} minRows={4} />
           <Field label="Status">
             <Select name="publishStatus" defaultValue={v.publishStatus}>
               <option value="PUBLISHED">Published</option>

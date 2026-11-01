@@ -4,7 +4,7 @@ import { exhibitorCodeValid } from "@/lib/exhibitor-access";
 import { getStaff } from "@/lib/permissions";
 import { rateLimit } from "@/lib/rate-limit";
 import { putObject } from "@/lib/storage";
-import { objectKey, validateUpload } from "@/lib/uploads";
+import { objectKey, trimLogo, validateUpload } from "@/lib/uploads";
 
 /**
  * Single-file upload. Staff may upload anything allowed; the public exhibitor
@@ -46,7 +46,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const upload = await validateUpload(file, { imagesOnly: prefix === "public/stories" });
+    const validated = await validateUpload(file, { imagesOnly: prefix === "public/stories" });
+    // Partner logos: crop away empty canvas so the mark fills its box on the site.
+    const upload = prefix === "staff/partners" ? await trimLogo(validated) : validated;
     const key = objectKey(prefix, upload.ext);
     await putObject(key, upload.buffer, upload.mimeType);
     return NextResponse.json({

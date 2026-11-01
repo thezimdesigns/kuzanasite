@@ -4,7 +4,8 @@ import { createEvent, updateEvent } from "@/app/admin/actions/programme";
 import { AdminForm } from "@/components/admin/admin-form";
 import { Panel } from "@/components/admin/ui";
 import { UploadField } from "@/components/admin/upload-field";
-import { Button, Checkbox, Field, Input, Select, Textarea } from "@/components/ui";
+import { Button, Checkbox, Field, Input, Select } from "@/components/ui";
+import { RichField } from "@/components/admin/rich-text";
 import { STATUS_LABELS } from "@/lib/time";
 
 export type EventValues = {
@@ -190,9 +191,7 @@ export function EventForm({
           </Panel>
 
           <Panel title="Poster, description & images">
-            <Field label="Full description" hint="Markdown supported: **bold**, lists, [links](https://…)">
-              <Textarea name="description" rows={8} defaultValue={v.description} />
-            </Field>
+            <RichField label="Full description" name="description" id="event-description" defaultValue={v.description} minRows={8} />
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <UploadField name="posterKey" label="Poster (portrait works best)" current={v.posterKey} folder="events" maxDim={2000} />
               <UploadField name="imageKey" label="Featured image" current={v.imageKey} folder="events" maxDim={2000} />

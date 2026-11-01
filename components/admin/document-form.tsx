@@ -5,6 +5,7 @@ import { AdminForm } from "@/components/admin/admin-form";
 import { Panel } from "@/components/admin/ui";
 import { UploadField } from "@/components/admin/upload-field";
 import { Button, Field, Input, Select, Textarea } from "@/components/ui";
+import { RichField } from "@/components/admin/rich-text";
 import { DOCUMENT_TYPE_LABELS } from "@/lib/options";
 
 export type DocumentValues = {
@@ -100,9 +101,14 @@ export function DocumentForm({
               <Field label="Short description">
                 <Textarea name="description" rows={2} defaultValue={v.description} />
               </Field>
-              <Field label="Full text (optional)" hint="For press releases and speeches. Markdown supported.">
-                <Textarea name="body" rows={10} defaultValue={v.body} />
-              </Field>
+              <RichField
+                label="Full text (optional)"
+                hint="For press releases and speeches."
+                name="body"
+                id="document-body"
+                defaultValue={v.body}
+                minRows={10}
+              />
               {v.id && (
                 <Field label="URL slug">
                   <Input name="slug" defaultValue={v.slug} />

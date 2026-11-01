@@ -22,6 +22,7 @@ const SETTING_FIELDS: [string, string, string?][] = [
   ["x", "X (Twitter) URL"],
   ["col1Title", "First link column heading"],
   ["col2Title", "Second link column heading"],
+  ["col3Title", "Third link column heading"],
 ];
 
 export function FooterSettingsForm({ values, readOnly }: { values: Record<string, string>; readOnly: boolean }) {
@@ -59,7 +60,7 @@ export function FooterLinkForm({
   link,
 }: {
   groups: LinkGroups;
-  columns: [string, string];
+  columns: [string, string, string];
   link?: {
     id: string;
     label: string;
@@ -116,6 +117,7 @@ export function FooterLinkForm({
             <Select name="column" defaultValue={String(link?.column ?? 1)}>
               <option value="1">{columns[0]}</option>
               <option value="2">{columns[1]}</option>
+              <option value="3">{columns[2]}</option>
             </Select>
           </Field>
           <div className="sm:col-span-2">

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
 import { fileUrl } from "@/lib/files";
 import { PhotoCredit } from "@/components/photo-credit";
 import { cn } from "@/components/ui";
@@ -15,8 +16,11 @@ export type InlineImage = {
   height: number | null;
 };
 
-/** [image 2], [Image 2], [ image 2 ]: a story's in-text image shortcodes. */
-export const IMAGE_CODE = /\[\s*image\s+(\d+)\s*\]/gi;
+/** [image 2], [Image 2], [ image 2 ]: a story's in-text image shortcodes (also as the editor escapes them, \[image 2\]). */
+export const IMAGE_CODE = /\\?\[\s*image\s+(\d+)\s*\\?\]/gi;
+
+/** A single line break shows as a line break, as writers expect (and as plain text entered before the editor did). */
+const plugins = [remarkBreaks];
 
 const components = {
   a: ({ href, children }: { href?: string; children?: React.ReactNode }) => {
@@ -81,7 +85,9 @@ export function Markdown({ children, images, lightboxStart = 0 }: { children: st
   if (!images?.length) {
     return (
       <div className="prose-kuzana">
-        <ReactMarkdown components={components}>{children.replace(IMAGE_CODE, "")}</ReactMarkdown>
+        <ReactMarkdown components={components} remarkPlugins={plugins}>
+          {children.replace(IMAGE_CODE, "")}
+        </ReactMarkdown>
       </div>
     );
   }
@@ -92,7 +98,7 @@ export function Markdown({ children, images, lightboxStart = 0 }: { children: st
       {toBlocks(children, images).map((block, i) => {
         if (block.kind === "text") {
           return (
-            <ReactMarkdown key={i} components={components}>
+            <ReactMarkdown key={i} components={components} remarkPlugins={plugins}>
               {block.text}
             </ReactMarkdown>
           );

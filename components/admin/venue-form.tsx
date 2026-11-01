@@ -6,6 +6,7 @@ import { Panel } from "@/components/admin/ui";
 import { GoogleLocationField } from "@/components/admin/google-location-field";
 import { UploadField } from "@/components/admin/upload-field";
 import { Button, Field, Input, Textarea } from "@/components/ui";
+import { RichField } from "@/components/admin/rich-text";
 
 export type VenueValues = Record<
   | "name"
@@ -57,12 +58,8 @@ export function VenueForm({ values: v, readOnly = false }: { values: VenueValues
               </details>
             </div>
             <div className="mt-4 space-y-4">
-              <Field label="Description" hint="Markdown supported.">
-                <Textarea name="description" rows={4} defaultValue={v.description} />
-              </Field>
-              <Field label="Directions" hint="Markdown supported.">
-                <Textarea name="directions" rows={4} defaultValue={v.directions} />
-              </Field>
+              <RichField label="Description" name="description" id="venue-description" defaultValue={v.description} minRows={4} />
+              <RichField label="Directions" name="directions" id="venue-directions" defaultValue={v.directions} minRows={4} />
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Parking">
                   <Textarea name="parking" rows={2} defaultValue={v.parking} />

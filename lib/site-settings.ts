@@ -19,7 +19,8 @@ export const FOOTER_SETTING_DEFAULTS = {
   "footer.youtube": "",
   "footer.x": "",
   "footer.col1Title": "At the event",
-  "footer.col2Title": "Media & more",
+  "footer.col2Title": "Media & stories",
+  "footer.col3Title": "Work with us",
 } as const;
 
 export type FooterSettingKey = keyof typeof FOOTER_SETTING_DEFAULTS;
@@ -44,7 +45,7 @@ export const getFooter = cache(async () => {
       }));
   return {
     settings,
-    columns: [1, 2].map((c) => list.filter((l) => l.column === c)),
+    columns: [1, 2, 3].map((c) => list.filter((l) => l.column === c)),
   };
 });
 

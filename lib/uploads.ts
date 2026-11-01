@@ -86,3 +86,35 @@ export function objectKey(prefix: string, ext: string) {
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");
   return `${prefix}/${now.getUTCFullYear()}/${month}/${randomUUID()}.${ext}`;
 }
+
+/**
+ * Logos often arrive on a large canvas with lots of empty space around the
+ * mark, which makes them look tiny on the site. Crops that space away and
+ * leaves a small even margin. Returns the original if the image can't be read.
+ */
+export async function trimLogo(upload: ValidatedUpload): Promise<ValidatedUpload> {
+  if (!["image/png", "image/webp", "image/jpeg"].includes(upload.mimeType)) return upload;
+  try {
+    const sharp = (await import("sharp")).default;
+    const { data, info } = await sharp(upload.buffer).trim({ threshold: 18 }).toBuffer({ resolveWithObject: true });
+    const pad = Math.round(Math.max(info.width, info.height) * 0.04);
+    const transparent = upload.mimeType !== "image/jpeg";
+    let image = sharp(data).extend({
+      top: pad,
+      bottom: pad,
+      left: pad,
+      right: pad,
+      background: transparent ? { r: 255, g: 255, b: 255, alpha: 0 } : "#ffffff",
+    });
+    image =
+      upload.mimeType === "image/png"
+        ? image.png({ compressionLevel: 9 })
+        : upload.mimeType === "image/webp"
+          ? image.webp({ quality: 90 })
+          : image.jpeg({ quality: 90 });
+    const buffer = await image.toBuffer();
+    return { ...upload, buffer, size: buffer.length };
+  } catch {
+    return upload;
+  }
+}

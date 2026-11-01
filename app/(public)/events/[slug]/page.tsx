@@ -388,7 +388,11 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                                 </span>
                               </button>
                             )}
-                            {s.description && <p className="mt-1 text-sm whitespace-pre-line">{s.description}</p>}
+                            {s.description && (
+                              <div className="mt-1 text-sm">
+                                <Markdown>{s.description}</Markdown>
+                              </div>
+                            )}
                             {s.participants.length > 0 && (
                               <ul className="mt-2 flex flex-wrap gap-2">
                                 {s.participants.map((p) => (

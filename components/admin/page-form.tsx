@@ -3,7 +3,8 @@
 import { updatePage } from "@/app/admin/actions/site";
 import { AdminForm } from "@/components/admin/admin-form";
 import { Panel } from "@/components/admin/ui";
-import { Button, Field, Input, Textarea } from "@/components/ui";
+import { Button, Field, Input } from "@/components/ui";
+import { RichField } from "@/components/admin/rich-text";
 
 export function PageForm({ values: v, readOnly }: { values: { id: string; title: string; summary: string; body: string }; readOnly: boolean }) {
   return (
@@ -19,9 +20,7 @@ export function PageForm({ values: v, readOnly }: { values: { id: string; title:
               <Field label="Intro line">
                 <Input name="summary" defaultValue={v.summary} />
               </Field>
-              <Field label="Content" required error={state.errors?.body} hint="Markdown: ## Heading, **bold**, - bullet, [link text](/programme)">
-                <Textarea name="body" rows={22} defaultValue={v.body} className="font-mono text-sm" />
-              </Field>
+              <RichField label="Content" required error={state.errors?.body} name="body" id="page-body" defaultValue={v.body} minRows={18} />
             </div>
           </Panel>
           {!readOnly && (
