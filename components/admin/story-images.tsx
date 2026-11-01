@@ -81,7 +81,8 @@ export function StoryImages({ initial, nextNumber, bodyId }: { initial: StoryIma
       <input type="hidden" name="images" value={payload} />
       <p className="text-sm text-muted">
         Upload photos, then put each one&apos;s code, like <code className="rounded bg-cream-dark px-1">[image 1]</code>, on its own line in the story where the
-        photo should appear.
+        photo should appear. Codes next to each other, with no text between them, show as a grid of up to 4 across. Readers can tap any photo to see it full
+        size.
       </p>
 
       {images.length > 0 && (
