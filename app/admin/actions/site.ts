@@ -35,33 +35,47 @@ const partnerSchema = z.object({
   logoKey: optionalText(300),
   prominent: checkbox,
   sortOrder: z.coerce.number().int().default(0),
+  /** Editions (years) the partner took part in; none ticked means every year. */
+  editionIds: z.array(z.string().max(40)).default([]),
 });
 
-export const createPartner = adminFormAction("site", partnerSchema, async (d) => {
-  const edition = await requireCurrentEdition();
-  await db.partner.create({ data: { ...d, editionId: edition.id } });
-  return { ok: true, message: "Partner added." };
-});
+const PARTNER_ARRAYS = { arrays: ["editionIds"] };
 
-export const updatePartner = adminFormAction("site", partnerSchema.and(z.object({ id: z.string() })), async (d) => {
-  const { id, ...data } = d;
-  await db.partner.update({
-    where: { id },
-    data: {
-      ...data,
-      url: data.url ?? null,
-      caption: data.caption ?? null,
-      description: data.description ?? null,
-      facebook: data.facebook ?? null,
-      instagram: data.instagram ?? null,
-      linkedin: data.linkedin ?? null,
-      youtube: data.youtube ?? null,
-      // A newly uploaded logo replaces the bundled one.
-      ...(data.logoKey && { logoKey: data.logoKey, logoUrl: null }),
-    },
-  });
-  return { ok: true, message: "Partner saved." };
-});
+export const createPartner = adminFormAction(
+  "site",
+  partnerSchema,
+  async ({ editionIds, ...d }) => {
+    await db.partner.create({ data: { ...d, editions: { connect: editionIds.map((id) => ({ id })) } } });
+    return { ok: true, message: "Partner added." };
+  },
+  PARTNER_ARRAYS,
+);
+
+export const updatePartner = adminFormAction(
+  "site",
+  partnerSchema.and(z.object({ id: z.string() })),
+  async (d) => {
+    const { id, editionIds, ...data } = d;
+    await db.partner.update({
+      where: { id },
+      data: {
+        ...data,
+        url: data.url ?? null,
+        caption: data.caption ?? null,
+        description: data.description ?? null,
+        facebook: data.facebook ?? null,
+        instagram: data.instagram ?? null,
+        linkedin: data.linkedin ?? null,
+        youtube: data.youtube ?? null,
+        // A newly uploaded logo replaces the bundled one.
+        ...(data.logoKey && { logoKey: data.logoKey, logoUrl: null }),
+        editions: { set: editionIds.map((eid) => ({ id: eid })) },
+      },
+    });
+    return { ok: true, message: "Partner saved." };
+  },
+  PARTNER_ARRAYS,
+);
 
 export async function deletePartner(id: string) {
   return runAdmin("site", async () => {

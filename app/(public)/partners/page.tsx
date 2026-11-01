@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 import { db } from "@/lib/db";
+import { getSiteState } from "@/lib/edition";
 import { fileUrl } from "@/lib/files";
 import { PartnerTier } from "@/lib/generated/prisma/enums";
 import { PARTNER_TIER_LABELS } from "@/lib/options";
@@ -23,15 +25,50 @@ const REST: { tier: PartnerTier; title: string }[] = [
 ];
 
 type Partner = Awaited<ReturnType<typeof load>>[number];
-const load = () => db.partner.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
+const load = () =>
+  db.partner.findMany({
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    include: { editions: { select: { id: true, year: true }, orderBy: { year: "asc" } } },
+  });
 
-export default async function PartnersPage() {
-  const partners = await load();
+export default async function PartnersPage({ searchParams }: PageProps<"/partners">) {
+  const [all, { next }] = await Promise.all([load(), getSiteState()]);
+  // Years that have partners of their own, newest first.
+  const years = [...new Set(all.flatMap((p) => p.editions.map((e) => e.year)))].sort((a, b) => b - a);
+  const asked = Number((await searchParams).year);
+  // Default: the coming edition once its partners are announced, otherwise the latest year with partners.
+  const year = years.includes(asked) ? asked : next && years.includes(next.year) ? next.year : (years[0] ?? null);
+  const partners = year ? all.filter((p) => p.editions.length === 0 || p.editions.some((e) => e.year === year)) : all;
   const lead = LEAD.flatMap((t) => partners.filter((p) => p.tier === t));
 
   return (
     <>
-      <PageHeader title="Partners & sponsors" intro="KUZANA SCEEZ is convened, hosted and delivered with these organisations." />
+      <PageHeader
+        title="Partners & sponsors"
+        intro={
+          year
+            ? `The organisations that convened, hosted and supported KUZANA SCEEZ ${year}.`
+            : "KUZANA SCEEZ is convened, hosted and delivered with these organisations."
+        }
+      >
+        {years.length > 1 && (
+          <nav aria-label="Choose an edition" className="flex flex-wrap gap-2">
+            {years.map((y) => (
+              <Link
+                key={y}
+                href={`/partners?year=${y}`}
+                aria-current={y === year ? "page" : undefined}
+                className={cn(
+                  "rounded-[var(--radius-control)] border px-4 py-2 font-heading font-bold transition-colors",
+                  y === year ? "border-green-900 bg-green-900 text-white" : "border-line bg-white text-green-900 hover:border-green-800",
+                )}
+              >
+                {y}
+              </Link>
+            ))}
+          </nav>
+        )}
+      </PageHeader>
       <Section>
         {partners.length === 0 && <EmptyState>Partners will be announced soon.</EmptyState>}
 
@@ -84,6 +121,7 @@ function PartnerCard({ partner: p, lead = false }: { partner: Partner; lead?: bo
       </div>
       <p className="text-sm font-semibold text-orange-dark">{p.caption ?? PARTNER_TIER_LABELS[p.tier]}</p>
       <h3 className="mt-0.5 font-heading text-lg leading-snug font-bold">{p.name}</h3>
+      {p.editions.length > 1 && <p className="mt-1 text-xs font-semibold text-muted tabular-nums">Partner in {p.editions.map((e) => e.year).join(", ")}</p>}
       {p.description && <p className="mt-2 text-sm leading-relaxed text-muted">{p.description}</p>}
       <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-5">
         {p.url && host ? (

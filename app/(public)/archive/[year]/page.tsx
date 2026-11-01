@@ -13,6 +13,8 @@ import { CoverageColumns } from "@/components/public/coverage-columns";
 import { DocumentList } from "@/components/public/document-list";
 import { StatsExplorer } from "@/components/public/stats-explorer";
 import { StoryCard } from "@/components/public/story-blocks";
+import { PartnerStrip } from "@/components/public/partner-strip";
+import { partnersOfEdition } from "@/lib/partners";
 import { BackLink, Section, SectionTitle } from "@/components/ui";
 
 const live = { publishStatus: { in: ["PUBLISHED" as const, "ARCHIVED" as const] } };
@@ -58,7 +60,7 @@ export default async function EditionReviewPage({ params }: PageProps<"/archive/
   const exhibitorIds = edition.exhibitors.map((x) => x.id);
   const eventIds = edition.events.map((e) => e.id);
 
-  const [reports, stories, mentions, { next }] = await Promise.all([
+  const [reports, stories, mentions, { next }, partners] = await Promise.all([
     getPublishedReports(undefined, edition),
     db.newsPost.findMany({
       where: {
@@ -83,6 +85,7 @@ export default async function EditionReviewPage({ params }: PageProps<"/archive/
       take: 6,
     }),
     getSiteState(),
+    db.partner.findMany({ where: partnersOfEdition(edition.id), orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
   ]);
 
   const days = [...reports].reverse().map((r) => ({
@@ -272,6 +275,20 @@ export default async function EditionReviewPage({ params }: PageProps<"/archive/
             ))}
           </div>
         </Section>
+      )}
+
+      {partners.length > 0 && (
+        <section className="border-t border-line bg-white">
+          <Section>
+            <div className="mb-8 flex flex-wrap items-center justify-center gap-4">
+              <h2 className="font-heading text-lg font-bold text-green-900">Partners of KUZANA SCEEZ {edition.year}</h2>
+              <Link href={`/partners?year=${edition.year}`} className="text-sm font-semibold text-green-800 hover:underline">
+                About our partners
+              </Link>
+            </div>
+            <PartnerStrip partners={partners} />
+          </Section>
+        </section>
       )}
 
       {invite && (

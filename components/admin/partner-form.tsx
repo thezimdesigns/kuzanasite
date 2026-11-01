@@ -20,9 +20,10 @@ export type PartnerValues = {
   youtube: string;
   prominent: boolean;
   sortOrder: number;
+  editionIds: string[];
 };
 
-export function PartnerForm({ values: v }: { values: PartnerValues }) {
+export function PartnerForm({ values: v, editions }: { values: PartnerValues; editions: { id: string; year: number }[] }) {
   return (
     <AdminForm action={v.id ? updatePartner : createPartner} resetOnSuccess={!v.id}>
       {(state, pending) => (
@@ -61,6 +62,15 @@ export function PartnerForm({ values: v }: { values: PartnerValues }) {
               </Field>
             ))}
           </div>
+          <fieldset>
+            <legend className="mb-1.5 text-sm font-semibold text-ink">Partner in</legend>
+            <div className="flex flex-wrap gap-x-5 gap-y-2">
+              {editions.map((e) => (
+                <Checkbox key={e.id} name="editionIds" value={e.id} defaultChecked={v.editionIds.includes(e.id)} label={String(e.year)} />
+              ))}
+            </div>
+            <p className="mt-1 text-xs text-muted">Tick every year they partnered. Leave all unticked for a partner of every edition (e.g. the convenor).</p>
+          </fieldset>
           <Checkbox name="prominent" defaultChecked={v.prominent} label="Prominent (shown larger, e.g. the hosting ministry)" />
           <UploadField name="logoKey" label="Logo" current={v.logoKey} folder="partners" maxDim={800} />
           <Button type="submit" size="sm" disabled={pending}>

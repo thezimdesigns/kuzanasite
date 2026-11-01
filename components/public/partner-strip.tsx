@@ -19,8 +19,10 @@ type Partner = {
 export function PartnerStrip({ partners }: { partners: Partner[] }) {
   const lead = partners.filter((p) => p.prominent);
   const rest = partners.filter((p) => !p.prominent);
+  // A long list sits in rows under the lead logo instead of squeezing beside it.
+  const stacked = rest.length > 5;
   return (
-    <div className="flex flex-col items-center gap-8 md:flex-row md:justify-center md:gap-12">
+    <div className={cn("flex flex-col items-center gap-8", !stacked && "md:flex-row md:justify-center md:gap-12")}>
       {lead.length > 0 && (
         <ul className="flex flex-wrap items-center justify-center gap-8">
           {lead.map((p) => (
@@ -28,7 +30,9 @@ export function PartnerStrip({ partners }: { partners: Partner[] }) {
           ))}
         </ul>
       )}
-      {lead.length > 0 && rest.length > 0 && <span className="hidden h-24 w-px bg-line md:block" aria-hidden />}
+      {lead.length > 0 &&
+        rest.length > 0 &&
+        (stacked ? <span className="h-px w-24 bg-line" aria-hidden /> : <span className="hidden h-24 w-px bg-line md:block" aria-hidden />)}
       {rest.length > 0 && (
         <ul className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
           {rest.map((p) => (

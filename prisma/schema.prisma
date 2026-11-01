@@ -244,7 +244,7 @@ model Edition {
   videos        Video[]
   documents     Document[]
   announcements Announcement[]
-  partners      Partner[]
+  partners      Partner[]              @relation("PartnerEditions")
   news          NewsPost[]
   interests     InterestRegistration[]
 }
@@ -625,8 +625,8 @@ model Document {
 
 model Partner {
   id          String      @id @default(cuid())
-  editionId   String?
-  edition     Edition?    @relation(fields: [editionId], references: [id], onDelete: SetNull)
+  /// The editions (years) this organisation partnered. None means every year (e.g. the convenor).
+  editions    Edition[]   @relation("PartnerEditions")
   name        String
   logoKey     String?
   logoUrl     String?

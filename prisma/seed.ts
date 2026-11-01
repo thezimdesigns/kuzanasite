@@ -26,8 +26,7 @@ async function main() {
       year: 2026,
       name: "KUZANA SCEEZ 2026",
       theme: "Towards Vision 2030 through Sports & Creative Industries",
-      description:
-        "KUZANA SCEEZ 2026 is a sport, creative economy and investment platform connecting talent, capital, brands, institutions and audiences.",
+      description: "KUZANA SCEEZ 2026 is a sport, creative economy and investment platform connecting talent, capital, brands, institutions and audiences.",
       startDate: at("2026-10-07T00:00:00"),
       endDate: at("2026-10-11T23:59:59"),
       isCurrent: true,
@@ -75,9 +74,23 @@ async function main() {
   }
 
   const sectors = [
-    "Sport", "Arts & Culture", "Fashion", "Media", "Technology", "Finance", "Education", "Tourism",
-    "Government", "Food", "Entertainment", "Equipment", "Health", "Transport", "Insurance",
-    "Professional Services", "Other",
+    "Sport",
+    "Arts & Culture",
+    "Fashion",
+    "Media",
+    "Technology",
+    "Finance",
+    "Education",
+    "Tourism",
+    "Government",
+    "Food",
+    "Entertainment",
+    "Equipment",
+    "Health",
+    "Transport",
+    "Insurance",
+    "Professional Services",
+    "Other",
   ];
   for (const [i, name] of sectors.entries()) {
     await db.exhibitorCategory.upsert({
@@ -85,7 +98,10 @@ async function main() {
       update: {},
       create: {
         name,
-        slug: name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-"),
+        slug: name
+          .toLowerCase()
+          .replace(/&/g, "and")
+          .replace(/[^a-z0-9]+/g, "-"),
         sortOrder: i,
       },
     });
@@ -207,13 +223,21 @@ async function main() {
 
   // Partners ------------------------------------------------------------------
   if ((await db.partner.count()) === 0) {
-    await db.partner.createMany({
-      data: [
-        { name: "MOSRAC Zimbabwe", logoUrl: "/brand/mosrac-zimbabwe.png", tier: "CONVENOR", caption: "Convenor", prominent: true, sortOrder: 1, editionId: edition.id },
-        { name: "Nhimbe Trust", logoUrl: "/brand/nhimbe-trust.png", tier: "TECHNICAL_PARTNER", caption: "Technical partner", url: "https://www.nhimbe.org", sortOrder: 2, editionId: edition.id },
-        { name: "ZITF", logoUrl: "/brand/zitf.png", tier: "HOST", caption: "Host", sortOrder: 3, editionId: edition.id },
-      ],
-    });
+    const editions = { connect: { id: edition.id } };
+    for (const data of [
+      { name: "MOSRAC Zimbabwe", logoUrl: "/brand/mosrac-zimbabwe.png", tier: "CONVENOR" as const, caption: "Convenor", prominent: true, sortOrder: 1 },
+      {
+        name: "Nhimbe Trust",
+        logoUrl: "/brand/nhimbe-trust.png",
+        tier: "TECHNICAL_PARTNER" as const,
+        caption: "Technical partner",
+        url: "https://www.nhimbe.org",
+        sortOrder: 2,
+      },
+      { name: "ZITF", logoUrl: "/brand/zitf.png", tier: "HOST" as const, caption: "Host", sortOrder: 3 },
+    ]) {
+      await db.partner.create({ data: { ...data, editions } });
+    }
   }
 
   // Homepage hero background slides (then managed in Admin → Homepage & branding)
@@ -229,12 +253,32 @@ async function main() {
   // Service provider categories (then managed in Admin → Service providers)
   if ((await db.serviceCategory.count()) === 0) {
     const names = [
-      "Photography", "Videography", "Design", "News & media", "Security", "Logistics", "Transport",
-      "Internet & connectivity", "Lighting", "Stage & sound", "Exhibition stalls", "Printing & branding",
-      "Catering", "Cleaning", "Medical & first aid", "Ushering & volunteers",
+      "Photography",
+      "Videography",
+      "Design",
+      "News & media",
+      "Security",
+      "Logistics",
+      "Transport",
+      "Internet & connectivity",
+      "Lighting",
+      "Stage & sound",
+      "Exhibition stalls",
+      "Printing & branding",
+      "Catering",
+      "Cleaning",
+      "Medical & first aid",
+      "Ushering & volunteers",
     ];
     await db.serviceCategory.createMany({
-      data: names.map((name, i) => ({ name, slug: name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-"), sortOrder: i })),
+      data: names.map((name, i) => ({
+        name,
+        slug: name
+          .toLowerCase()
+          .replace(/&/g, "and")
+          .replace(/[^a-z0-9]+/g, "-"),
+        sortOrder: i,
+      })),
     });
   }
 

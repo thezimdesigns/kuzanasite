@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { editionDates, getCurrentEdition, getSiteState } from "@/lib/edition";
 import { BetweenHome } from "@/components/public/home-between";
 import { getNews } from "@/lib/news";
+import { partnersOfEdition } from "@/lib/partners";
 import { getActiveAnnouncements, getEditionEvents, getLiveBoard } from "@/lib/programme";
 import { computeStatus, dateKey, formatLongDay, startOfDay } from "@/lib/time";
 import { AutoRefresh } from "@/components/public/auto-refresh";
@@ -65,9 +66,7 @@ export default async function HomePage() {
       db.partner.findMany({
         where: {
           tier: { in: ["CONVENOR", "HOST", "TECHNICAL_PARTNER", "PARTNER"] },
-          ...(edition && {
-            OR: [{ editionId: edition.id }, { editionId: null }],
-          }),
+          ...partnersOfEdition(edition?.id),
         },
         orderBy: { sortOrder: "asc" },
       }),

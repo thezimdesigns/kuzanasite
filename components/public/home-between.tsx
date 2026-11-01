@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { editionDates, editionJsonLd, getPortal } from "@/lib/edition";
 import { fileUrl } from "@/lib/files";
 import { getNews, getSeriesList, storyLabel } from "@/lib/news";
+import { partnersOfEdition } from "@/lib/partners";
 import { siteUrl } from "@/lib/site";
 import { dateKey, startOfDay } from "@/lib/time";
 import { CoverageColumns } from "@/components/public/coverage-columns";
@@ -40,7 +41,11 @@ export async function BetweenHome({ next, past }: { next: Edition | null; past: 
       orderBy: [{ featured: "desc" }, { publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
       take: 3,
     }),
-    db.partner.findMany({ where: { tier: { in: ["CONVENOR", "HOST", "TECHNICAL_PARTNER", "PARTNER"] } }, orderBy: { sortOrder: "asc" } }),
+    // Between editions the strip thanks the last edition's partners (and those with us every year).
+    db.partner.findMany({
+      where: { tier: { in: ["CONVENOR", "HOST", "TECHNICAL_PARTNER", "PARTNER"] }, ...partnersOfEdition(past?.id) },
+      orderBy: { sortOrder: "asc" },
+    }),
     past
       ? db.event.findMany({
           where: { editionId: past.id, publishStatus: "PUBLISHED", OR: [{ posterKey: { not: null } }, { imageKey: { not: null } }] },
