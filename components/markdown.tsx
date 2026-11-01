@@ -109,8 +109,9 @@ export function Markdown({ children, images, lightboxStart = 0 }: { children: st
         const cols = gridColumns(block.images.length);
         return (
           <div key={i} className={cn("story-figure grid grid-cols-2 gap-2 sm:gap-3", COLS[cols])}>
-            {block.images.map((img) => (
-              <figure key={img.number} className="min-w-0">
+            {block.images.map((img, n) => (
+              // Phones show two across: with an odd count the first photo takes the full width, so no photo sits alone at the end.
+              <figure key={img.number} className={cn("min-w-0", n === 0 && block.images.length % 2 === 1 && "col-span-2 sm:col-span-1")}>
                 <StoryPhoto img={img} index={order++} tile />
                 {img.caption && <figcaption className="mt-1.5 line-clamp-2 text-xs leading-snug text-muted">{img.caption}</figcaption>}
               </figure>
