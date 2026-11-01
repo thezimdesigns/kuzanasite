@@ -23,6 +23,7 @@ import { qaAutoApprove, voterId } from "@/lib/qa";
 import { rateLimit } from "@/lib/rate-limit";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { uniqueSlug } from "@/lib/slug";
+import { confirmToSender, notifyTeam } from "@/lib/email/notify";
 
 const TOO_MANY: FormState = {
   ok: false,
@@ -71,7 +72,34 @@ export async function submitInterest(_: FormState, fd: FormData): Promise<FormSt
   const parsed = interestSchema.safeParse(formToObject(fd));
   if (!parsed.success) return invalid(parsed.error, fd);
   const { current } = await getSiteState();
-  await db.interestRegistration.create({ data: { ...parsed.data, editionId: current?.id ?? null } });
+  const d = parsed.data;
+  await db.interestRegistration.create({ data: { ...d, editionId: current?.id ?? null } });
+  notifyTeam({
+    subject: `New interest: ${d.interest}${current ? ` for ${current.year}` : ""}`,
+    intro: `${d.name}${d.organisation ? ` (${d.organisation})` : ""} registered interest on the website.`,
+    rows: [
+      ["Interested as", d.interest],
+      ["Organisation", d.organisation],
+      ["Email", d.email],
+      ["Phone", d.phone],
+      ["Country", d.country],
+      ["Message", d.message],
+    ],
+    adminPath: "/admin/visitors?tab=interest",
+    replyTo: d.email,
+  });
+  confirmToSender({
+    to: d.email,
+    subject: `Thanks for your interest in ${current?.name ?? "KUZANA SCEEZ"}`,
+    title: "We've got your details",
+    body: `Hello ${d.name},
+
+Thank you for registering your interest in taking part in ${current?.name ?? "KUZANA SCEEZ"} as ${/^[AEIOU]/i.test(d.interest) ? "an" : "a"} ${d.interest.toLowerCase()}. We'll be in touch as plans take shape and when applications open.
+
+The KUZANA team`,
+    ctaPath: "/take-part",
+    ctaLabel: "See ways to take part",
+  });
   return {
     ok: true,
     message: "Thank you. Your interest has been captured and we will be in touch.",
@@ -111,6 +139,24 @@ export async function submitFeedback(_: FormState, fd: FormData): Promise<FormSt
       eventId: (await db.event.findUnique({ where: { id: d.eventId ?? "" } })) ? d.eventId : null,
       venueId: (await db.venue.findUnique({ where: { id: d.venueId ?? "" } })) ? d.venueId : null,
     },
+  });
+  notifyTeam({
+    subject: `New feedback: ${d.category}`,
+    intro: d.anonymous ? "Anonymous feedback from the website." : `Feedback from ${d.name || "a visitor"}.`,
+    rows: [
+      ["Category", d.category],
+      ["Rating", d.rating ? `${d.rating} / 5` : null],
+      ["Message", d.message],
+      ...(d.anonymous
+        ? []
+        : ([
+            ["Email", d.email],
+            ["Phone", d.phone],
+            ["May contact", d.contactPermission ? "Yes" : "No"],
+          ] as [string, string | null | undefined][])),
+    ],
+    adminPath: "/admin/feedback",
+    replyTo: d.anonymous || !d.contactPermission ? null : d.email,
   });
   return {
     ok: true,
@@ -252,6 +298,18 @@ export async function submitExhibitorRegistration(_: FormState, fd: FormData): P
       logoKey: logo?.key,
       media: { create: media.map((m, i) => ({ ...m, sortOrder: i })) },
     },
+  });
+  notifyTeam({
+    subject: `New exhibitor to review: ${data.name}`,
+    intro: `${data.contactName} submitted a stand for ${data.name}. It is waiting for review.`,
+    rows: [
+      ["Contact", data.contactName],
+      ["Phone", data.phone],
+      ["Email", data.email],
+      ["Hall / stand", [data.hall, data.stand].filter(Boolean).join(" / ")],
+    ],
+    adminPath: "/admin/exhibitors?status=PENDING",
+    replyTo: data.email,
   });
   return {
     ok: true,
@@ -438,6 +496,33 @@ export async function submitStory(_: FormState, fd: FormData): Promise<FormState
       },
     });
   }
+  notifyTeam({
+    subject: `New story: ${d.organisation ?? d.name}`,
+    intro: `${d.name}${d.organisation ? ` (${d.organisation})` : ""} shared their KUZANA story.`,
+    rows: [
+      ["Took part as", d.role],
+      ["How they took part", d.tookPart],
+      ["What came out of it", d.outcomes],
+      ["Working on now", d.workingOn],
+      ["Will they be back?", d.returning],
+      ["Email", d.email],
+      ["Phone", d.phone],
+    ],
+    adminPath: "/admin/stories",
+    replyTo: d.email,
+  });
+  confirmToSender({
+    to: d.email,
+    subject: "Thank you for sharing your KUZANA story",
+    title: "Thank you for your story",
+    body: `Hello ${d.name},
+
+Thank you for telling us what came out of KUZANA. The team reads every story, and we'll be in touch before featuring yours.
+
+The KUZANA team`,
+    ctaPath: "/stories",
+    ctaLabel: "Read the stories",
+  });
   return { ok: true, message: "Thank you for sharing your story. The KUZANA team reads every one and may be in touch to feature it." };
 }
 
@@ -471,6 +556,19 @@ export async function submitEnquiry(_: FormState, fd: FormData): Promise<FormSta
   const exhibitor = await db.exhibitor.findFirst({ where: { id: exhibitorId, status: "APPROVED" }, select: { id: true, name: true } });
   if (!exhibitor) return { ok: false, message: "This exhibitor is no longer listed." };
   await db.exhibitorEnquiry.create({ data: { ...data, exhibitorId: exhibitor.id } });
+  confirmToSender({
+    to: data.email,
+    subject: `Your enquiry to ${exhibitor.name}`,
+    title: "Your enquiry is saved",
+    body: `Hello ${data.name},
+
+Thank you for your enquiry to ${exhibitor.name} (${data.topic}). KUZANA passes enquiries on to exhibitors, together with your contact details, so they can reply to you directly.
+
+Your message:
+${data.message}
+
+The KUZANA team`,
+  });
   return {
     ok: true,
     message: `Thank you. Your enquiry is saved and KUZANA will pass it to ${exhibitor.name}.`,

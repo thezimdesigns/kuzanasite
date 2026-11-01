@@ -5,7 +5,7 @@ import { EmailAllEnquiries, ExhibitorEnquiryActions } from "@/components/admin/e
 import { AdminPage, Panel, RowLink } from "@/components/admin/ui";
 import { Alert, Badge, buttonClass } from "@/components/ui";
 import { db } from "@/lib/db";
-import { emailConfigured } from "@/lib/email/ses";
+import { emailConfigured } from "@/lib/email/send";
 import { enquiryDigest } from "@/lib/enquiries";
 import { can, requireAreaPage } from "@/lib/permissions";
 import { formatDay, formatTime } from "@/lib/time";
@@ -53,7 +53,7 @@ export default async function AdminEnquiries() {
       {!canEmail && (
         <div className="mb-5">
           <Alert tone="orange">
-            Email isn&apos;t set up on the server yet (Amazon SES keys). Until it is, use <strong>Copy text</strong> to paste an exhibitor&apos;s enquiries into
+            Email isn&apos;t set up on the server yet (RESEND_KEY). Until it is, use <strong>Copy text</strong> to paste an exhibitor&apos;s enquiries into
             WhatsApp or your own email, then <strong>Mark as passed on</strong>.
           </Alert>
         </div>

@@ -123,13 +123,15 @@ export default async function EditionReviewPage({ params }: PageProps<"/archive/
                 [speeches.length, "speeches"],
                 [edition.albums.length + edition.videos.length, "albums & videos"],
               ] as const
-            ).map(([n, label]) => (
-              <div key={label}>
-                <dt className="sr-only">{label}</dt>
-                <dd className="font-heading text-4xl leading-none font-extrabold text-orange-bright tabular-nums">{n}</dd>
-                <dd className="mt-1 text-sm font-semibold text-white/70">{label}</dd>
-              </div>
-            ))}
+            )
+              .filter(([n]) => n > 0)
+              .map(([n, label]) => (
+                <div key={label}>
+                  <dt className="sr-only">{label}</dt>
+                  <dd className="font-heading text-4xl leading-none font-extrabold text-orange-bright tabular-nums">{n}</dd>
+                  <dd className="mt-1 text-sm font-semibold text-white/70">{label}</dd>
+                </div>
+              ))}
           </dl>
           {/* Jump links: the page is long. */}
           <nav aria-label="On this page" className="mt-8 flex flex-wrap gap-2 text-sm font-semibold">

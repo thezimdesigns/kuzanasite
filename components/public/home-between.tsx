@@ -262,13 +262,15 @@ export async function BetweenHome({ next, past }: { next: Edition | null; past: 
                       [pastCounts[2], "speakers & guests"],
                       [pastCounts[3], "speeches"],
                     ] as const
-                  ).map(([n, label]) => (
-                    <div key={label}>
-                      <dt className="sr-only">{label}</dt>
-                      <dd className="font-heading text-3xl leading-none font-extrabold text-green-900 tabular-nums sm:text-4xl">{n}</dd>
-                      <dd className="mt-1 text-xs font-semibold text-muted">{label}</dd>
-                    </div>
-                  ))}
+                  )
+                    .filter(([n]) => n > 0)
+                    .map(([n, label]) => (
+                      <div key={label}>
+                        <dt className="sr-only">{label}</dt>
+                        <dd className="font-heading text-3xl leading-none font-extrabold text-green-900 tabular-nums sm:text-4xl">{n}</dd>
+                        <dd className="mt-1 text-xs font-semibold text-muted">{label}</dd>
+                      </div>
+                    ))}
                 </dl>
               )}
               <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">

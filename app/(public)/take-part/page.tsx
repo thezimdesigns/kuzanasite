@@ -80,7 +80,9 @@ export default async function TakePartPage() {
           )}
         </div>
         {!portal.open && (
-          <p className="mt-3 text-sm text-muted">Portal applications for {next?.year ?? "the next edition"} are not open yet. Register interest below and we&apos;ll tell you when they open.</p>
+          <p className="mt-3 text-sm text-muted">
+            Portal applications for {next?.year ?? "the next edition"} are not open yet. Register interest below and we&apos;ll tell you when they open.
+          </p>
         )}
       </PageHeader>
 
@@ -102,13 +104,15 @@ export default async function TakePartPage() {
                   [proof[2], "speakers and guests"],
                   [proof[3], "media reports"],
                 ] as const
-              ).map(([n, label]) => (
-                <div key={label}>
-                  <dt className="sr-only">{label}</dt>
-                  <dd className="font-heading text-5xl leading-none font-extrabold tracking-[-0.03em] text-orange-bright tabular-nums">{n}</dd>
-                  <dd className="mt-2 text-sm font-semibold text-white/75">{label}</dd>
-                </div>
-              ))}
+              )
+                .filter(([n]) => n > 0)
+                .map(([n, label]) => (
+                  <div key={label}>
+                    <dt className="sr-only">{label}</dt>
+                    <dd className="font-heading text-5xl leading-none font-extrabold tracking-[-0.03em] text-orange-bright tabular-nums">{n}</dd>
+                    <dd className="mt-2 text-sm font-semibold text-white/75">{label}</dd>
+                  </div>
+                ))}
             </dl>
             <Link href={`/archive/${past.year}`} className="mt-8 inline-flex items-center gap-1 font-semibold text-orange-bright hover:underline">
               See KUZANA SCEEZ {past.year} in review <ArrowUpRight className="size-4" aria-hidden />
@@ -119,7 +123,13 @@ export default async function TakePartPage() {
 
       {posts.length > 0 && (
         <Section>
-          <SectionTitle action={<Link href="/stories" className="text-sm font-semibold text-green-800 hover:underline">All stories</Link>}>
+          <SectionTitle
+            action={
+              <Link href="/stories" className="text-sm font-semibold text-green-800 hover:underline">
+                All stories
+              </Link>
+            }
+          >
             From the people who took part
           </SectionTitle>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

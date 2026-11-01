@@ -5,7 +5,7 @@ import { z } from "zod";
 import { adminFormAction, runAdmin } from "@/lib/admin-action";
 import { createClaimToken } from "@/lib/claim";
 import { db } from "@/lib/db";
-import { emailConfigured, sendEmail } from "@/lib/email/ses";
+import { emailConfigured, sendEmail } from "@/lib/email/send";
 import { enquiryDigest, pendingEnquiries } from "@/lib/enquiries";
 import { requireCurrentEdition } from "@/lib/edition";
 import { checkbox, optionalEmail, optionalText, optionalUrl, phone, requiredText } from "@/lib/forms";

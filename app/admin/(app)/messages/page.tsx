@@ -21,7 +21,7 @@ export default async function AdminMessages() {
       )}
       {!channels.EMAIL && (
         <div className="mb-3">
-          <Alert tone="orange">Email (Amazon SES) is not configured. Email sends will be recorded as failed.</Alert>
+          <Alert tone="orange">Email is not configured (add RESEND_KEY in Coolify). Email sends will be recorded as failed.</Alert>
         </div>
       )}
       <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">

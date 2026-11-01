@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { emailConfigured, sendEmail } from "@/lib/email/ses";
+import { emailConfigured, sendEmail } from "@/lib/email/send";
 import { layout } from "@/lib/email/templates";
 import type { Channel } from "@/lib/generated/prisma/enums";
 import { VISITOR_INTERESTS, VISITOR_TYPES } from "@/lib/options";
@@ -176,8 +176,8 @@ export async function deliverMessage(messageId: string) {
         });
         if (ok) sent++;
         else failed++;
-        // Stay under the SES send rate (default 14/s in production, 1/s in the sandbox).
-        await new Promise((res) => setTimeout(res, Number(process.env.SES_SEND_INTERVAL_MS ?? 120)));
+        // Stay under the provider's send rate (Resend allows about 2 a second by default).
+        await new Promise((res) => setTimeout(res, Number(process.env.EMAIL_SEND_INTERVAL_MS ?? process.env.SES_SEND_INTERVAL_MS ?? 600)));
         if (i % 25 === 0)
           await db.message.update({
             where: { id: messageId },
