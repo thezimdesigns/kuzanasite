@@ -36,7 +36,7 @@ export function PartnerStrip({ partners }: { partners: Partner[] }) {
       {rest.length > 0 && (
         <ul className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
           {rest.map((p) => (
-            <PartnerLogo key={p.id} partner={p} className="h-[4.5rem] w-44" sizes="176px" />
+            <PartnerLogo key={p.id} partner={p} className="h-24 w-36" sizes="144px" />
           ))}
         </ul>
       )}

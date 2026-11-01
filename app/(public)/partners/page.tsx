@@ -112,7 +112,7 @@ function PartnerCard({ partner: p, lead = false }: { partner: Partner; lead?: bo
   const host = p.url ? new URL(p.url).hostname.replace(/^www\./, "") : null;
   return (
     <article className={cn("flex flex-col rounded-[var(--radius-card)] border border-line bg-white", lead ? "p-6" : "p-5")}>
-      <div className={cn("relative mb-5", lead ? (p.prominent ? "h-32" : "h-24") : "h-16")}>
+      <div className={cn("relative mb-5", lead ? (p.prominent ? "h-32" : "h-24") : "h-28")}>
         {logo ? (
           <Image src={logo} alt={`${p.name} logo`} fill sizes="320px" className="object-contain object-left" />
         ) : (
