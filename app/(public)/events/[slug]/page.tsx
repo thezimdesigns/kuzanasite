@@ -31,6 +31,7 @@ import { FriendlyBadge, StatusBadge } from "@/components/public/status-badge";
 import { StatsBoard } from "@/components/public/stats-board";
 import { getPublishedReports } from "@/lib/stats-server";
 import { StreamPlayer } from "@/components/public/stream-player";
+import { StoryLightbox, type LightboxItem } from "@/components/public/lightbox";
 import { StoryCard } from "@/components/public/story-blocks";
 import { getStoriesFeaturing } from "@/lib/news";
 import { Markdown } from "@/components/markdown";
@@ -138,8 +139,16 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
     sessionDays.set(k, [...(sessionDays.get(k) ?? []), s]);
   }
 
+  // Posters open in the lightbox (main poster first, then session posters in agenda order).
+  const sessionPosters = event.sessions.filter((s) => s.posterKey);
+  const posters: LightboxItem[] = [
+    ...(image ? [{ src: image, alt: `${event.title} poster`, caption: event.title }] : []),
+    ...sessionPosters.map((s) => ({ src: fileUrl(s.posterKey)!, alt: `${s.title} poster`, caption: s.title })),
+  ];
+  const posterIndex = (sessionId: string) => (image ? 1 : 0) + sessionPosters.findIndex((s) => s.id === sessionId);
+
   return (
-    <>
+    <StoryLightbox items={posters}>
       {event.bannerKey && <ProgrammeBanner banner={{ wide: event.bannerKey, mobile: event.bannerMobileKey }} priority className="border-b border-line" />}
       <header className="border-b border-line bg-ivory-pattern">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 sm:py-12 md:grid-cols-[1.4fr_1fr]">
@@ -248,12 +257,11 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
             </div>
           </div>
           {image && (
-            <a
-              href={image}
-              target="_blank"
-              rel="noopener"
-              className="hero-art group relative block aspect-[4/5] max-h-[32rem] overflow-hidden rounded-[var(--radius-card)] border border-line bg-white shadow-[var(--shadow-lift)]"
-              aria-label={`Open the ${event.title} poster full size`}
+            <button
+              type="button"
+              data-lightbox={0}
+              className="hero-art group relative block aspect-[4/5] max-h-[32rem] w-full cursor-zoom-in overflow-hidden rounded-[var(--radius-card)] border border-line bg-white shadow-[var(--shadow-lift)]"
+              aria-label={`View the ${event.title} poster full size`}
             >
               <Image
                 src={image}
@@ -263,7 +271,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                 className="object-contain transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
                 priority
               />
-            </a>
+            </button>
           )}
         </div>
       </header>
@@ -363,12 +371,11 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                               {s.room && ` · ${s.room}`}
                             </p>
                             {s.posterKey && (
-                              <a
-                                href={fileUrl(s.posterKey)!}
-                                target="_blank"
-                                rel="noopener"
-                                className="group mt-2 block w-32 overflow-hidden rounded-[var(--radius-control)] border border-line"
-                                aria-label={`Open the ${s.title} poster`}
+                              <button
+                                type="button"
+                                data-lightbox={posterIndex(s.id)}
+                                className="group mt-2 block w-32 cursor-zoom-in overflow-hidden rounded-[var(--radius-control)] border border-line"
+                                aria-label={`View the ${s.title} poster full size`}
                               >
                                 <span className="relative block aspect-[4/5]">
                                   <Image
@@ -379,7 +386,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                                   />
                                 </span>
-                              </a>
+                              </button>
                             )}
                             {s.description && <p className="mt-1 text-sm whitespace-pre-line">{s.description}</p>}
                             {s.participants.length > 0 && (
@@ -584,7 +591,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
           }).replace(/</g, "\\u003c"),
         }}
       />
-    </>
+    </StoryLightbox>
   );
 }
 

@@ -12,6 +12,7 @@ import { CompletionLink } from "@/components/admin/completion-link";
 import { ExhibitorEditForm } from "@/components/admin/exhibitor-edit-form";
 import { AdminPage, Panel, ReadOnlyNotice } from "@/components/admin/ui";
 import { Badge } from "@/components/ui";
+import { StoryLightbox } from "@/components/public/lightbox";
 
 export default async function AdminExhibitor({ params }: PageProps<"/admin/exhibitors/[id]">) {
   const user = await requireStaff();
@@ -32,6 +33,7 @@ export default async function AdminExhibitor({ params }: PageProps<"/admin/exhib
     }),
   ]);
   if (!x) notFound();
+  const photos = x.media.filter((m) => m.mimeType.startsWith("image/"));
   const activeLinks = x.claimTokens.filter((t) => !t.revokedAt && t.expiresAt > new Date());
 
   return (
@@ -94,41 +96,45 @@ export default async function AdminExhibitor({ params }: PageProps<"/admin/exhib
         {x.media.length === 0 ? (
           <p className="text-sm text-muted">No files.</p>
         ) : (
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {x.media.map((m) => (
-              <li key={m.id} className="overflow-hidden rounded-lg border border-line">
-                <a href={fileUrl(m.key)!} target="_blank" rel="noopener" className="block">
+          <StoryLightbox items={photos.map((m) => ({ src: fileUrl(m.key)!, alt: m.caption ?? "", caption: m.caption ?? m.kind.toLowerCase() }))}>
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {x.media.map((m) => (
+                <li key={m.id} className="overflow-hidden rounded-lg border border-line">
                   {m.mimeType.startsWith("image/") ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={fileUrl(m.key)!} alt="" className="aspect-[4/3] w-full object-cover" loading="lazy" />
+                    <button type="button" data-lightbox={photos.indexOf(m)} className="block w-full cursor-zoom-in" aria-label="View full size">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={fileUrl(m.key)!} alt="" className="aspect-[4/3] w-full object-cover" loading="lazy" />
+                    </button>
                   ) : (
-                    <span className="flex aspect-[4/3] flex-col items-center justify-center gap-1 bg-cream-dark p-2 text-center text-xs">
-                      <FileText className="size-6" /> {m.fileName ?? "Document"}
-                    </span>
+                    <a href={fileUrl(m.key, m.fileName)!} className="block">
+                      <span className="flex aspect-[4/3] flex-col items-center justify-center gap-1 bg-cream-dark p-2 text-center text-xs">
+                        <FileText className="size-6" /> {m.fileName ?? "Document"}
+                      </span>
+                    </a>
                   )}
-                </a>
-                <div className="space-y-1 p-2 text-xs">
-                  <div className="flex items-center justify-between">
-                    <Badge>{m.kind.toLowerCase().replace("_", " ")}</Badge>
-                    <span className="text-muted">{formatBytes(m.size)}</span>
-                  </div>
-                  {editable && (
-                    <div className="flex flex-wrap gap-1">
-                      {m.mimeType.startsWith("image/") && x.logoKey !== m.key && (
-                        <ActionButton action={setExhibitorLogo.bind(null, x.id, m.key)} variant="ghost">
-                          Use as logo
-                        </ActionButton>
-                      )}
-                      {x.logoKey === m.key && <Badge tone="green">Logo</Badge>}
-                      <ActionButton action={deleteExhibitorMedia.bind(null, m.id)} variant="ghost" confirm="Delete this file permanently?">
-                        Delete
-                      </ActionButton>
+                  <div className="space-y-1 p-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <Badge>{m.kind.toLowerCase().replace("_", " ")}</Badge>
+                      <span className="text-muted">{formatBytes(m.size)}</span>
                     </div>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+                    {editable && (
+                      <div className="flex flex-wrap gap-1">
+                        {m.mimeType.startsWith("image/") && x.logoKey !== m.key && (
+                          <ActionButton action={setExhibitorLogo.bind(null, x.id, m.key)} variant="ghost">
+                            Use as logo
+                          </ActionButton>
+                        )}
+                        {x.logoKey === m.key && <Badge tone="green">Logo</Badge>}
+                        <ActionButton action={deleteExhibitorMedia.bind(null, m.id)} variant="ghost" confirm="Delete this file permanently?">
+                          Delete
+                        </ActionButton>
+                      </div>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </StoryLightbox>
         )}
       </Panel>
 

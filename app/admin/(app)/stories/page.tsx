@@ -3,6 +3,7 @@ import { ExternalLink } from "lucide-react";
 import { setSubmissionStatus, startStoryDraft } from "@/app/admin/actions/content";
 import { ActionButton } from "@/components/admin/admin-form";
 import { StoryInvite } from "@/components/admin/story-invite";
+import { StoryLightbox } from "@/components/public/lightbox";
 import { AdminPage, Panel, ReadOnlyNotice, Tabs } from "@/components/admin/ui";
 import { Badge } from "@/components/ui";
 import { db } from "@/lib/db";
@@ -108,10 +109,17 @@ export default async function AdminStories({ searchParams }: PageProps<"/admin/s
                     ))}
                 </dl>
                 {s.photoKey && (
-                  <a href={fileUrl(s.photoKey)!} target="_blank" rel="noopener" className="block overflow-hidden rounded-[var(--radius-control)] border border-line">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={fileUrl(s.photoKey)!} alt={`Photo from ${s.name}`} className="aspect-square w-full object-cover" loading="lazy" />
-                  </a>
+                  <StoryLightbox items={[{ src: fileUrl(s.photoKey)!, alt: `Photo from ${s.name}`, caption: s.organisation ?? s.name }]}>
+                    <button
+                      type="button"
+                      data-lightbox={0}
+                      className="block w-full cursor-zoom-in overflow-hidden rounded-[var(--radius-control)] border border-line"
+                      aria-label={`View the photo from ${s.name} full size`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={fileUrl(s.photoKey)!} alt={`Photo from ${s.name}`} className="aspect-square w-full object-cover" loading="lazy" />
+                    </button>
+                  </StoryLightbox>
                 )}
               </div>
               {editable && (
@@ -147,7 +155,15 @@ export default async function AdminStories({ searchParams }: PageProps<"/admin/s
 }
 
 /** Everyone who took part in the last edition, each with a personal "Share your story" message. */
-async function InviteList({ pastId, year, submitted }: { pastId: string | null; year: number | null; submitted: { exhibitorId: string | null; personId: string | null }[] }) {
+async function InviteList({
+  pastId,
+  year,
+  submitted,
+}: {
+  pastId: string | null;
+  year: number | null;
+  submitted: { exhibitorId: string | null; personId: string | null }[];
+}) {
   const [exhibitors, people] = await Promise.all([
     db.exhibitor.findMany({
       where: { status: "APPROVED", ...(pastId && { editionId: pastId }) },
@@ -169,8 +185,8 @@ async function InviteList({ pastId, year, submitted }: { pastId: string | null; 
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted">
-        Each link is personal: it fills in who the story is about, so answers arrive linked to the right profile. Speakers have no contact details on file; copy the message and send it from your
-        own contacts.
+        Each link is personal: it fills in who the story is about, so answers arrive linked to the right profile. Speakers have no contact details on file; copy
+        the message and send it from your own contacts.
       </p>
       <Panel title={`Exhibitors (${exhibitors.length})`}>
         <ul className="divide-y divide-line">
@@ -182,7 +198,12 @@ async function InviteList({ pastId, year, submitted }: { pastId: string | null; 
                 </p>
                 <p className="text-sm text-muted">{x.contactName}</p>
               </div>
-              <StoryInvite message={message(x.contactName.split(" ")[0] || x.contactName, x.name, x.slug)} phone={x.whatsapp ?? x.phone} email={x.email} subject={subject} />
+              <StoryInvite
+                message={message(x.contactName.split(" ")[0] || x.contactName, x.name, x.slug)}
+                phone={x.whatsapp ?? x.phone}
+                email={x.email}
+                subject={subject}
+              />
             </li>
           ))}
         </ul>

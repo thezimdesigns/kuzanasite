@@ -10,6 +10,7 @@ import { findExhibitorStall } from "@/lib/floor-plans";
 import { EnquiryForm } from "@/components/public/enquiry-form";
 import { RatingForm } from "@/components/public/rating-form";
 import { ShareButtons } from "@/components/public/share-buttons";
+import { StoryLightbox } from "@/components/public/lightbox";
 import { StoryCard } from "@/components/public/story-blocks";
 import { getStoriesFeaturing } from "@/lib/news";
 import { dateKey } from "@/lib/time";
@@ -119,25 +120,27 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
           {images.length > 0 && (
             <div>
               <SectionTitle>Photos</SectionTitle>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {images.map((m) => (
-                  <a
-                    key={m.id}
-                    href={fileUrl(m.key)!}
-                    target="_blank"
-                    rel="noopener"
-                    className="relative block aspect-[4/3] overflow-hidden rounded-[var(--radius-control)] bg-cream-dark"
-                  >
-                    <Image
-                      src={fileUrl(m.key)!}
-                      alt={m.caption ?? `${x.name} ${m.kind.toLowerCase().replace("_", " ")}`}
-                      fill
-                      sizes="(min-width: 640px) 25vw, 50vw"
-                      className="object-cover"
-                    />
-                  </a>
-                ))}
-              </div>
+              <StoryLightbox items={images.map((m) => ({ src: fileUrl(m.key)!, alt: m.caption ?? x.name, caption: m.caption }))}>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {images.map((m, i) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      data-lightbox={i}
+                      className="relative block aspect-[4/3] w-full cursor-zoom-in overflow-hidden rounded-[var(--radius-control)] bg-cream-dark"
+                      aria-label={`View ${m.caption ?? `photo ${i + 1}`} full size`}
+                    >
+                      <Image
+                        src={fileUrl(m.key)!}
+                        alt={m.caption ?? `${x.name} ${m.kind.toLowerCase().replace("_", " ")}`}
+                        fill
+                        sizes="(min-width: 640px) 25vw, 50vw"
+                        className="object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </StoryLightbox>
             </div>
           )}
           {(x.opportunities.length > 0 || x.seeking || x.offering) && (

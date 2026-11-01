@@ -1,10 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarDays, FileDown, MapPin, Play } from "lucide-react";
+import { CalendarDays, FileDown, MapPin } from "lucide-react";
 import type { ProgrammeStatus } from "@/lib/generated/prisma/enums";
 import { fileUrl } from "@/lib/files";
 import { dateKey, formatDate, formatRange, friendlyStatus, TIME_ZONE } from "@/lib/time";
-import { youtubeThumb } from "@/lib/youtube";
 import { FriendlyBadge } from "@/components/public/status-badge";
 import { cn } from "@/components/ui";
 
@@ -156,35 +155,8 @@ export function AlbumCard({
   );
 }
 
-export function VideoCard({ video }: { video: { youtubeId: string; title: string; date: Date | null } }) {
-  return (
-    <a
-      href={`https://www.youtube.com/watch?v=${video.youtubeId}`}
-      target="_blank"
-      rel="noopener"
-      className="group block overflow-hidden rounded-[var(--radius-card)] border border-line bg-white transition-[box-shadow,transform] duration-300 ease-[var(--ease-out-expo)] hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]"
-    >
-      <div className="relative aspect-video overflow-hidden bg-ink">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={youtubeThumb(video.youtubeId)}
-          alt=""
-          loading="lazy"
-          className="size-full object-cover opacity-90 transition-[transform,opacity] duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.04] group-hover:opacity-100"
-        />
-        <span className="absolute inset-0 flex items-center justify-center">
-          <span className="rounded-full bg-orange-dark p-3 text-white shadow-[0_8px_24px_-6px_rgb(0_0_0/0.5)] transition-transform duration-300 ease-[var(--ease-out-expo)] group-hover:scale-110">
-            <Play className="size-6 fill-current" />
-          </span>
-        </span>
-      </div>
-      <div className="p-3">
-        <h3 className="line-clamp-2 font-heading font-bold leading-snug">{video.title}</h3>
-        {video.date && <p className="mt-0.5 text-xs text-muted">{formatDate(video.date)}</p>}
-      </div>
-    </a>
-  );
-}
+/** Video thumbnails play in a lightbox (client component). */
+export { VideoCard } from "@/components/public/video-card";
 
 export function ExhibitorCard({
   exhibitor,
