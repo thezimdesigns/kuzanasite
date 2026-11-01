@@ -9,6 +9,8 @@ import { ActionButton } from "@/components/admin/admin-form";
 import { NewsForm } from "@/components/admin/news-form";
 import { AdminPage, ReadOnlyNotice } from "@/components/admin/ui";
 import { newsOptions } from "@/lib/news-admin";
+import { fileUrl } from "@/lib/files";
+import { IMAGE_CODE } from "@/components/markdown";
 
 export default async function EditNews({ params }: PageProps<"/admin/news/[id]">) {
   const user = await requireStaff();
@@ -16,7 +18,7 @@ export default async function EditNews({ params }: PageProps<"/admin/news/[id]">
   const [p, options] = await Promise.all([
     db.newsPost.findUnique({
       where: { id: (await params).id },
-      include: { exhibitors: { select: { exhibitorId: true } }, people: { select: { personId: true } } },
+      include: { exhibitors: { select: { exhibitorId: true } }, people: { select: { personId: true } }, images: { orderBy: { number: "asc" } } },
     }),
     newsOptions(),
   ]);
@@ -43,6 +45,22 @@ export default async function EditNews({ params }: PageProps<"/admin/news/[id]">
           body: p.body,
           coverKey: p.coverKey ?? "",
           coverAlt: p.coverAlt ?? "",
+          coverCaption: p.coverCaption ?? "",
+          coverCredit: p.coverCredit ?? "",
+          coverCreditUrl: p.coverCreditUrl ?? "",
+          images: p.images.map((i) => ({
+            number: i.number,
+            key: i.key,
+            url: fileUrl(i.key) ?? "",
+            alt: i.alt ?? "",
+            caption: i.caption ?? "",
+            credit: i.credit ?? "",
+            creditUrl: i.creditUrl ?? "",
+            width: i.width,
+            height: i.height,
+          })),
+          // Past every number in use or still written in the text, so a code never changes picture.
+          nextImageNumber: Math.max(0, ...p.images.map((i) => i.number), ...[...p.body.matchAll(IMAGE_CODE)].map((m) => Number(m[1]))) + 1,
           author: p.author ?? "",
           eventId: p.eventId ?? "",
           featured: p.featured,

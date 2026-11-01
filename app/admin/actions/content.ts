@@ -5,7 +5,7 @@ import { z } from "zod";
 import { adminFormAction, runAdmin } from "@/lib/admin-action";
 import { db } from "@/lib/db";
 import { getCurrentEdition } from "@/lib/edition";
-import { checkbox, optionalText, requiredText } from "@/lib/forms";
+import { checkbox, optionalText, optionalUrl, requiredText } from "@/lib/forms";
 import { MentionPlatform, NewsKind, PublishStatus } from "@/lib/generated/prisma/enums";
 import { detectPlatform, hostOf } from "@/lib/coverage";
 import { fetchLinkPreview } from "@/lib/link-preview";
@@ -18,6 +18,40 @@ import { keyToReportDay, readGroups, statGroupsSchema } from "@/lib/stats";
 // News
 // ---------------------------------------------------------------------------
 
+/** One in-text image from the editor ([image N] in the story). */
+const storyImageSchema = z.object({
+  number: z.number().int().min(1).max(999),
+  key: z.string().regex(/^staff\/[\w/.-]+$/),
+  alt: optionalText(200),
+  caption: optionalText(300),
+  credit: optionalText(150),
+  creditUrl: optionalUrl,
+  width: z.number().int().positive().max(20000).nullable().optional(),
+  height: z.number().int().positive().max(20000).nullable().optional(),
+});
+
+/** Saves a story's in-text images: removes dropped ones (and their files), adds and updates the rest. */
+async function setImages(postId: string, images: z.infer<typeof storyImageSchema>[]) {
+  const unique = [...new Map(images.map((i) => [i.number, i])).values()];
+  const gone = await db.newsPostImage.findMany({ where: { postId, number: { notIn: unique.map((i) => i.number) } } });
+  await db.$transaction([
+    db.newsPostImage.deleteMany({ where: { id: { in: gone.map((g) => g.id) } } }),
+    ...unique.map((i) => {
+      const data = {
+        key: i.key,
+        alt: i.alt ?? null,
+        caption: i.caption ?? null,
+        credit: i.credit ?? null,
+        creditUrl: i.creditUrl ?? null,
+        width: i.width ?? null,
+        height: i.height ?? null,
+      };
+      return db.newsPostImage.upsert({ where: { postId_number: { postId, number: i.number } }, update: data, create: { ...data, postId, number: i.number } });
+    }),
+  ]);
+  for (const g of gone) if (!unique.some((i) => i.key === g.key)) await deleteObject(g.key);
+}
+
 const newsSchema = z.object({
   title: requiredText("Headline", 160),
   slug: z.string().trim().max(90).optional(),
@@ -25,6 +59,9 @@ const newsSchema = z.object({
   body: requiredText("Story", 50000),
   coverKey: optionalText(300),
   coverAlt: optionalText(200),
+  coverCaption: optionalText(300),
+  coverCredit: optionalText(150),
+  coverCreditUrl: optionalUrl,
   author: optionalText(120),
   eventId: optionalText(40).transform((v) => v ?? null),
   featured: checkbox,
@@ -38,6 +75,18 @@ const newsSchema = z.object({
   seriesPart: z.preprocess((v) => (v === "" || v == null ? undefined : v), z.coerce.number().int().min(1).max(999).optional()),
   exhibitorIds: z.array(z.string().max(40)).default([]),
   personIds: z.array(z.string().max(40)).default([]),
+  images: z
+    .string()
+    .default("[]")
+    .transform((s, ctx) => {
+      try {
+        return JSON.parse(s) as unknown;
+      } catch {
+        ctx.addIssue({ code: "custom", message: "Images could not be read. Reload the page and try again." });
+        return z.NEVER;
+      }
+    })
+    .pipe(z.array(storyImageSchema).max(40)),
 });
 
 const NEWS_ARRAYS = { arrays: ["exhibitorIds", "personIds"] };
@@ -53,12 +102,15 @@ async function setFeatured(postId: string, d: { exhibitorIds: string[]; personId
 }
 
 function newsData(d: z.infer<typeof newsSchema>) {
-  const { slug: _s, exhibitorIds: _e, personIds: _p, ...rest } = d;
+  const { slug: _s, exhibitorIds: _e, personIds: _p, images: _i, ...rest } = d;
   return {
     ...rest,
     excerpt: d.excerpt ?? null,
     coverKey: d.coverKey ?? null,
     coverAlt: d.coverAlt ?? null,
+    coverCaption: d.coverCaption ?? null,
+    coverCredit: d.coverCredit ?? null,
+    coverCreditUrl: d.coverCreditUrl ?? null,
     author: d.author ?? null,
     seriesPart: d.seriesId ? (d.seriesPart ?? null) : null,
   };
@@ -79,6 +131,7 @@ export const createNews = adminFormAction(
       },
     });
     await setFeatured(post.id, d);
+    await setImages(post.id, d.images);
     redirect(`/admin/news/${post.id}?saved=1`);
   },
   NEWS_ARRAYS,
@@ -94,6 +147,7 @@ export const updateNews = adminFormAction(
       data: { ...newsData(d), ...(d.slug && { slug: slugify(d.slug) }) },
     });
     await setFeatured(d.id, d);
+    await setImages(d.id, d.images);
     if (old.coverKey && old.coverKey !== d.coverKey) await deleteObject(old.coverKey);
     return { ok: true, message: "Story saved." };
   },
@@ -102,8 +156,10 @@ export const updateNews = adminFormAction(
 
 export async function deleteNews(id: string) {
   await runAdmin("press", async () => {
+    const images = await db.newsPostImage.findMany({ where: { postId: id }, select: { key: true } });
     const p = await db.newsPost.delete({ where: { id } });
     if (p.coverKey) await deleteObject(p.coverKey);
+    for (const i of images) await deleteObject(i.key);
   });
   redirect("/admin/news");
 }

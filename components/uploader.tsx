@@ -95,6 +95,7 @@ export function Uploader({
   scope,
   maxDim,
   onChange,
+  onUploaded,
   compact = false,
 }: {
   label: string;
@@ -108,7 +109,9 @@ export function Uploader({
   /** "story": a public story photo (images only, rate limited). */
   scope?: "story";
   maxDim?: number;
-  onChange: (files: UploadedFile[]) => void;
+  onChange?: (files: UploadedFile[]) => void;
+  /** Hand each finished file over and drop it from this list (for callers that show uploads themselves). */
+  onUploaded?: (file: UploadedFile) => void;
   compact?: boolean;
 }) {
   const [items, setItems] = useState<Item[]>([]);
@@ -126,7 +129,7 @@ export function Uploader({
   function commit(next: Item[]) {
     itemsRef.current = next;
     setItems(next);
-    onChange(next.filter((i) => i.status === "done" && i.result).map((i) => i.result!));
+    onChange?.(next.filter((i) => i.status === "done" && i.result).map((i) => i.result!));
   }
 
   function patch(id: string, update: Partial<Item>) {
@@ -144,11 +147,13 @@ export function Uploader({
       if (folder) form.set("folder", folder);
       if (scope) form.set("scope", scope);
       const result = await uploadWithProgress(form, (p) => patch(item.id, { progress: p }));
-      patch(item.id, {
-        status: "done",
-        progress: 1,
-        result: { ...result, width, height, preview: item.preview },
-      });
+      const done = { ...result, width, height, preview: item.preview };
+      if (onUploaded) {
+        onUploaded(done);
+        commit(itemsRef.current.filter((i) => i.id !== item.id));
+        return;
+      }
+      patch(item.id, { status: "done", progress: 1, result: done });
     } catch (error) {
       patch(item.id, { status: "error", error: (error as Error).message });
     }

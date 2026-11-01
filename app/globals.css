@@ -94,6 +94,13 @@ h4 {
 .prose-kuzana strong {
   font-weight: 700;
 }
+/* In-text images ([image N] shortcodes in stories). */
+.prose-kuzana .story-figure {
+  margin: 1.75rem 0;
+}
+.prose-kuzana .story-figure figcaption a {
+  color: inherit;
+}
 
 /* ---------------------------------------------------------------------------
    Motion. Content is visible by default; every effect is opt-in under
@@ -289,7 +296,9 @@ h4 {
   font: 800 11px/1 var(--font-heading);
   white-space: nowrap;
   cursor: pointer;
-  transition: scale 0.2s var(--ease-out-expo), background-color 0.2s;
+  transition:
+    scale 0.2s var(--ease-out-expo),
+    background-color 0.2s;
 }
 .kuzana-stall[data-empty] {
   background: #fff;

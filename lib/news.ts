@@ -39,6 +39,7 @@ export async function getNewsPost(slug: string) {
     include: {
       event: { select: { title: true, slug: true } },
       series: true,
+      images: { orderBy: { number: "asc" } },
       exhibitors: { include: { exhibitor: { select: { slug: true, name: true, logoKey: true, status: true, category: { select: { name: true } } } } } },
       people: { include: { person: { select: { slug: true, name: true, photoKey: true, jobTitle: true, organisation: true, publishStatus: true } } } },
     },

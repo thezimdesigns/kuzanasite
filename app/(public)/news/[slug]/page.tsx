@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { fileUrl } from "@/lib/files";
 import { getNewsPost, readingMinutes } from "@/lib/news";
 import { formatDate } from "@/lib/time";
+import { ImageCredit } from "@/components/image-credit";
 import { Markdown } from "@/components/markdown";
 import { NewsRow } from "@/components/public/news-blocks";
 import { ShareButtons } from "@/components/public/share-buttons";
@@ -102,14 +103,17 @@ export default async function NewsArticle({ params }: PageProps<"/news/[slug]">)
       </header>
       {cover && (
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <figure className="relative -mt-0 aspect-[16/9] overflow-hidden rounded-[var(--radius-card)] bg-cream-dark">
-            <Image src={cover} alt={p.coverAlt ?? ""} fill priority sizes="(min-width: 1024px) 1024px, 100vw" className="object-cover" />
+          <figure>
+            <div className="relative aspect-[16/9] overflow-hidden rounded-[var(--radius-card)] bg-cream-dark">
+              <Image src={cover} alt={p.coverAlt ?? ""} fill priority sizes="(min-width: 1024px) 1024px, 100vw" className="object-cover" />
+            </div>
+            <ImageCredit caption={p.coverCaption} credit={p.coverCredit} creditUrl={p.coverCreditUrl} />
           </figure>
         </div>
       )}
       <Section className="max-w-3xl">
         <div className="text-[1.0625rem] leading-relaxed">
-          <Markdown>{p.body}</Markdown>
+          <Markdown images={p.images}>{p.body}</Markdown>
         </div>
         {(people.length > 0 || exhibitors.length > 0) && (
           <aside className="mt-10" aria-label="Featured in this story">

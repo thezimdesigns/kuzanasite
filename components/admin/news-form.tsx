@@ -4,6 +4,7 @@ import { createNews, updateNews } from "@/app/admin/actions/content";
 import { AdminForm } from "@/components/admin/admin-form";
 import { Panel } from "@/components/admin/ui";
 import { PickList } from "@/components/admin/pick-list";
+import { StoryImages, type StoryImage } from "@/components/admin/story-images";
 import { UploadField } from "@/components/admin/upload-field";
 import { Button, Checkbox, Field, Input, Select, Textarea } from "@/components/ui";
 
@@ -15,6 +16,11 @@ export type NewsValues = {
   body: string;
   coverKey: string;
   coverAlt: string;
+  coverCaption: string;
+  coverCredit: string;
+  coverCreditUrl: string;
+  images: StoryImage[];
+  nextImageNumber: number;
   author: string;
   eventId: string;
   featured: boolean;
@@ -49,9 +55,18 @@ export function NewsForm({ values: v, options, readOnly = false }: { values: New
               <Field label="Standfirst" hint="One or two sentences under the headline and on cards.">
                 <Textarea name="excerpt" rows={2} defaultValue={v.excerpt} maxLength={320} />
               </Field>
-              <Field label="Story" required error={state.errors?.body} hint="Markdown: ## Subheading, **bold**, - list, [link](https://…)">
-                <Textarea name="body" rows={18} defaultValue={v.body} className="font-mono text-sm leading-relaxed" />
+              <Field
+                label="Story"
+                required
+                error={state.errors?.body}
+                hint="Markdown: ## Subheading, **bold**, - list, [link](https://…). Photos: [image 1] on its own line (add them below)."
+              >
+                <Textarea id="news-body" name="body" rows={18} defaultValue={v.body} className="font-mono text-sm leading-relaxed" />
               </Field>
+              <div className="border-t border-line pt-4">
+                <h3 className="mb-2 font-heading text-base font-bold text-green-900">Images in the story</h3>
+                <StoryImages initial={v.images} nextNumber={v.nextImageNumber} bodyId="news-body" />
+              </div>
             </div>
           </Panel>
           <div className="space-y-6">
@@ -126,6 +141,15 @@ export function NewsForm({ values: v, options, readOnly = false }: { values: New
             <Panel title="Cover image">
               <div className="space-y-3">
                 <UploadField name="coverKey" label="Image (landscape works best)" current={v.coverKey} folder="news" maxDim={2000} />
+                <Field label="Caption">
+                  <Input name="coverCaption" defaultValue={v.coverCaption} maxLength={300} />
+                </Field>
+                <Field label="Photo credit / source" hint="Photographer or outlet, shown as “Photo: …”">
+                  <Input name="coverCredit" defaultValue={v.coverCredit} maxLength={150} />
+                </Field>
+                <Field label="Credit link (optional)">
+                  <Input name="coverCreditUrl" type="url" defaultValue={v.coverCreditUrl} placeholder="https://" />
+                </Field>
                 <Field label="Describe the image" hint="For people using screen readers.">
                   <Input name="coverAlt" defaultValue={v.coverAlt} />
                 </Field>

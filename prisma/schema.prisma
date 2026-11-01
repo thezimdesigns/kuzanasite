@@ -338,12 +338,12 @@ model Event {
   ratings       Rating[]
   subscriptions EventSubscription[]
   messages      Message[]
+  questions     ConferenceQuestion[]
+  tickets       EventTicket[]
 
   @@index([startsAt])
   @@index([publishStatus, startsAt])
   @@index([editionId])
-  questions            ConferenceQuestion[]
-  tickets              EventTicket[]
 }
 
 model Session {
@@ -368,9 +368,9 @@ model Session {
   videos       Video[]
   ratings      Rating[]
   streams      EventStream[]
+  questions    ConferenceQuestion[]
 
   @@index([eventId, startsAt])
-  questions      ConferenceQuestion[]
 }
 
 model Person {
@@ -868,36 +868,61 @@ model FooterLink {
 // ---------------------------------------------------------------------------
 
 model NewsPost {
-  id            String        @id @default(cuid())
-  editionId     String?
-  edition       Edition?      @relation(fields: [editionId], references: [id], onDelete: SetNull)
-  eventId       String?
-  event         Event?        @relation(fields: [eventId], references: [id], onDelete: SetNull)
-  title         String
-  slug          String        @unique
-  excerpt       String?
-  body          String
-  coverKey      String?
-  coverAlt      String?
-  author        String?
-  featured      Boolean       @default(false)
+  id             String        @id @default(cuid())
+  editionId      String?
+  edition        Edition?      @relation(fields: [editionId], references: [id], onDelete: SetNull)
+  eventId        String?
+  event          Event?        @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  title          String
+  slug           String        @unique
+  excerpt        String?
+  body           String
+  coverKey       String?
+  coverAlt       String?
+  coverCaption   String?
+  /// Photographer or source of the cover image, shown as "Photo: …".
+  coverCredit    String?
+  coverCreditUrl String?
+  author         String?
+  featured       Boolean       @default(false)
   /// Plain update, participant story or interview. Stories and interviews live at /stories.
-  kind          NewsKind      @default(UPDATE)
-  seriesId      String?
-  series        Series?       @relation(fields: [seriesId], references: [id], onDelete: SetNull)
-  seriesPart    Int?
-  publishStatus PublishStatus @default(DRAFT)
-  publishedAt   DateTime      @default(now())
-  createdById   String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  kind           NewsKind      @default(UPDATE)
+  seriesId       String?
+  series         Series?       @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  seriesPart     Int?
+  publishStatus  PublishStatus @default(DRAFT)
+  publishedAt    DateTime      @default(now())
+  createdById    String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   exhibitors NewsPostExhibitor[]
   people     NewsPostPerson[]
+  images     NewsPostImage[]
 
   @@index([publishStatus, publishedAt])
   @@index([kind, publishStatus, publishedAt])
   @@index([seriesId, seriesPart])
+}
+
+/// An image placed inside a story's text with the shortcode [image N].
+/// Numbers are per post and never reused, so a code always means the same picture.
+model NewsPostImage {
+  id        String   @id @default(cuid())
+  postId    String
+  post      NewsPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  number    Int
+  key       String
+  alt       String?
+  caption   String?
+  /// Photographer or source, shown as "Photo: …".
+  credit    String?
+  creditUrl String?
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+
+  @@unique([postId, number])
 }
 
 /// An editorial series, for example "Signal", told in numbered parts.
