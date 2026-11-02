@@ -89,7 +89,7 @@ export default async function NewsArticle({ params }: PageProps<"/news/[slug]">)
         }}
       />
       <header className="bg-ivory-pattern">
-        <div className="mx-auto max-w-3xl px-4 pt-8 pb-6 sm:px-6 sm:pt-12">
+        <div className="mx-auto max-w-6xl px-4 pt-8 pb-6 sm:px-6 sm:pt-12">
           {p.series ? (
             <BackLink href={`/series/${p.series.slug}`} label={p.series.title} />
           ) : (
@@ -126,7 +126,7 @@ export default async function NewsArticle({ params }: PageProps<"/news/[slug]">)
       </header>
       <StoryLightbox items={lightbox}>
         {cover && (
-          <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <figure>
               <div className="group relative aspect-[16/9] overflow-hidden rounded-[var(--radius-card)] bg-cream-dark">
                 <button type="button" data-lightbox={0} className="absolute inset-0 cursor-zoom-in" aria-label="View the cover photo full size">
@@ -138,7 +138,7 @@ export default async function NewsArticle({ params }: PageProps<"/news/[slug]">)
             </figure>
           </div>
         )}
-        <Section className="max-w-3xl">
+        <Section>
           <div className="text-[1.0625rem] leading-relaxed">
             <Markdown images={p.images} lightboxStart={cover ? 1 : 0}>
               {p.body}
@@ -223,7 +223,7 @@ export default async function NewsArticle({ params }: PageProps<"/news/[slug]">)
       </StoryLightbox>
       {more.length > 0 && (
         <section className="border-t border-line bg-white">
-          <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+          <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
             <h2 className="mb-2 text-xl font-extrabold text-green-900">More from KUZANA</h2>
             {more.map((m) => (
               <NewsRow key={m.id} post={m} className="border-b border-line last:border-0" />

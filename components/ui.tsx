@@ -118,7 +118,9 @@ export function PageHeader({
 }
 
 export function Section({ className, ...props }: ComponentProps<"section">) {
-  return <section className={cn("mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10", className)} {...props} />;
+  // cn() only joins classes, so a width passed in must replace the default rather than sit beside it.
+  const width = className?.includes("max-w-") ? "" : "max-w-6xl";
+  return <section className={cn("mx-auto px-4 py-8 sm:px-6 sm:py-10", width, className)} {...props} />;
 }
 
 export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
