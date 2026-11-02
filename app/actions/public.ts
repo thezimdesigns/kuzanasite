@@ -121,6 +121,7 @@ const feedbackSchema = z.object({
   email: optionalEmail,
   phone: optionalText(30),
   contactPermission: checkbox,
+  publishConsent: checkbox,
 });
 
 export async function submitFeedback(_: FormState, fd: FormData): Promise<FormState> {

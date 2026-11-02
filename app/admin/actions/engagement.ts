@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
@@ -9,6 +10,7 @@ import { checkbox, optionalEmail, optionalText, requiredText } from "@/lib/forms
 import { VISITOR_INTERESTS, VISITOR_TYPES } from "@/lib/options";
 import { Channel, FeedbackStatus, type QuestionStatus } from "@/lib/generated/prisma/enums";
 import { setQaAutoApprove } from "@/lib/qa";
+import { FEEDBACK_PUBLIC_KEY } from "@/lib/feedback";
 import { deliverMessage, resolveAudience } from "@/lib/messaging";
 
 // ---------------------------------------------------------------------------
@@ -33,6 +35,43 @@ export const updateFeedback = adminFormAction(
 
 export async function setFeedbackStatus(id: string, status: FeedbackStatus) {
   return runAdmin("feedback", () => db.feedback.update({ where: { id }, data: { status } }));
+}
+
+/** What of a piece of feedback is shown on the website, and under what name. */
+export const updateFeedbackPublic = adminFormAction(
+  "feedback",
+  z.object({
+    id: z.string(),
+    isPublic: checkbox,
+    publicText: optionalText(1200),
+    publicName: optionalText(80),
+  }),
+  async (d) => {
+    await db.feedback.update({
+      where: { id: d.id },
+      data: { isPublic: d.isPublic, publicText: d.publicText ?? null, publicName: d.publicName ?? null },
+    });
+    revalidatePath("/", "layout");
+    return { ok: true, message: d.isPublic ? "Shown on the website." : "Kept private." };
+  },
+);
+
+/** Quick publish or hide from the feedback list. */
+export async function setFeedbackPublic(id: string, isPublic: boolean) {
+  await runAdmin("feedback", () => db.feedback.update({ where: { id }, data: { isPublic } }));
+  revalidatePath("/", "layout");
+}
+
+/** Turns the public "What people said" section on or off across the site. */
+export async function setFeedbackWall(on: boolean) {
+  await runAdmin("feedback", () =>
+    db.siteSetting.upsert({
+      where: { key: FEEDBACK_PUBLIC_KEY },
+      update: { value: on ? "1" : "0" },
+      create: { key: FEEDBACK_PUBLIC_KEY, value: on ? "1" : "0" },
+    }),
+  );
+  revalidatePath("/", "layout");
 }
 
 // ---------------------------------------------------------------------------

@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { can, requireStaff } from "@/lib/permissions";
 import { formatDay, formatTime } from "@/lib/time";
 import { FeedbackStatusForm } from "@/components/admin/feedback-status-form";
+import { FeedbackPublicForm } from "@/components/admin/feedback-tools";
+import { defaultPublicName } from "@/lib/feedback";
 import { AdminPage, Panel } from "@/components/admin/ui";
 import { Badge } from "@/components/ui";
 
@@ -71,9 +73,22 @@ export default async function AdminFeedbackItem({ params }: PageProps<"/admin/fe
             )}
           </div>
         </Panel>
-        <Panel title="Handling">
-          <FeedbackStatusForm id={f.id} status={f.status} notes={f.adminNotes ?? ""} readOnly={!can(user, "feedback")} />
-        </Panel>
+        <div className="space-y-6">
+          <Panel title="Handling">
+            <FeedbackStatusForm id={f.id} status={f.status} notes={f.adminNotes ?? ""} readOnly={!can(user, "feedback")} />
+          </Panel>
+          <Panel title="On the website">
+            <FeedbackPublicForm
+              id={f.id}
+              isPublic={f.isPublic}
+              publicText={f.publicText ?? f.message}
+              publicName={f.publicName ?? ""}
+              defaultName={defaultPublicName(f)}
+              consent={f.publishConsent}
+              readOnly={!can(user, "feedback")}
+            />
+          </Panel>
+        </div>
       </div>
     </AdminPage>
   );

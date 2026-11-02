@@ -75,6 +75,10 @@ export function FeedbackForm({
           <Field label="Your message" required error={state.errors?.message}>
             <Textarea name="message" rows={5} maxLength={4000} />
           </Field>
+          <Checkbox
+            name="publishConsent"
+            label="KUZANA may quote my feedback on the website (with my first name, or as “a visitor” if I send it anonymously)."
+          />
           <Checkbox name="anonymous" label="Send anonymously" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
           {!anonymous && (
             <div className="space-y-4 rounded-[var(--radius-control)] bg-cream p-4">

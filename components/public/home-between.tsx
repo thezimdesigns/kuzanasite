@@ -14,6 +14,8 @@ import { CoverageColumns } from "@/components/public/coverage-columns";
 import { HeroSlides } from "@/components/public/hero-slides";
 import { NewsRow } from "@/components/public/news-blocks";
 import { PartnerStrip } from "@/components/public/partner-strip";
+import { FeedbackWall } from "@/components/public/feedback-wall";
+import { getFeedbackWall } from "@/lib/feedback";
 import { SeriesBand, StoryCard } from "@/components/public/story-blocks";
 import { TakePartGrid } from "@/components/public/take-part";
 import { Section, SectionTitle } from "@/components/ui";
@@ -64,6 +66,7 @@ export async function BetweenHome({ next, past }: { next: Edition | null; past: 
       : null,
   ]);
 
+  const wall = await getFeedbackWall(6);
   const nowReading = stories.posts[0] ?? null;
   // Series parts show in the series band; the participant grid is for stand-alone stories.
   const standalone = stories.posts.filter((p) => !p.series && p.id !== nowReading?.id).slice(0, 3);
@@ -207,6 +210,19 @@ export async function BetweenHome({ next, past }: { next: Edition | null; past: 
           </div>
         </div>
       </Section>
+
+      {/* What people said (when the section is switched on and feedback is chosen) */}
+      {wall.length > 0 && (
+        <div className="border-t border-line bg-cream-dark/50">
+          <Section>
+            <FeedbackWall
+              items={wall}
+              title={past ? `What people said about ${past.year}` : "What people said"}
+              moreHref={wall.length >= 6 ? "/feedback#what-people-said" : undefined}
+            />
+          </Section>
+        </div>
+      )}
 
       {/* Updates and coverage */}
       {(updates.posts.length > 0 || mentions.length > 0) && (

@@ -677,10 +677,19 @@ model Feedback {
   anonymous         Boolean        @default(false)
   status            FeedbackStatus @default(NEW)
   adminNotes        String?
+  /// The person agreed (on the form) that KUZANA may quote their feedback publicly.
+  publishConsent    Boolean        @default(false)
+  /// Chosen by staff to show in the public "What people said" section.
+  isPublic          Boolean        @default(false)
+  /// What is shown publicly: the message as is, or a trimmed excerpt.
+  publicText        String?
+  /// Name shown publicly, e.g. "Clemence M." (anonymous feedback shows as a visitor).
+  publicName        String?
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
   @@index([status, createdAt])
+  @@index([isPublic, createdAt])
 }
 
 /// A visitor's enquiry to an exhibitor, collected on the exhibitor's profile and
