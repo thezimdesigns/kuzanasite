@@ -883,6 +883,10 @@ model NewsPost {
   /// Photographer or source of the cover image, shown as "Photo: …".
   coverCredit    String?
   coverCreditUrl String?
+  /// A downloadable publication (e.g. the designed PDF of a Signal volume).
+  pdfKey         String?
+  pdfName        String?
+  pdfSize        Int?
   author         String?
   featured       Boolean       @default(false)
   /// Plain update, participant story or interview. Stories and interviews live at /stories.

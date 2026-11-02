@@ -28,6 +28,8 @@ export default async function NewNews({ searchParams }: PageProps<"/admin/news/n
           coverCaption: "",
           coverCredit: "",
           coverCreditUrl: "",
+          pdfKey: "",
+          pdfName: "",
           images: [],
           nextImageNumber: 1,
           author: "",

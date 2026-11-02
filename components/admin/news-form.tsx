@@ -20,6 +20,8 @@ export type NewsValues = {
   coverCaption: string;
   coverCredit: string;
   coverCreditUrl: string;
+  pdfKey: string;
+  pdfName: string;
   images: StoryImage[];
   nextImageNumber: number;
   author: string;
@@ -139,6 +141,21 @@ export function NewsForm({ values: v, options, readOnly = false }: { values: New
                   <PickList name="personIds" options={options.people} initial={v.personIds} placeholder="Type to find a speaker, artist or athlete…" />
                 </div>
                 <p className="text-xs text-muted">Featured exhibitors and people show the story on their profile pages.</p>
+              </div>
+            </Panel>
+            <Panel title="Publication (PDF)">
+              <div className="space-y-3">
+                <p className="text-sm text-muted">The designed version of this story, for readers to download (for example a Signal volume).</p>
+                <UploadField
+                  name="pdf"
+                  mode="json"
+                  accept="document"
+                  label="PDF file"
+                  current={v.pdfKey || null}
+                  currentName={v.pdfName || null}
+                  folder="publications"
+                />
+                {v.pdfKey && <Checkbox name="removePdf" label="Remove the PDF" />}
               </div>
             </Panel>
             <Panel title="Cover image">

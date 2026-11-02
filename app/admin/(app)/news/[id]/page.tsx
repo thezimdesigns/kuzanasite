@@ -48,6 +48,8 @@ export default async function EditNews({ params }: PageProps<"/admin/news/[id]">
           coverCaption: p.coverCaption ?? "",
           coverCredit: p.coverCredit ?? "",
           coverCreditUrl: p.coverCreditUrl ?? "",
+          pdfKey: p.pdfKey ?? "",
+          pdfName: p.pdfName ?? "",
           images: p.images.map((i) => ({
             number: i.number,
             key: i.key,

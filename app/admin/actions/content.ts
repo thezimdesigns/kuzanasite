@@ -62,6 +62,20 @@ const newsSchema = z.object({
   coverCaption: optionalText(300),
   coverCredit: optionalText(150),
   coverCreditUrl: optionalUrl,
+  pdf: z
+    .string()
+    .optional()
+    .transform((s) => {
+      if (!s) return null;
+      try {
+        return z
+          .object({ key: z.string().startsWith("staff/"), mimeType: z.literal("application/pdf"), size: z.number(), fileName: z.string().optional() })
+          .parse(JSON.parse(s));
+      } catch {
+        return null;
+      }
+    }),
+  removePdf: checkbox,
   author: optionalText(120),
   eventId: optionalText(40).transform((v) => v ?? null),
   featured: checkbox,
@@ -102,7 +116,7 @@ async function setFeatured(postId: string, d: { exhibitorIds: string[]; personId
 }
 
 function newsData(d: z.infer<typeof newsSchema>) {
-  const { slug: _s, exhibitorIds: _e, personIds: _p, images: _i, ...rest } = d;
+  const { slug: _s, exhibitorIds: _e, personIds: _p, images: _i, pdf, removePdf, ...rest } = d;
   return {
     ...rest,
     excerpt: d.excerpt ?? null,
@@ -111,6 +125,8 @@ function newsData(d: z.infer<typeof newsSchema>) {
     coverCaption: d.coverCaption ?? null,
     coverCredit: d.coverCredit ?? null,
     coverCreditUrl: d.coverCreditUrl ?? null,
+    // A new PDF replaces the old one; "Remove" clears it; otherwise it stays as it was.
+    ...(pdf ? { pdfKey: pdf.key, pdfName: pdf.fileName ?? null, pdfSize: pdf.size } : removePdf ? { pdfKey: null, pdfName: null, pdfSize: null } : {}),
     author: d.author ?? null,
     seriesPart: d.seriesId ? (d.seriesPart ?? null) : null,
   };
@@ -149,6 +165,7 @@ export const updateNews = adminFormAction(
     await setFeatured(d.id, d);
     await setImages(d.id, d.images);
     if (old.coverKey && old.coverKey !== d.coverKey) await deleteObject(old.coverKey);
+    if (old.pdfKey && (d.removePdf || (d.pdf && d.pdf.key !== old.pdfKey))) await deleteObject(old.pdfKey);
     return { ok: true, message: "Story saved." };
   },
   NEWS_ARRAYS,
@@ -159,6 +176,7 @@ export async function deleteNews(id: string) {
     const images = await db.newsPostImage.findMany({ where: { postId: id }, select: { key: true } });
     const p = await db.newsPost.delete({ where: { id } });
     if (p.coverKey) await deleteObject(p.coverKey);
+    if (p.pdfKey) await deleteObject(p.pdfKey);
     for (const i of images) await deleteObject(i.key);
   });
   redirect("/admin/news");

@@ -3,9 +3,10 @@ import { siteUrl } from "@/lib/site";
 import { DEFAULT_SHARE_IMAGE, shareMetadata } from "@/lib/seo";
 import Image from "next/image";
 import Link from "next/link";
+import { FileDown } from "lucide-react";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { fileUrl } from "@/lib/files";
+import { fileUrl, formatBytes } from "@/lib/files";
 import { getNewsPost, readingMinutes } from "@/lib/news";
 import { formatDate } from "@/lib/time";
 import { PhotoCredit } from "@/components/photo-credit";
@@ -53,6 +54,7 @@ export default async function NewsArticle({ params }: PageProps<"/news/[slug]">)
   const exhibitors = p.exhibitors.map((x) => x.exhibitor).filter((x) => x.status === "APPROVED");
   const people = p.people.map((x) => x.person).filter((x) => x.publishStatus === "PUBLISHED");
   const isStory = p.kind !== "UPDATE" || !!p.series;
+  const pdf = p.pdfKey ? fileUrl(p.pdfKey, p.pdfName ?? `${p.slug}.pdf`) : null;
   // Every photo in the story, cover first, in reading order: what the lightbox steps through.
   const lightbox: LightboxItem[] = [
     ...(cover ? [{ src: cover, alt: p.coverAlt ?? "", caption: p.coverCaption, credit: p.coverCredit, creditUrl: p.coverCreditUrl }] : []),
@@ -111,6 +113,15 @@ export default async function NewsArticle({ params }: PageProps<"/news/[slug]">)
             {p.author && <span>{p.author}</span>}
             <span>{readingMinutes(p.body)} min read</span>
           </p>
+          {pdf && (
+            <a
+              href={pdf}
+              className="mt-5 inline-flex items-center gap-2 rounded-[var(--radius-control)] border border-green-900/25 bg-white px-4 py-2.5 font-heading text-sm font-bold text-green-900 transition-[border-color,transform] hover:border-green-900 active:scale-[0.98]"
+            >
+              <FileDown className="size-4 text-orange-dark" aria-hidden /> Download the PDF edition
+              {p.pdfSize ? <span className="font-normal text-muted">{formatBytes(p.pdfSize)}</span> : null}
+            </a>
+          )}
         </div>
       </header>
       <StoryLightbox items={lightbox}>
@@ -133,6 +144,23 @@ export default async function NewsArticle({ params }: PageProps<"/news/[slug]">)
               {p.body}
             </Markdown>
           </div>
+          {pdf && (
+            <a
+              href={pdf}
+              className="group mt-10 flex items-center gap-4 rounded-[var(--radius-card)] bg-green-900 p-5 text-white transition-colors hover:bg-green-800"
+            >
+              <span className="grid size-12 shrink-0 place-items-center rounded-[var(--radius-control)] bg-white/10">
+                <FileDown className="size-6 text-orange-bright" aria-hidden />
+              </span>
+              <span className="min-w-0">
+                <span className="block font-heading text-lg font-bold">Read the designed edition</span>
+                <span className="block text-sm text-white/75">
+                  Download the PDF{p.series ? ` of ${p.series.title}${p.seriesPart ? ` Vol. ${p.seriesPart}` : ""}` : ""}
+                  {p.pdfSize ? ` · ${formatBytes(p.pdfSize)}` : ""}
+                </span>
+              </span>
+            </a>
+          )}
           {(people.length > 0 || exhibitors.length > 0) && (
             <aside className="mt-10" aria-label="Featured in this story">
               <h2 className="mb-3 font-heading text-sm font-bold tracking-[0.08em] text-muted uppercase">Featured in this story</h2>
