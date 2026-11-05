@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { shareMetadata } from "@/lib/seo";
+import { DEFAULT_SHARE_IMAGE, shareMetadata, ticketOffer } from "@/lib/seo";
+import { siteUrl } from "@/lib/site";
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -138,6 +139,19 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
     const k = dateKey(s.startsAt);
     sessionDays.set(k, [...(sessionDays.get(k) ?? []), s]);
   }
+
+  // Structured data: only what is on record. No people or prices means the field is left out, not guessed.
+  const pageUrl = siteUrl(`/events/${event.slug}`);
+  const onStage = [...event.participants, ...event.sessions.flatMap((s) => s.participants)].filter((p) => p.role !== "MODERATOR" && p.role !== "FACILITATOR");
+  const performers = [...new Map(onStage.map((p) => [p.person.slug, p.person])).values()].slice(0, 25).map((p) => ({
+    "@type": "Person",
+    name: p.name,
+    url: siteUrl(`/speakers/${p.slug}`),
+  }));
+  const ticketRows = event.tickets.length
+    ? event.tickets.map((t) => ({ ...t, url: t.url ?? event.ticketUrl }))
+    : [{ price: event.ticketPrice, url: event.ticketUrl }];
+  const offers = ticketRows.flatMap((t) => ticketOffer(t, pageUrl, editionOver) ?? []);
 
   // Posters open in the lightbox (main poster first, then session posters in agenda order).
   const sessionPosters = event.sessions.filter((s) => s.posterKey);
@@ -583,6 +597,9 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
                 : status === "POSTPONED"
                   ? "https://schema.org/EventPostponed"
                   : "https://schema.org/EventScheduled",
+            eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+            url: pageUrl,
+            image: [siteUrl(image ?? DEFAULT_SHARE_IMAGE.url)],
             ...(event.venue && {
               location: {
                 "@type": "Place",
@@ -591,7 +608,9 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
               },
             }),
             description: event.summary ?? undefined,
-            organizer: { "@type": "Organization", name: "KUZANA SCEEZ" },
+            organizer: { "@type": "Organization", name: "KUZANA SCEEZ", url: siteUrl("/") },
+            ...(performers.length > 0 && { performer: performers }),
+            ...(offers.length > 0 && { offers }),
           }).replace(/</g, "\\u003c"),
         }}
       />

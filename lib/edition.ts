@@ -3,6 +3,8 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { getStaff } from "@/lib/permissions";
+import { DEFAULT_SHARE_IMAGE } from "@/lib/seo";
+import { siteUrl } from "@/lib/site";
 import { dateKey } from "@/lib/time";
 
 export const getCurrentEdition = cache(async () => {
@@ -82,6 +84,7 @@ export function editionJsonLd(e: EditionLike, url: string) {
     "@type": "Event",
     name: e.name,
     description: e.theme ?? "Sport & Creative Economy Expo of Zimbabwe",
+    image: [siteUrl(DEFAULT_SHARE_IMAGE.url)],
     startDate: day(e.startDate),
     endDate: day(e.endDate),
     eventStatus: "https://schema.org/EventScheduled",
