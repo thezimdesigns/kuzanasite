@@ -81,6 +81,7 @@ enum ExhibitorStatus {
 enum ExhibitorSource {
   PUBLIC
   STAFF
+  IMPORT
 }
 
 enum ExhibitorMediaKind {
@@ -481,6 +482,8 @@ model Exhibitor {
   offering      String?
   consent       Boolean            @default(false)
   consentAt     DateTime?
+  /// Contact person, phone, email and WhatsApp on the public profile. Off for contacts imported without consent to publish.
+  showContact   Boolean            @default(true)
   status        ExhibitorStatus    @default(PENDING)
   source        ExhibitorSource    @default(PUBLIC)
   reviewNotes   String?

@@ -195,21 +195,32 @@ export default async function ExhibitorPage({ params }: PageProps<"/exhibitors/[
           </Card>
           <Card className="space-y-3 p-5">
             <h2 className="font-heading text-lg font-bold text-green-900">Contact</h2>
-            <p className="text-sm">
-              <strong>{x.contactName}</strong>
-            </p>
-            <a href={`tel:${x.phone.replace(/\s/g, "")}`} className="flex items-center gap-2 text-sm hover:text-green-800">
-              <Phone className="size-4 text-orange-dark" /> {x.phone}
-            </a>
-            {(x.whatsapp || x.phone) && (
-              <a href={waLink(x.whatsapp ?? x.phone)} target="_blank" rel="noopener" className="flex items-center gap-2 text-sm hover:text-green-800">
-                <MessageCircle className="size-4 text-[#25D366]" /> WhatsApp
-              </a>
-            )}
-            {x.email && (
-              <a href={`mailto:${x.email}`} className="flex items-center gap-2 text-sm break-all hover:text-green-800">
-                <Mail className="size-4 text-orange-dark" /> {x.email}
-              </a>
+            {x.showContact ? (
+              <>
+                {x.contactName && (
+                  <p className="text-sm">
+                    <strong>{x.contactName}</strong>
+                  </p>
+                )}
+                {x.phone && (
+                  <a href={`tel:${x.phone.replace(/\s/g, "")}`} className="flex items-center gap-2 text-sm hover:text-green-800">
+                    <Phone className="size-4 text-orange-dark" /> {x.phone}
+                  </a>
+                )}
+                {(x.whatsapp || x.phone) && (
+                  <a href={waLink(x.whatsapp || x.phone)} target="_blank" rel="noopener" className="flex items-center gap-2 text-sm hover:text-green-800">
+                    <MessageCircle className="size-4 text-[#25D366]" /> WhatsApp
+                  </a>
+                )}
+                {x.email && (
+                  <a href={`mailto:${x.email}`} className="flex items-center gap-2 text-sm break-all hover:text-green-800">
+                    <Mail className="size-4 text-orange-dark" /> {x.email}
+                  </a>
+                )}
+              </>
+            ) : (
+              // Contacts kept private (e.g. imported without consent): visitors use the enquiry form.
+              <p className="text-sm text-muted">To get in touch, send {x.name} an enquiry above. KUZANA passes it on.</p>
             )}
             {x.address && (
               <p className="flex items-start gap-2 text-sm">

@@ -33,7 +33,7 @@ type X = Record<
   | "offering"
   | "reviewNotes",
   string
-> & { opportunities: string[]; consent: boolean };
+> & { opportunities: string[]; consent: boolean; showContact: boolean };
 
 export function ExhibitorEditForm({ x, sectors, readOnly }: { x: X; sectors: { id: string; name: string }[]; readOnly: boolean }) {
   const [media, setMedia] = useState<Record<string, (UploadedFile & { kind: ExhibitorMediaKind })[]>>({});
@@ -74,10 +74,10 @@ export function ExhibitorEditForm({ x, sectors, readOnly }: { x: X; sectors: { i
                   ))}
                 </Select>
               </Field>
-              <Field label="Contact person" required error={state.errors?.contactName}>
+              <Field label="Contact person" error={state.errors?.contactName}>
                 <Input name="contactName" defaultValue={x.contactName} />
               </Field>
-              <Field label="Phone" required error={state.errors?.phone}>
+              <Field label="Phone" error={state.errors?.phone}>
                 <Input name="phone" defaultValue={x.phone} />
               </Field>
               <Field label="Email" error={state.errors?.email}>
@@ -132,7 +132,13 @@ export function ExhibitorEditForm({ x, sectors, readOnly }: { x: X; sectors: { i
               </div>
             </Panel>
           )}
-          <Panel title="Internal notes">
+          <Panel title="Privacy and internal notes">
+            <Checkbox
+              name="showContact"
+              defaultChecked={x.showContact}
+              label="Show contact person, phone, WhatsApp and email on the public profile"
+            />
+            <p className="mb-3 mt-1 text-xs text-muted">Untick when they have not agreed to publish these. Visitors can still send an enquiry.</p>
             <Textarea name="reviewNotes" rows={3} defaultValue={x.reviewNotes} />
             <p className="mt-2 text-xs text-muted">Publishing consent: {x.consent ? "given" : "not recorded (staff capture)"}</p>
           </Panel>

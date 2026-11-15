@@ -88,9 +88,11 @@ export const captureExhibitor = adminFormAction("exhibitors", captureSchema, asy
 const exhibitorSchema = z.object({
   id: z.string(),
   name: requiredText("Organisation name"),
-  contactName: requiredText("Contact person"),
-  phone,
+  // Optional here: rows imported from a register may lack a contact or number.
+  contactName: optionalText(120),
+  phone: optionalText(30),
   email: optionalEmail,
+  showContact: checkbox,
   categoryId: optionalText(40),
   hall: optionalText(60),
   stand: optionalText(60),
@@ -123,6 +125,9 @@ export const updateExhibitor = adminFormAction(
       where: { id },
       data: {
         ...data,
+        contactName: d.contactName ?? "",
+        phone: d.phone ?? "",
+        showContact: d.showContact,
         opportunities: d.opportunities,
         updatedById: user.id,
         ...(logo && { logoKey: logo.key }),

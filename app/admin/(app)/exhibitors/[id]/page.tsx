@@ -165,6 +165,7 @@ export default async function AdminExhibitor({ params }: PageProps<"/admin/exhib
           reviewNotes: x.reviewNotes ?? "",
           opportunities: x.opportunities,
           consent: x.consent,
+          showContact: x.showContact,
         }}
       />
 
