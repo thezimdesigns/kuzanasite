@@ -21,6 +21,8 @@ export const FOOTER_SETTING_DEFAULTS = {
   "footer.col1Title": "At the event",
   "footer.col2Title": "Media & stories",
   "footer.col3Title": "Work with us",
+  "footer.memberLabel": "Member of ZNCC",
+  "footer.memberUrl": "https://www.zncc.co.zw/",
 } as const;
 
 export type FooterSettingKey = keyof typeof FOOTER_SETTING_DEFAULTS;

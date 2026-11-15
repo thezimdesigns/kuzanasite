@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Mail, MapPin, Phone } from "lucide-react";
+import { ArrowUpRight, ChevronRight, Mail, MapPin, Phone } from "lucide-react";
 import { getFooter } from "@/lib/site-settings";
 import { SocialLinks } from "@/components/public/social-links";
 
@@ -23,6 +23,19 @@ export async function SiteFooter() {
             />
           </Link>
           {s["footer.tagline"] && <p className="mt-2 max-w-xs text-sm">{s["footer.tagline"]}</p>}
+          {s["footer.memberLabel"] && (
+            <a
+              href={s["footer.memberUrl"] || "https://www.zncc.co.zw/"}
+              target="_blank"
+              rel="noopener"
+              title="Zimbabwe National Chamber of Commerce"
+              className="group mt-3 inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-white/20 px-2.5 py-1 text-xs font-semibold text-white/85 transition-colors hover:border-gold-light hover:text-white"
+            >
+              {s["footer.memberLabel"]}
+              <span className="sr-only">(Zimbabwe National Chamber of Commerce, opens in a new tab)</span>
+              <ArrowUpRight className="size-3.5 text-gold-light transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden />
+            </a>
+          )}
           <ul className="mt-4 space-y-2 text-sm">
             {s["footer.location"] && (
               <li className="flex items-center gap-2">
