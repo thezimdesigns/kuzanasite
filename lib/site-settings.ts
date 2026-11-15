@@ -21,7 +21,8 @@ export const FOOTER_SETTING_DEFAULTS = {
   "footer.col1Title": "At the event",
   "footer.col2Title": "Media & stories",
   "footer.col3Title": "Work with us",
-  "footer.memberLabel": "Member of ZNCC",
+  "footer.memberName": "Zimbabwe National Chamber of Commerce",
+  "footer.memberShort": "ZNCC",
   "footer.memberUrl": "https://www.zncc.co.zw/",
 } as const;
 

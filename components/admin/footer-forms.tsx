@@ -23,8 +23,9 @@ const SETTING_FIELDS: [string, string, string?][] = [
   ["col1Title", "First link column heading"],
   ["col2Title", "Second link column heading"],
   ["col3Title", "Third link column heading"],
-  ["memberLabel", "Membership line (e.g. Member of ZNCC); leave empty to hide"],
-  ["memberUrl", "Membership link"],
+  ["memberName", "Member of (organisation's full name); leave empty to hide"],
+  ["memberShort", "Organisation's short name, e.g. ZNCC"],
+  ["memberUrl", "Organisation's website"],
 ];
 
 export function FooterSettingsForm({ values, readOnly }: { values: Record<string, string>; readOnly: boolean }) {

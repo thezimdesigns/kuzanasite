@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, ChevronRight, Mail, MapPin, Phone } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, ChevronRight, Mail, MapPin, Phone } from "lucide-react";
 import { getFooter } from "@/lib/site-settings";
 import { SocialLinks } from "@/components/public/social-links";
 
@@ -23,17 +23,29 @@ export async function SiteFooter() {
             />
           </Link>
           {s["footer.tagline"] && <p className="mt-2 max-w-xs text-sm">{s["footer.tagline"]}</p>}
-          {s["footer.memberLabel"] && (
+          {s["footer.memberName"] && (
+            // A membership seal: reads as a credential, not a link.
             <a
               href={s["footer.memberUrl"] || "https://www.zncc.co.zw/"}
               target="_blank"
               rel="noopener"
-              title="Zimbabwe National Chamber of Commerce"
-              className="group mt-3 inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-white/20 px-2.5 py-1 text-xs font-semibold text-white/85 transition-colors hover:border-gold-light hover:text-white"
+              className="group mt-5 flex max-w-xs items-center gap-3 rounded-[var(--radius-card)] border border-gold-light/35 bg-white/[0.06] p-3 pr-4 transition-[background-color,border-color] duration-200 hover:border-gold-light hover:bg-white/10"
             >
-              {s["footer.memberLabel"]}
-              <span className="sr-only">(Zimbabwe National Chamber of Commerce, opens in a new tab)</span>
-              <ArrowUpRight className="size-3.5 text-gold-light transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden />
+              <span className="relative grid size-12 shrink-0 place-items-center rounded-full bg-gold-light text-green-950 shadow-[inset_0_0_0_3px_rgb(0_0_0/0.08)]">
+                <BadgeCheck className="size-6" strokeWidth={2.25} aria-hidden />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[0.7rem] font-semibold tracking-[0.06em] text-gold-light uppercase">Proud member of</span>
+                <span className="mt-0.5 block font-heading text-sm leading-snug font-bold text-balance text-white">
+                  {s["footer.memberName"]}
+                  {s["footer.memberShort"] && <span className="font-semibold text-white/70"> ({s["footer.memberShort"]})</span>}
+                </span>
+                <span className="sr-only">, opens in a new tab</span>
+              </span>
+              <ArrowUpRight
+                className="ml-auto size-4 shrink-0 self-start text-gold-light transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                aria-hidden
+              />
             </a>
           )}
           <ul className="mt-4 space-y-2 text-sm">
